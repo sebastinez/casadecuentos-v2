@@ -1,0 +1,34 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PocketBase — runtime data and the downloaded binary are not committed.
+# Schema/seed live in pb_migrations/ (committed); pb_data is reproducible from them.
+/pb_data
+/.bin
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Deploy secrets — the server's PRIVATE host key and the nixos-anywhere staging
+# dir must never be committed. (The sops-ENCRYPTED nix/secrets/secrets.yaml IS
+# committed; that's the point of sops.)
+/nix/secrets/hostkey/
+/extra-files/
