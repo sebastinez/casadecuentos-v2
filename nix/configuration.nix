@@ -10,8 +10,9 @@ let
 in
 {
   imports = [
-    ./hardware.nix
-    ./disko.nix
+    # Copied from the box's /etc/nixos/hardware-configuration.nix after you
+    # install NixOS on it (filesystems, initrd modules, swap). See DEPLOY.md §6.
+    ./hardware-configuration.nix
     ./modules/options.nix
     ./modules/secrets.nix
     ./modules/web.nix
@@ -25,15 +26,17 @@ in
     acmeEmail = "me@sebastinez.dev"; # ← Let's Encrypt account / expiry notices
   };
 
-  # ── Boot / disk ──────────────────────────────────────────────────────────────
-  # disko declares the filesystems. Installing GRUB to the disk (/dev/sda) plus
-  # the EF02 BIOS-boot partition covers BIOS-booting Hetzner VMs; efiSupport +
-  # the ESP also covers the UEFI variant — safe whichever mode the box uses.
+  # ── Boot ─────────────────────────────────────────────────────────────────────
+  # Match what your NixOS installer set up. Check on the box:
+  #     [ -d /sys/firmware/efi ] && echo UEFI || echo BIOS
+  # BIOS (typical Hetzner Cloud manual install) → keep the block below.
+  # UEFI → comment it out and use systemd-boot instead:
+  #     boot.loader.systemd-boot.enable = true;
+  #     boot.loader.efi.canTouchEfiVariables = true;
+  # (filesystems come from the imported hardware-configuration.nix).
   boot.loader.grub = {
     enable = true;
-    efiSupport = true;
-    efiInstallAsRemovable = true;
-    device = "/dev/sda";
+    device = "/dev/sda"; # the boot disk; confirm with `lsblk` on the box
   };
 
   # ── Host basics ────────────────────────────────────────────────────────────

@@ -27,8 +27,6 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# Deploy secrets — the server's PRIVATE host key and the nixos-anywhere staging
-# dir must never be committed. (The sops-ENCRYPTED nix/secrets/secrets.yaml IS
-# committed; that's the point of sops.)
-/nix/secrets/hostkey/
-/extra-files/
+# The decrypted sops keyfile must never be committed. (The sops-ENCRYPTED
+# nix/secrets/secrets.yaml IS committed — that's the point of sops.)
+/nix/secrets/*.dec.yaml

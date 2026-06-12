@@ -68,20 +68,31 @@ cert) while the public DNS record serves everyone else.
 
 ---
 
-## 1. Provision the Hetzner VPS
+## 1. Provision the Hetzner VPS and install NixOS
+
+This runbook uses the **build-on-the-box** model: you install NixOS on the
+server yourself, then build the flake natively on it (`x86_64-linux`), so your
+Mac never has to cross-build and there's no `nixos-anywhere`/kexec.
 
 Create a server in the Hetzner Cloud console:
 
 - **Type:** confirm which "cpx22" you meant — it isn't a real Hetzner type:
   - **CX22** — Intel, 2 vCPU / 4 GB / **40 GB** disk (cheapest that fits)
   - **CPX21** — AMD, 3 vCPU / 4 GB / **80 GB** disk
-  Either works; the Nix config targets `x86_64-linux` for both. The
-  [`disko`](../nix/disko.nix) layout just fills the disk, so 40 GB or 80 GB is
-  fine. (Avoid the ARM **CAX** line — it's `aarch64`, which this config is not
-  built for.)
-- **Image:** any (Ubuntu) — it gets wiped by `nixos-anywhere`.
-- **SSH key:** add yours so you can reach the rescue/installer.
+  Either works; the Nix config targets `x86_64-linux` for both. (Avoid the ARM
+  **CAX** line — it's `aarch64`, which this config is not built for.)
+- **SSH key:** add yours so you can log in.
 - Note the server's **public IPv4 and IPv6**.
+
+**Install NixOS** using whichever path you've chosen — a Hetzner NixOS image, or
+mounting the NixOS ISO via the console and installing manually (`parted` →
+`nixos-generate-config` → `nixos-install`). The result you need before
+continuing: you can `ssh` into a running NixOS box, and it has a generated
+`/etc/nixos/hardware-configuration.nix`.
+
+> 4 GB RAM is enough to build this closure but it's tight. If a build OOMs, add
+> swap — set `zramSwap.enable = true;` (already cheap to add to
+> `configuration.nix`) or a `swapDevices` entry, and retry.
 
 ## 2. DNS records
 
@@ -109,34 +120,42 @@ Edit [`nix/configuration.nix`](../nix/configuration.nix):
 Edit [`nix/modules/backups.nix`](../nix/modules/backups.nix) → `s3Endpoint`,
 `s3Region`, `s3Bucket` for your Hetzner Object Storage bucket.
 
-## 4. Keys: your age key + a pre-generated host key
+## 4. Bring the box's hardware config + bootloader into the flake
 
-sops-nix needs `secrets.yaml` to exist (and decrypt to the server's host key) at
-**eval** time — but the host key normally only exists *after* install. Break
-that circular dependency by **pre-generating the host key locally**, so you can
-encrypt to it before the box exists and have nixos-anywhere install it.
+The NixOS installer generated the box's real disk/hardware config. Copy it into
+the flake (which imports `nix/hardware-configuration.nix`):
+
+```sh
+scp root@<server-ip>:/etc/nixos/hardware-configuration.nix nix/hardware-configuration.nix
+```
+
+Set the **bootloader** in [`nix/configuration.nix`](../nix/configuration.nix) to
+match how the box boots — check on the box:
+
+```sh
+ssh root@<server-ip> '[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS; lsblk'
+```
+
+- **BIOS** (typical Hetzner) → keep the `boot.loader.grub` block; set `device`
+  to the boot disk from `lsblk` (usually `/dev/sda`).
+- **UEFI** → comment grub out and enable systemd-boot (snippet is in the file).
+
+## 5. Encrypt the secrets to the host
+
+The box already has its own SSH host key (generated at install), so there's no
+pre-generation or circular-dependency dance:
 
 ```sh
 # Your personal (admin) age key — lets you edit secrets:
 mkdir -p ~/.config/sops/age
 age-keygen -o ~/.config/sops/age/keys.txt        # prints your PUBLIC key: age1...
 
-# The server's future SSH host key, generated locally:
-cd nix
-mkdir -p secrets/hostkey
-ssh-keygen -t ed25519 -N "" -C casadecuentos-host \
-  -f secrets/hostkey/ssh_host_ed25519_key
-ssh-to-age -i secrets/hostkey/ssh_host_ed25519_key.pub   # prints the host age1...
+# The box's host key → age recipient:
+ssh root@<server-ip> 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
 ```
 
-Put the **admin** public key as `&admin` and the **host** `age1...` as `&host`
-in [`nix/.sops.yaml`](../nix/.sops.yaml).
-
-> ⚠️ `secrets/hostkey/` is a **private key** — it's already git-ignored; never
-> commit it. (The *encrypted* `secrets.yaml` is safe to commit; that's the point
-> of sops.)
-
-## 5. Encrypt the secrets (now possible — both recipients are known)
+Put the **admin** key as `&admin` and the **host** `age1...` as `&host` in
+[`nix/.sops.yaml`](../nix/.sops.yaml), then create the encrypted file:
 
 ```sh
 cd nix
@@ -144,155 +163,60 @@ cp secrets/secrets.example.yaml secrets/secrets.yaml
 sops secrets/secrets.yaml     # $EDITOR opens; fill REAL values; save → encrypted
 ```
 
-You can leave `stripe_webhook_secret` as a placeholder for now — you mint the
-real one in step 10 and re-`sops` it then. See
+Leave `stripe_webhook_secret` as a placeholder for now — you mint the real one
+in step 10 and re-`sops` it then. The encrypted `secrets.yaml` **is** safe to
+commit (that's the point of sops). See
 [`secrets.example.yaml`](../nix/secrets/secrets.example.yaml) for the full key
 list (Stripe, PocketBase admin, Resend, S3, restic password).
 
-## 6. Install NixOS with nixos-anywhere
+## 6. Get the flake onto the box and build it
 
-This kexecs into the NixOS installer, partitions the disk per `disko.nix`, and
-installs the flake — wiping the box.
+Commit everything first (domain edits, `hardware-configuration.nix`, the
+encrypted `secrets.yaml`). The box builds the closure **natively** — your Mac
+never cross-builds.
 
-> **The golden rule: connect as `root` over SSH *key* auth.** nixos-anywhere
-> runs non-interactively and **cannot answer password prompts**:
->
-> - A **non-root** user would need **passwordless** (`NOPASSWD`) sudo — an extra
->   hurdle. Just use `root`.
-> - If your SSH **key** isn't accepted at any stage, SSH falls back to asking
->   for a password and the run aborts with
->   *"a terminal is required to read the password."*
->
-> These are exactly the two failures to avoid: the root run that "needs a
-> password" = key not accepted; the `nixos` run that "needs sudo" = non-root
-> without passwordless sudo.
-
-### 6a. Get a known-good root environment (recommended: Rescue mode)
-
-The most reliable source environment on Hetzner Cloud is **Rescue mode** — a
-clean Debian with root + your SSH key, kexec-capable, free of the default
-image's cloud-init password/expiry quirks:
-
-1. Hetzner console → your server → **Rescue** → type **linux64**, select your
-   SSH key → **Enable rescue & power cycle** (Reset).
-2. The server reboots into rescue with passwordless root key login.
-
-(You may skip rescue and target the freshly-created server directly **iff**
-passwordless root SSH already works — verify in 6b.)
-
-### 6b. Pre-flight: prove passwordless root SSH works
-
-This one check predicts success. From your laptop:
+**Option A — git (recommended; clean updates):** push to a private GitHub repo,
+then on the box:
 
 ```sh
-ssh-keygen -R <server-ip>                        # clear any stale host key
-ssh -i ~/.ssh/<your-key> root@<server-ip> true && echo "OK passwordless root"
+ssh root@<server-ip>
+git clone https://github.com/<you>/casadecuentos-v2 /root/casadecuentos
+cd /root/casadecuentos
 ```
 
-If it prints `OK` with **no** password prompt, nixos-anywhere will connect
-cleanly. If it asks for a password, fix that first (wrong `-i` key path, key not
-attached to the server, or key auth disabled on the default image — use Rescue).
-
-### 6c. Run the installer
-
-The flake ships a Hetzner-Cloud [`hardware.nix`](../nix/hardware.nix) (virtio),
-so no on-target hardware generation is needed.
-
-**Load your key into ssh-agent first** so the passphrase is asked **once**, not
-on every connection nixos-anywhere opens (this is why you saw repeated passphrase
-prompts — see the note below):
+**Option B — rsync (no remote):** copy the tree from your laptop and make it a
+git repo on the box (flakes only see git-tracked files):
 
 ```sh
-eval "$(ssh-agent -s)"
-ssh-add --apple-use-keychain ~/.ssh/<your-key>   # macOS; drop the flag on Linux
+rsync -a --exclude node_modules --exclude build --exclude .svelte-kit \
+  --exclude pb_data --exclude .bin --exclude .jj --exclude .env \
+  ./ root@<server-ip>:/root/casadecuentos/
+ssh root@<server-ip> 'cd /root/casadecuentos && git init -q && git add -A && \
+  git -c user.email=a@b -c user.name=deploy commit -qm deploy'
 ```
 
-Stage the pre-generated host key so the box boots already holding it (sops can
-then decrypt secrets on first boot), then run from the **repo root** (the flake
-lives there, not in `nix/`):
+Then build + switch **on the box** (native `x86_64-linux`):
 
 ```sh
-# Place the host key generated in step 4 onto the target's /etc/ssh:
-install -d -m700 extra-files/etc/ssh
-install -m600 nix/secrets/hostkey/ssh_host_ed25519_key     extra-files/etc/ssh/
-install -m644 nix/secrets/hostkey/ssh_host_ed25519_key.pub extra-files/etc/ssh/
-
-nix run github:nix-community/nixos-anywhere -- \
-  --flake .#casadecuentos \
-  --target-host root@<server-ip> \
-  -i ~/.ssh/<your-key> \
-  --extra-files extra-files \
-  --build-on-remote            # REQUIRED on a macOS laptop — see note
-```
-
-- **`--extra-files`** copies your pre-generated `/etc/ssh/ssh_host_ed25519_key`
-  onto the box, so its host key matches the `&host` recipient you encrypted to —
-  secrets decrypt on first boot, no second deploy needed. (`extra-files/` is
-  git-ignored.)
-- **`--build-on-remote` (macOS):** the storefront package is `x86_64-linux`; a
-  **darwin laptop cannot build it**, so let the target build its own closure.
-  (On a Linux laptop you can omit this.) Alternatively add the box as a remote
-  builder and build locally — `--build-on-remote` is simpler.
-- Add `--debug` if it fails — it prints the exact phase (kexec / disko /
-  install) and the command that stopped.
-- RAM note: kexec mounts the Nix store as **tmpfs** and wants **≥4 GB**.
-  CX22/CPX21 have exactly 4 GB — fine, but if the installer OOMs mid-copy add
-  `--no-substitute-on-destination`.
-
-> The first run **fails on the `pnpmDeps` TOFU hash** (the PocketBase hash is
-> already pinned). Read `got: sha256-…` from the error, paste it into
-> [`pkgs/sveltekit.nix`](../nix/pkgs/sveltekit.nix), and re-run — see step 7.
-
-### Troubleshooting matrix
-
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| Prompts for a password as `root` | SSH key not offered/accepted | pass `-i ~/.ssh/<key>`; verify with 5b; `ssh-keygen -R <ip>` for a stale host key |
-| `a terminal is required to read the password` | non-root user with password-prompt sudo | use `root` (or give the user `NOPASSWD` sudo on the **source** image) |
-| `Permission denied (publickey)` | wrong key, or key not on the box | attach your key at creation / in Rescue; pass the matching `-i` |
-| `Host key verification failed` | stale `~/.ssh/known_hosts` from a prior wipe | `ssh-keygen -R <ip>` |
-| Hangs / unreachable right after `kexec` | installer lost network, or < 4 GB RAM | use Rescue (6a); ensure ≥ 4 GB; retry |
-| Repeated **passphrase** prompts | key passphrase asked per SSH connection | load it into `ssh-agent` once (see 6c) — keep the passphrase |
-
-If you truly have **no key** on the box and must use a password:
-
-```sh
-SSHPASS='<password>' nix run github:nix-community/nixos-anywhere -- \
-  --flake .#casadecuentos --target-host root@<ip> --env-password
-```
-
-After it finishes the box reboots into NixOS holding the pre-generated host key,
-so sops decrypts the secrets on first boot — no second deploy needed.
-
-## 7. Fill in the `pnpmDeps` hash
-
-The PocketBase hash is already pinned in
-[`pkgs/pocketbase.nix`](../nix/pkgs/pocketbase.nix). The one remaining
-fixed-output hash is the SvelteKit `pnpmDeps`. Because it's an `x86_64-linux`
-build (and pnpm can pull platform-specific optional deps), **compute it on
-Linux, not on your Mac** — easiest is to let step 6's `--build-on-remote`
-surface it: the install build fails with `pnpmDeps … got: sha256-…`; paste that
-into [`pkgs/sveltekit.nix`](../nix/pkgs/sveltekit.nix) and re-run step 6c.
-
-(If you've added the box as a remote builder you can instead run
-`nix build .#sveltekit` from the repo root and read the same hash.)
-
-## 8. Deploying updates
-
-Once installed, push config changes from the **repo root**. As a macOS laptop
-can't build the `x86_64-linux` closure, build on the box too:
-
-```sh
+cd /root/casadecuentos
 nixos-rebuild switch --flake .#casadecuentos \
-  --target-host root@<server-ip> \
-  --build-host root@<server-ip>          # build on the box (omit on a Linux laptop)
+  --extra-experimental-features 'nix-command flakes'   # first run only
 ```
 
-Check it came up:
+(After the first switch, flakes are enabled system-wide and you can drop that
+flag. Run as root, or `sudo nixos-rebuild …`.)
+
+> First build **fails on the `pnpmDeps` TOFU hash** (the PocketBase hash is
+> already pinned). Read `got: sha256-…`, paste it into
+> [`pkgs/sveltekit.nix`](../nix/pkgs/sveltekit.nix), commit/re-sync, rebuild.
+> If the build OOMs on 4 GB RAM, add swap (`zramSwap.enable = true;` in
+> `configuration.nix`) and retry.
+
+## 7. Verify it came up
 
 ```sh
-ssh root@<server-ip> 'systemctl status pocketbase sveltekit caddy --no-pager'
-curl -I https://casadecuentos.ch        # 200, valid cert
+systemctl status pocketbase sveltekit caddy --no-pager   # on the box
+curl -I https://casadecuentos.ch          # 200, valid cert
 curl -I https://pb.casadecuentos.ch/api/health
 ```
 
@@ -302,6 +226,15 @@ curl -I https://pb.casadecuentos.ch/api/health
 > resolves publicly:
 > `curl -s https://casadecuentos.ch/libros/<slug> | grep og:image` → the URL
 > should be `https://pb.<domain>/api/files/...` and load in a browser.
+
+## 8. Deploying updates
+
+- **git:** push from your laptop, then on the box
+  `cd /root/casadecuentos && git pull && nixos-rebuild switch --flake .#casadecuentos`.
+- **rsync:** re-sync the tree, re-commit on the box, then `nixos-rebuild switch`.
+
+A new `pb_migrations/*.js` only applies when the `pocketbase` unit restarts — the
+rebuild restarts it, so migrations land on deploy.
 
 ## 9. PocketBase post-install
 
@@ -380,11 +313,10 @@ env files under `/run/secrets-rendered/`.)
 
 ## 13. Ongoing operations
 
-- **Deploy changes:** snapshot/commit, then (from the repo root)
-  `nixos-rebuild switch --flake .#casadecuentos --target-host root@<ip> --build-host root@<ip>`
-  (drop `--build-host` on a Linux laptop). A new `pb_migrations/*.js` only
-  applies when the `pocketbase` unit restarts — the rebuild restarts it, so
-  migrations land on deploy.
+- **Deploy changes:** commit/push (or re-sync), then **on the box**
+  `cd /root/casadecuentos && git pull && nixos-rebuild switch --flake .#casadecuentos`.
+  A new `pb_migrations/*.js` only applies when the `pocketbase` unit restarts —
+  the rebuild restarts it, so migrations land on deploy.
 - **Rotate a secret:** `cd nix && sops secrets/secrets.yaml`, edit, save, re-deploy.
 - **Rotate recipients:** edit `nix/.sops.yaml`, then (from `nix/`)
   `sops updatekeys secrets/secrets.yaml`.
@@ -399,7 +331,7 @@ env files under `/run/secrets-rendered/`.)
 | -------------------------------------------------------- | ---------------------------------------------------- |
 | NixOS stands up PB + SvelteKit + Caddy as systemd units  | `nix/modules/web.nix`, `nix/modules/caddy.nix`       |
 | Domain A/AAAA → VPS; automatic HTTPS                      | step 2 + `services.caddy` (ACME)                     |
-| Secrets via sops-nix, never in `/nix/store`              | `nix/modules/secrets.nix`, `.sops.yaml`, steps 4–6   |
+| Secrets via sops-nix, never in `/nix/store`              | `nix/modules/secrets.nix`, `.sops.yaml`, step 5      |
 | Stripe webhook at a stable public HTTPS URL              | `caddy.nix` apex proxy + step 10                     |
 | Automated DB backups + image snapshots, restore-verified | `nix/modules/backups.nix` + step 12                  |
 | SPF + DKIM + DMARC from a dedicated subdomain            | step 11                                              |
