@@ -8,7 +8,6 @@
 # To GO LIVE later: point casadecuentos.ch + www A/AAAA at this box, uncomment
 # the apex/www blocks at the bottom, switch ORIGIN to https://casadecuentos.ch,
 # and reload.
-
 {
 	email me@sebastinez.dev
 }
@@ -18,12 +17,36 @@ preview.casadecuentos.ch {
 	reverse_proxy 127.0.0.1:3000
 }
 
-# PocketBase: public /api/files (book covers + OG images) and the admin UI.
-# Its collection API rules are the security boundary — keep orders/rsvps/
-# contact_messages superuser-only (see DEPLOY.md step 9).
+# PocketBase. Public surface is reduced to the read-only file endpoint that
+# browsers + the OG crawlers need; the admin UI, collections API, and settings
+# are reachable only from the box itself (the BFF connects via the /etc/hosts
+# loopback pin; you reach the admin over an SSH tunnel — see below).
 pb.casadecuentos.ch {
-	reverse_proxy 127.0.0.1:8090
+	# Block anything that is NOT a public file AND NOT from a local client
+	# (admin /_/, /api/collections, /api/settings, superuser auth from the
+	# internet) — a 404 hides the surface entirely.
+	@blocked {
+		not path /api/files/*
+		not remote_ip 127.0.0.1/8 ::1
+	}
+	handle @blocked {
+		respond 404
+	}
+	# Everything else → PocketBase: public covers/OG (/api/files/*), plus any
+	# path from the box itself (the BFF via the /etc/hosts loopback pin, and you
+	# over an SSH tunnel).
+	handle {
+		reverse_proxy 127.0.0.1:8090
+	}
 }
+
+# Reach the admin UI from your laptop with an SSH tunnel, then open
+# http://localhost:8090/_/ :
+#     ssh -L 8090:127.0.0.1:8090 <user>@<vps-ip>
+#
+# Prefer the simpler "admin is public, protected by password + collection rules"
+# model instead? Replace this whole block with:
+#     pb.casadecuentos.ch { reverse_proxy 127.0.0.1:8090 }
 
 # ── GO LIVE: uncomment when the apex DNS points here ─────────────────────────
 # casadecuentos.ch {

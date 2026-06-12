@@ -68,18 +68,28 @@ ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw --force enable
 
 ## 2. DNS records
 
-Point the domain at the box (do this early so Caddy can get certs):
+**Preview first (recommended):** point only the two subdomains at the box and
+leave the apex + `www` on your current host (e.g. Shopify). Subdomain records
+are independent, and Caddy issues a cert per hostname via HTTP-01 — the apex
+never has to point here. This runs a fully working preview while the live store
+stays put.
 
-| Type | Name  | Value           |
-| ---- | ----- | --------------- |
-| A    | `@`   | `<server IPv4>` |
-| AAAA | `@`   | `<server IPv6>` |
-| A    | `www` | `<server IPv4>` |
-| AAAA | `www` | `<server IPv6>` |
-| A    | `pb`  | `<server IPv4>` |
-| AAAA | `pb`  | `<server IPv6>` |
+| Type | Name      | Value           |
+| ---- | --------- | --------------- |
+| A    | `pb`      | `<server IPv4>` |
+| A    | `preview` | `<server IPv4>` |
+| AAAA | `pb`      | `<server IPv6>` *(optional — only if the box's IPv6 works)* |
+| AAAA | `preview` | `<server IPv6>` *(optional)* |
 
-Wait for propagation: `dig +short casadecuentos.ch`.
+A-records alone suffice. The committed [`Caddyfile`](../deploy/Caddyfile) and
+`ORIGIN` are preconfigured for `preview.casadecuentos.ch`.
+
+**Go live later:** add `@` + `www` A/AAAA → the box, uncomment the apex/www
+blocks in the `Caddyfile`, switch `ORIGIN` to `https://casadecuentos.ch`, point
+the Stripe webhook at the apex, and `systemctl reload caddy && systemctl restart
+casadecuentos`.
+
+Wait for propagation: `dig +short preview.casadecuentos.ch`.
 
 ## 3. Install packages
 
@@ -183,32 +193,42 @@ Verify it's all up:
 
 ```sh
 systemctl status pocketbase casadecuentos caddy --no-pager
-curl -I https://casadecuentos.ch              # 200, valid cert
-curl -I https://pb.casadecuentos.ch/api/health
+curl -I https://preview.casadecuentos.ch          # 200, valid cert
+curl -I https://pb.casadecuentos.ch/api/files/     # public file endpoint reachable
 # OG image must resolve to a public PB URL and load in a browser:
-curl -s https://casadecuentos.ch/libros/<slug> | grep og:image
+curl -s https://preview.casadecuentos.ch/libros/<slug> | grep og:image
 ```
 
 ## 9. PocketBase post-install
 
-Open `https://pb.<domain>/_/` and:
+The `Caddyfile` keeps the admin UI **off the public internet** (only
+`/api/files/*` is public). Reach it from your laptop via an SSH tunnel:
+
+```sh
+ssh -L 8090:127.0.0.1:8090 <user>@<vps-ip>      # then open http://localhost:8090/_/
+```
+
+Then:
 
 1. Create the **superuser** — use the **same** email/password you put in
    `sveltekit.env` (`POCKETBASE_ADMIN_EMAIL` / `_PASSWORD`), since the BFF
-   authenticates as that user. (Or:
+   authenticates as that user. (Or, right on the box:
    `pocketbase superuser upsert <email> <pw> --dir=/var/lib/pocketbase/pb_data`.)
 2. **Settings → Application:** set the Application URL to `https://pb.<domain>`.
 3. **Settings → trusted proxy:** trust the `X-Forwarded-For` header (Caddy is in
    front) so logs/rate-limits see the real client IP.
-4. **Audit collection API rules** (the API is public): `orders`, `rsvps`,
-   `contact_messages` must **not** be publicly listable/readable — their rules
-   should require the superuser. Public read-only: `books`, `genres`,
-   `publishers`, `book_languages`, `banners`, `featured_books`, `events`.
+4. **Audit collection API rules** (defense in depth — the collections API isn't
+   public under the hardened `Caddyfile`, but keep this correct): `orders`,
+   `rsvps`, `contact_messages` must require the superuser; public read-only are
+   `books`, `genres`, `publishers`, `book_languages`, `banners`,
+   `featured_books`, `events`.
 
 ## 10. Stripe production webhook + smoke test
 
 1. Stripe dashboard → **Developers → Webhooks → Add endpoint**:
-   `https://<domain>/api/webhooks/stripe`, event `checkout.session.completed`.
+   `https://preview.casadecuentos.ch/api/webhooks/stripe`, event
+   `checkout.session.completed`. (At go-live, change this to the apex — or add a
+   second endpoint — and update `STRIPE_WEBHOOK_SECRET`.)
 2. Copy the endpoint's **Signing secret** (`whsec_…`) into
    `/etc/casadecuentos/sveltekit.env` (`STRIPE_WEBHOOK_SECRET`), then
    `systemctl restart casadecuentos`. (The local `stripe listen` secret does
