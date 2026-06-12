@@ -1,12 +1,12 @@
-# Deployment runbook — Casa de Cuentos (Phase 12: ops / launch)
+# Deployment runbook — Casa de Cuentos (Debian 13 + Caddy)
 
-Reproducible, cheap, durable hosting for the storefront on **one Hetzner VPS**
-running **NixOS**: PocketBase + SvelteKit + Caddy as systemd services, secrets
-via **sops-nix**, automatic HTTPS, and automated backups.
+Simple, cheap, durable hosting on **one Hetzner VPS** running **Debian 13
+(Trixie)**: PocketBase + SvelteKit (`node build`) as **systemd services** behind
+**Caddy** (automatic HTTPS). Secrets live in root-only env files. Backups use
+PocketBase's built-in scheduled backup-to-S3.
 
-All declarative config lives in [`nix/`](../nix). This runbook covers the steps
-that can't be expressed in Nix: provisioning the box, DNS, secrets, email
-authentication, and verification.
+Config artifacts live in [`deploy/`](../deploy): two systemd units, the
+`Caddyfile`, two `*.env.example` templates, and `update.sh`.
 
 ---
 
@@ -32,10 +32,10 @@ authentication, and verification.
 
 **Why PocketBase is public** (`pb.<domain>`): the storefront mints every book
 cover and OG image URL from the PocketBase files endpoint
-(`pb.files.getURL → /api/files/...`). Those URLs are loaded directly by browsers
-and by the WhatsApp/Instagram link-preview crawlers, so the files endpoint must
-be publicly reachable. We give PocketBase its own subdomain and point
-`POCKETBASE_URL` at it. On the box, `networking.hosts` pins `pb.<domain>` to
+(`pb.files.getURL → /api/files/...`). Those are loaded directly by browsers and
+by the WhatsApp/Instagram link-preview crawlers, so the files endpoint must be
+publicly reachable. We give PocketBase its own subdomain and point
+`POCKETBASE_URL` at it. On the box, an `/etc/hosts` entry pins `pb.<domain>` to
 `127.0.0.1`, so the BFF's own PocketBase calls stay local (over Caddy's valid
 cert) while the public DNS record serves everyone else.
 
@@ -43,283 +43,230 @@ cert) while the public DNS record serves everyone else.
 > This is PocketBase's normal deployment mode, but it makes your collection
 > **API rules** the security boundary — see step 9.
 
----
-
-## 0. Prerequisites (on your laptop)
-
-- Nix with flakes (`nix --version`)
-- `sops`, `age`, `ssh-to-age` (`nix shell nixpkgs#sops nixpkgs#age nixpkgs#ssh-to-age`)
-- A Hetzner Cloud account and an SSH keypair
-- **The repo must be git-tracked.** The flake lives at the repo root, and Nix
-  copies the flake's source tree into `/nix/store` to evaluate it. In a
-  **non-git** directory Nix copies *everything* — including `.env` (real
-  secrets), `pb_data`, `node_modules` — which is slow and leaks secrets into the
-  world-readable store. With a git tree, Nix honours `.gitignore` (which already
-  excludes those). This repo uses **jj**, so colocate a git backing once:
-
-  ```sh
-  jj git init --colocate     # adds a .git backing; .gitignore now filters the flake
-  ```
-
-  (Plain `git init` works too.) New/edited files must be snapshotted before they
-  are visible to the flake — `jj` auto-snapshots the working copy; with plain
-  git, `git add -A` first. Verify nothing sensitive is included:
-  `nix flake archive --json | …` or simply `git status --ignored`.
+Replace `casadecuentos.ch` with your real domain throughout (in the `Caddyfile`,
+both `.env` files, and `/etc/hosts`).
 
 ---
 
-## 1. Provision the Hetzner VPS and install NixOS
+## 1. Create the VPS + first login
 
-This runbook uses the **build-on-the-box** model: you install NixOS on the
-server yourself, then build the flake natively on it (`x86_64-linux`), so your
-Mac never has to cross-build and there's no `nixos-anywhere`/kexec.
+- **Type:** CX22 (Intel, 2 vCPU/4 GB) or CPX21 (AMD) — both fine. Avoid the ARM
+  CAX line only if you'd download the wrong PocketBase/Node arch; if you *do*
+  use CAX, swap `linux_amd64` → `linux_arm64` for the PocketBase binary and use
+  the arm64 Node — everything else is identical.
+- **Image:** Debian 13.
+- **SSH key:** add yours.
+- Note the **public IPv4 + IPv6**, then log in as `root`.
 
-Create a server in the Hetzner Cloud console:
+Basic hardening:
 
-- **Type:** confirm which "cpx22" you meant — it isn't a real Hetzner type:
-  - **CX22** — Intel, 2 vCPU / 4 GB / **40 GB** disk (cheapest that fits)
-  - **CPX21** — AMD, 3 vCPU / 4 GB / **80 GB** disk
-  Either works; the Nix config targets `x86_64-linux` for both. (Avoid the ARM
-  **CAX** line — it's `aarch64`, which this config is not built for.)
-- **SSH key:** add yours so you can log in.
-- Note the server's **public IPv4 and IPv6**.
-
-**Install NixOS** using whichever path you've chosen — a Hetzner NixOS image, or
-mounting the NixOS ISO via the console and installing manually (`parted` →
-`nixos-generate-config` → `nixos-install`). The result you need before
-continuing: you can `ssh` into a running NixOS box, and it has a generated
-`/etc/nixos/hardware-configuration.nix`.
-
-> 4 GB RAM is enough to build this closure but it's tight. If a build OOMs, add
-> swap — set `zramSwap.enable = true;` (already cheap to add to
-> `configuration.nix`) or a `swapDevices` entry, and retry.
+```sh
+apt update && apt -y upgrade
+apt -y install ufw
+ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw --force enable
+```
 
 ## 2. DNS records
 
-Point the domain at the box (do this early so ACME can issue certs):
+Point the domain at the box (do this early so Caddy can get certs):
 
-| Type | Name  | Value             |
-| ---- | ----- | ----------------- |
-| A    | `@`   | `<server IPv4>`   |
-| AAAA | `@`   | `<server IPv6>`   |
-| A    | `www` | `<server IPv4>`   |
-| AAAA | `www` | `<server IPv6>`   |
-| A    | `pb`  | `<server IPv4>`   |
-| AAAA | `pb`  | `<server IPv6>`   |
+| Type | Name  | Value           |
+| ---- | ----- | --------------- |
+| A    | `@`   | `<server IPv4>` |
+| AAAA | `@`   | `<server IPv6>` |
+| A    | `www` | `<server IPv4>` |
+| AAAA | `www` | `<server IPv6>` |
+| A    | `pb`  | `<server IPv4>` |
+| AAAA | `pb`  | `<server IPv6>` |
 
-Wait for propagation (`dig +short casadecuentos.ch`).
+Wait for propagation: `dig +short casadecuentos.ch`.
 
-## 3. Set your apex domain + SSH key in the config
-
-Edit [`nix/configuration.nix`](../nix/configuration.nix):
-
-- `casadecuentos.domain` → your real apex domain
-- `casadecuentos.acmeEmail` → your email
-- `users.users.root.openssh.authorizedKeys.keys` → your SSH **public** key
-
-Edit [`nix/modules/backups.nix`](../nix/modules/backups.nix) → `s3Endpoint`,
-`s3Region`, `s3Bucket` for your Hetzner Object Storage bucket.
-
-## 4. Bring the box's hardware config + bootloader into the flake
-
-The NixOS installer generated the box's real disk/hardware config. Copy it into
-the flake (which imports `nix/hardware-configuration.nix`):
+## 3. Install packages
 
 ```sh
-scp root@<server-ip>:/etc/nixos/hardware-configuration.nix nix/hardware-configuration.nix
+# Node.js 22 (NodeSource) + pnpm via corepack
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt -y install nodejs git unzip
+corepack enable
+corepack prepare pnpm@10.15.1 --activate
+
+# Caddy (official apt repo)
+apt -y install debian-keyring debian-archive-keyring apt-transport-https curl
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+  | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+  | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update && apt -y install caddy
 ```
 
-Set the **bootloader** in [`nix/configuration.nix`](../nix/configuration.nix) to
-match how the box boots — check on the box:
+## 4. Create the service user + directories
 
 ```sh
-ssh root@<server-ip> '[ -d /sys/firmware/efi ] && echo UEFI || echo BIOS; lsblk'
+useradd --system --home /opt/casadecuentos --shell /usr/sbin/nologin casadecuentos || true
+mkdir -p /opt/casadecuentos /var/lib/pocketbase/pb_data /etc/casadecuentos
+chown -R casadecuentos:casadecuentos /var/lib/pocketbase
 ```
 
-- **BIOS** (typical Hetzner) → keep the `boot.loader.grub` block; set `device`
-  to the boot disk from `lsblk` (usually `/dev/sda`).
-- **UEFI** → comment grub out and enable systemd-boot (snippet is in the file).
+## 5. Get the code onto the box
 
-## 5. Encrypt the secrets to the host
-
-The box already has its own SSH host key (generated at install), so there's no
-pre-generation or circular-dependency dance:
+Push this repo to a (private) GitHub repo, then clone it. The app dir stays
+owned by `root` (the service only needs to *read* it):
 
 ```sh
-# Your personal (admin) age key — lets you edit secrets:
-mkdir -p ~/.config/sops/age
-age-keygen -o ~/.config/sops/age/keys.txt        # prints your PUBLIC key: age1...
-
-# The box's host key → age recipient:
-ssh root@<server-ip> 'cat /etc/ssh/ssh_host_ed25519_key.pub' | ssh-to-age
+git clone https://github.com/<you>/casadecuentos-v2 /opt/casadecuentos
+cd /opt/casadecuentos
 ```
 
-Put the **admin** key as `&admin` and the **host** `age1...` as `&host` in
-[`nix/.sops.yaml`](../nix/.sops.yaml), then create the encrypted file:
+(No remote? `rsync -a --exclude node_modules --exclude .svelte-kit --exclude build \
+--exclude pb_data --exclude .bin --exclude .jj --exclude .env ./ root@<ip>:/opt/casadecuentos/`
+from your laptop instead.)
+
+## 6. PocketBase
 
 ```sh
-cd nix
-cp secrets/secrets.example.yaml secrets/secrets.yaml
-sops secrets/secrets.yaml     # $EDITOR opens; fill REAL values; save → encrypted
+# Binary (pinned 0.39.1 — the version the migrations + Goja hook were built for)
+curl -fsSL -o /tmp/pb.zip \
+  https://github.com/pocketbase/pocketbase/releases/download/v0.39.1/pocketbase_0.39.1_linux_amd64.zip
+unzip -o /tmp/pb.zip pocketbase -d /usr/local/bin/
+chmod +x /usr/local/bin/pocketbase
+
+# Env file (Resend key for the shipped-email hook)
+cp /opt/casadecuentos/deploy/pocketbase.env.example /etc/casadecuentos/pocketbase.env
+$EDITOR /etc/casadecuentos/pocketbase.env
+chmod 600 /etc/casadecuentos/pocketbase.env
+
+# systemd unit
+cp /opt/casadecuentos/deploy/pocketbase.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now pocketbase
+journalctl -u pocketbase -n 20 --no-pager      # should log the applied migrations + loaded hook
 ```
 
-Leave `stripe_webhook_secret` as a placeholder for now — you mint the real one
-in step 10 and re-`sops` it then. The encrypted `secrets.yaml` **is** safe to
-commit (that's the point of sops). See
-[`secrets.example.yaml`](../nix/secrets/secrets.example.yaml) for the full key
-list (Stripe, PocketBase admin, Resend, S3, restic password).
+The unit runs PocketBase on `127.0.0.1:8090`, reading migrations/hooks from the
+cloned repo and storing data in `/var/lib/pocketbase/pb_data`.
 
-## 6. Get the flake onto the box and build it
-
-Commit everything first (domain edits, `hardware-configuration.nix`, the
-encrypted `secrets.yaml`). The box builds the closure **natively** — your Mac
-never cross-builds.
-
-**Option A — git (recommended; clean updates):** push to a private GitHub repo,
-then on the box:
+## 7. SvelteKit (build + run)
 
 ```sh
-ssh root@<server-ip>
-git clone https://github.com/<you>/casadecuentos-v2 /root/casadecuentos
-cd /root/casadecuentos
+cd /opt/casadecuentos
+pnpm install --frozen-lockfile
+pnpm build                                     # produces ./build (adapter-node)
+
+# Env file (PocketBase URL, ORIGIN, Stripe/Resend/PB-admin keys)
+cp deploy/sveltekit.env.example /etc/casadecuentos/sveltekit.env
+$EDITOR /etc/casadecuentos/sveltekit.env
+chmod 600 /etc/casadecuentos/sveltekit.env
+
+# systemd unit
+cp deploy/casadecuentos.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now casadecuentos
+journalctl -u casadecuentos -n 20 --no-pager   # "Listening on http://127.0.0.1:3000"
 ```
 
-**Option B — rsync (no remote):** copy the tree from your laptop and make it a
-git repo on the box (flakes only see git-tracked files):
+> The app reads env vars at **runtime** (`$env/dynamic/private`), so the build
+> needs no secrets — only the running service does, via the env file.
+
+## 8. Caddy + the /etc/hosts pin
 
 ```sh
-rsync -a --exclude node_modules --exclude build --exclude .svelte-kit \
-  --exclude pb_data --exclude .bin --exclude .jj --exclude .env \
-  ./ root@<server-ip>:/root/casadecuentos/
-ssh root@<server-ip> 'cd /root/casadecuentos && git init -q && git add -A && \
-  git -c user.email=a@b -c user.name=deploy commit -qm deploy'
+# Pin the PocketBase subdomain to loopback so the BFF reaches it locally
+echo "127.0.0.1 pb.casadecuentos.ch" >> /etc/hosts
+
+# Install the Caddyfile (edit domain + ACME email first)
+cp /opt/casadecuentos/deploy/Caddyfile /etc/caddy/Caddyfile
+$EDITOR /etc/caddy/Caddyfile
+systemctl reload caddy
 ```
 
-Then build + switch **on the box** (native `x86_64-linux`):
+Verify it's all up:
 
 ```sh
-cd /root/casadecuentos
-nixos-rebuild switch --flake .#casadecuentos \
-  --extra-experimental-features 'nix-command flakes'   # first run only
-```
-
-(After the first switch, flakes are enabled system-wide and you can drop that
-flag. Run as root, or `sudo nixos-rebuild …`.)
-
-> First build **fails on the `pnpmDeps` TOFU hash** (the PocketBase hash is
-> already pinned). Read `got: sha256-…`, paste it into
-> [`pkgs/sveltekit.nix`](../nix/pkgs/sveltekit.nix), commit/re-sync, rebuild.
-> If the build OOMs on 4 GB RAM, add swap (`zramSwap.enable = true;` in
-> `configuration.nix`) and retry.
-
-## 7. Verify it came up
-
-```sh
-systemctl status pocketbase sveltekit caddy --no-pager   # on the box
-curl -I https://casadecuentos.ch          # 200, valid cert
+systemctl status pocketbase casadecuentos caddy --no-pager
+curl -I https://casadecuentos.ch              # 200, valid cert
 curl -I https://pb.casadecuentos.ch/api/health
+# OG image must resolve to a public PB URL and load in a browser:
+curl -s https://casadecuentos.ch/libros/<slug> | grep og:image
 ```
-
-> **ORIGIN / OG tags:** `ORIGIN=https://<domain>` and
-> `POCKETBASE_URL=https://pb.<domain>` are already set in
-> [`web.nix`](../nix/modules/web.nix). Verify a product page's `og:image`
-> resolves publicly:
-> `curl -s https://casadecuentos.ch/libros/<slug> | grep og:image` → the URL
-> should be `https://pb.<domain>/api/files/...` and load in a browser.
-
-## 8. Deploying updates
-
-- **git:** push from your laptop, then on the box
-  `cd /root/casadecuentos && git pull && nixos-rebuild switch --flake .#casadecuentos`.
-- **rsync:** re-sync the tree, re-commit on the box, then `nixos-rebuild switch`.
-
-A new `pb_migrations/*.js` only applies when the `pocketbase` unit restarts — the
-rebuild restarts it, so migrations land on deploy.
 
 ## 9. PocketBase post-install
 
 Open `https://pb.<domain>/_/` and:
 
 1. Create the **superuser** — use the **same** email/password you put in
-   `secrets.yaml` (`pocketbase_admin_email` / `..._password`), since the BFF
-   authenticates as that user. (Or create via SSH:
+   `sveltekit.env` (`POCKETBASE_ADMIN_EMAIL` / `_PASSWORD`), since the BFF
+   authenticates as that user. (Or:
    `pocketbase superuser upsert <email> <pw> --dir=/var/lib/pocketbase/pb_data`.)
 2. **Settings → Application:** set the Application URL to `https://pb.<domain>`.
-3. **Settings → trusted proxy:** set it to trust the `X-Forwarded-For` header
-   (Caddy is in front), so rate-limits/logs see the real client IP.
-4. **Audit collection API rules** (the API is now public): confirm
-   `orders`, `rsvps`, and `contact_messages` are **not** publicly listable/
-   readable — list/view/update rules should require the superuser. Public
-   collections should be only `books`, `genres`, `publishers`,
-   `book_languages`, `banners`, `featured_books`, `events` (read-only).
+3. **Settings → trusted proxy:** trust the `X-Forwarded-For` header (Caddy is in
+   front) so logs/rate-limits see the real client IP.
+4. **Audit collection API rules** (the API is public): `orders`, `rsvps`,
+   `contact_messages` must **not** be publicly listable/readable — their rules
+   should require the superuser. Public read-only: `books`, `genres`,
+   `publishers`, `book_languages`, `banners`, `featured_books`, `events`.
 
 ## 10. Stripe production webhook + smoke test
 
-The local `stripe listen` secret does **not** work in prod.
-
 1. Stripe dashboard → **Developers → Webhooks → Add endpoint**:
-   `https://<domain>/api/webhooks/stripe`, event
-   `checkout.session.completed`.
-2. Copy the endpoint's **Signing secret** (`whsec_…`) into `secrets.yaml`
-   (`stripe_webhook_secret`), re-deploy (step 8).
+   `https://<domain>/api/webhooks/stripe`, event `checkout.session.completed`.
+2. Copy the endpoint's **Signing secret** (`whsec_…`) into
+   `/etc/casadecuentos/sveltekit.env` (`STRIPE_WEBHOOK_SECRET`), then
+   `systemctl restart casadecuentos`. (The local `stripe listen` secret does
+   **not** work in prod.)
 3. **Smoke test with a real UI checkout** (not `stripe trigger` — the signature
    path needs a genuine session): add a book to the cart on the live site, pay
-   with a Stripe **test card**, then confirm in PocketBase admin that the order
-   flipped `pending → paid`, stock decremented, and the confirmation email sent.
+   with a Stripe **test card**, then confirm in the admin that the order flipped
+   `pending → paid`, stock decremented, and the confirmation email sent.
 
 ## 11. Email authentication (Resend, dedicated subdomain)
 
 In Resend, add a sending domain — use a **dedicated subdomain** (e.g.
-`mail.casadecuentos.ch` / `send.casadecuentos.ch`) so the storefront's
-reputation is isolated. Resend gives you DNS records to add:
+`mail.casadecuentos.ch`) so the storefront's reputation is isolated. Add the DNS
+records Resend shows:
 
 - **SPF** — `TXT` on the subdomain: `v=spf1 include:_spf.resend.com ~all`
-- **DKIM** — the `CNAME`/`TXT` record(s) Resend shows (its public key)
+- **DKIM** — the `CNAME`/`TXT` record(s) Resend gives (its public key)
 - **DMARC** — `TXT` at `_dmarc.<domain>`:
   `v=DMARC1; p=quarantine; rua=mailto:dmarc@<domain>`
 
-Set `MAIL_FROM` to an address **on that verified domain** — it's currently
-`Casa de Cuentos <pedidos@<domain>>` in [`web.nix`](../nix/modules/web.nix);
-change the local part/subdomain to match Resend. Verify with a test order and
-check the message passes SPF/DKIM/DMARC (Gmail "Show original", or
-[mail-tester.com](https://www.mail-tester.com)).
+Set `MAIL_FROM` (in **both** env files) to an address on that verified domain.
+Verify with a test order: Gmail "Show original" or
+[mail-tester.com](https://www.mail-tester.com) should show SPF/DKIM/DMARC pass.
 
-## 12. Backups — and verify a restore
+## 12. Backups — PocketBase backup-to-S3 (+ verify a restore)
 
-Create a Hetzner **Object Storage** bucket (or any S3-compatible target), put
-its credentials in `secrets.yaml` (`s3_access_key_id`, `s3_secret_access_key`)
-and set the bucket/endpoint in `backups.nix`.
+Create a Hetzner **Object Storage** bucket (S3-compatible). In the PocketBase
+admin → **Settings → Backups**:
 
-- **Litestream** streams `data.db` continuously (`systemctl status litestream`).
-- **restic** snapshots the image dir nightly at 03:30
-  (`systemctl status restic-backups-images.timer`).
+- Set the **S3 storage** endpoint, region, bucket, access key + secret.
+- Enable a **cron schedule** (e.g. `0 3 * * *` — nightly 03:00). PocketBase zips
+  the database **and** the uploaded images into one archive and uploads it.
 
-**Verify restore (required — don't skip):**
+**Verify a restore (required — don't skip):** download the latest backup from
+the bucket and confirm it restores. Either use the admin's **"restore backup"**
+on a throwaway instance, or:
 
 ```sh
-# DB: restore the streamed SQLite to a scratch path and open it
-litestream restore -o /tmp/restore-test.db \
-  s3://casadecuentos-backups/litestream/data.db
-sqlite3 /tmp/restore-test.db '.tables'        # should list the collections
-
-# Images: list + restore a restic snapshot to a scratch dir
-restic -r s3:<endpoint>/<bucket>/restic-images snapshots
-restic -r s3:<endpoint>/<bucket>/restic-images restore latest --target /tmp/img-test
+# fetch a backup zip from the bucket (s3cmd/rclone/aws), then:
+unzip -o backup.zip -d /tmp/pb-restore
+sqlite3 /tmp/pb-restore/data.db '.tables'      # should list the collections
+ls /tmp/pb-restore/storage                      # uploaded images present
 ```
 
-(Run on the box where the S3 env + restic password are present, e.g. via
-`systemd-run --pty --property=EnvironmentFile=...` or by sourcing the rendered
-env files under `/run/secrets-rendered/`.)
+> Want continuous (sub-second-RPO) DB backup instead? Install the `litestream`
+> binary + a systemd unit streaming `/var/lib/pocketbase/pb_data/data.db` to S3.
+> PocketBase's built-in scheduled backup is simpler and covers images too — fine
+> for this store.
 
-## 13. Ongoing operations
+## 13. Updates + ongoing operations
 
-- **Deploy changes:** commit/push (or re-sync), then **on the box**
-  `cd /root/casadecuentos && git pull && nixos-rebuild switch --flake .#casadecuentos`.
-  A new `pb_migrations/*.js` only applies when the `pocketbase` unit restarts —
-  the rebuild restarts it, so migrations land on deploy.
-- **Rotate a secret:** `cd nix && sops secrets/secrets.yaml`, edit, save, re-deploy.
-- **Rotate recipients:** edit `nix/.sops.yaml`, then (from `nix/`)
-  `sops updatekeys secrets/secrets.yaml`.
+- **Deploy a code change:** push to GitHub, then on the box
+  `sudo /opt/casadecuentos/deploy/update.sh` (pulls, `pnpm install`, `pnpm
+  build`, restarts both services — see [`deploy/update.sh`](../deploy/update.sh)).
+  New `pb_migrations/*.js` apply on the PocketBase restart it does.
+- **Change a secret:** edit `/etc/casadecuentos/*.env`, then `systemctl restart
+  casadecuentos` (and/or `pocketbase`).
+- **Logs:** `journalctl -u casadecuentos -f` / `-u pocketbase -f` / `-u caddy -f`.
 - **Owner's daily loop** stays entirely in `https://pb.<domain>/_/` (catalog,
   featured, banners, events, RSVPs, contact messages, order fulfillment).
 
@@ -327,12 +274,12 @@ env files under `/run/secrets-rendered/`.)
 
 ## Acceptance-criteria mapping (Phase 12)
 
-| Criterion                                                | Where                                                |
-| -------------------------------------------------------- | ---------------------------------------------------- |
-| NixOS stands up PB + SvelteKit + Caddy as systemd units  | `nix/modules/web.nix`, `nix/modules/caddy.nix`       |
-| Domain A/AAAA → VPS; automatic HTTPS                      | step 2 + `services.caddy` (ACME)                     |
-| Secrets via sops-nix, never in `/nix/store`              | `nix/modules/secrets.nix`, `.sops.yaml`, step 5      |
-| Stripe webhook at a stable public HTTPS URL              | `caddy.nix` apex proxy + step 10                     |
-| Automated DB backups + image snapshots, restore-verified | `nix/modules/backups.nix` + step 12                  |
-| SPF + DKIM + DMARC from a dedicated subdomain            | step 11                                              |
-| Owner operates everything from PocketBase admin          | step 9 (public `pb.<domain>/_/`)                     |
+| Criterion                                                | Where                                            |
+| -------------------------------------------------------- | ------------------------------------------------ |
+| PB + SvelteKit + Caddy as systemd services on one VPS    | `deploy/*.service`, `deploy/Caddyfile`, steps 6–8 |
+| Domain A/AAAA → VPS; automatic HTTPS                     | step 2 + Caddy (ACME)                            |
+| Secrets injected at runtime, not world-readable          | `/etc/casadecuentos/*.env` (chmod 600), steps 6–7 |
+| Stripe webhook at a stable public HTTPS URL              | Caddy apex proxy + step 10                       |
+| Automated DB + image backups, restore-verified           | step 12 (PocketBase backup-to-S3)                |
+| SPF + DKIM + DMARC from a dedicated subdomain            | step 11                                          |
+| Owner operates everything from PocketBase admin          | step 9 (public `pb.<domain>/_/`)                 |

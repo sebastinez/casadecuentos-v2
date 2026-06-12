@@ -1,0 +1,24 @@
+# /etc/caddy/Caddyfile — Casa de Cuentos. Caddy handles TLS (Let's Encrypt)
+# automatically. Replace casadecuentos.ch with your real domain and set the
+# ACME email below. Reload after edits: `sudo systemctl reload caddy`.
+
+{
+	email me@sebastinez.dev
+}
+
+# Storefront + /api/checkout, /api/webhooks/stripe, /api/catalogo
+casadecuentos.ch {
+	reverse_proxy 127.0.0.1:3000
+}
+
+# www → apex
+www.casadecuentos.ch {
+	redir https://casadecuentos.ch{uri} permanent
+}
+
+# PocketBase: public /api/files (book covers + OG images) and the admin UI.
+# Its collection API rules are the security boundary — keep orders/rsvps/
+# contact_messages superuser-only (see DEPLOY.md step 9).
+pb.casadecuentos.ch {
+	reverse_proxy 127.0.0.1:8090
+}

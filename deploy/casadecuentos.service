@@ -1,0 +1,25 @@
+[Unit]
+Description=Casa de Cuentos storefront (SvelteKit BFF)
+After=network.target pocketbase.service
+Wants=pocketbase.service
+
+[Service]
+User=casadecuentos
+Group=casadecuentos
+WorkingDirectory=/opt/casadecuentos
+# ORIGIN, POCKETBASE_URL, Stripe/Resend/PB-admin keys, SHIPPING_RATE_CHF.
+# (chmod 600, owned by root.)
+EnvironmentFile=/etc/casadecuentos/sveltekit.env
+# adapter-node's build/ is self-contained — `node build` needs no node_modules.
+ExecStart=/usr/bin/node /opt/casadecuentos/build
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

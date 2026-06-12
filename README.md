@@ -99,11 +99,13 @@ fulfilment.
 
 ## Deployment (production)
 
-Production runs on one Hetzner VPS with **NixOS** — PocketBase + SvelteKit +
-Caddy as systemd services, secrets via sops-nix, automatic HTTPS, and Litestream
-+ restic backups. All declarative config is in [`nix/`](nix); the step-by-step
-runbook (provisioning, DNS, secrets, Stripe webhook, email auth, restore
-verification) is [`docs/DEPLOY.md`](docs/DEPLOY.md).
+Production runs on one Hetzner VPS with **Debian 13** — PocketBase + SvelteKit
+(`node build`) as **systemd services** behind **Caddy** (automatic HTTPS),
+secrets in root-only env files, backups via PocketBase's scheduled backup-to-S3.
+The systemd units, `Caddyfile`, env templates, and `update.sh` are in
+[`deploy/`](deploy); the step-by-step runbook (provisioning, DNS, secrets,
+Stripe webhook, email auth, restore verification) is
+[`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 PocketBase is served at `pb.<domain>` so book-cover/OG image URLs (minted from
 its files endpoint) are publicly fetchable; on the box that hostname resolves to

@@ -1,0 +1,28 @@
+[Unit]
+Description=PocketBase (Casa de Cuentos backend)
+After=network.target
+
+[Service]
+User=casadecuentos
+Group=casadecuentos
+WorkingDirectory=/var/lib/pocketbase
+# RESEND_API_KEY + MAIL_FROM — the shipped-email hook reads them via $os.getenv,
+# so they must reach THIS process. (chmod 600, owned by root.)
+EnvironmentFile=/etc/casadecuentos/pocketbase.env
+ExecStart=/usr/local/bin/pocketbase serve \
+  --dir=/var/lib/pocketbase/pb_data \
+  --migrationsDir=/opt/casadecuentos/pb_migrations \
+  --hooksDir=/opt/casadecuentos/pb_hooks \
+  --http=127.0.0.1:8090
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/pocketbase
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

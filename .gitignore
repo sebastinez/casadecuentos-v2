@@ -27,6 +27,5 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-# The decrypted sops keyfile must never be committed. (The sops-ENCRYPTED
-# nix/secrets/secrets.yaml IS committed — that's the point of sops.)
-/nix/secrets/*.dec.yaml
+# Production secrets live in /etc/casadecuentos/*.env on the server (chmod 600),
+# never in the repo. Only the deploy/*.env.example templates are committed.
