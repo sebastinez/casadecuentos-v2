@@ -1,19 +1,21 @@
 # /etc/caddy/Caddyfile — Casa de Cuentos. Caddy handles TLS (Let's Encrypt)
-# automatically. Replace casadecuentos.ch with your real domain and set the
-# ACME email below. Reload after edits: `sudo systemctl reload caddy`.
+# automatically, one cert per hostname. Reload after edits:
+#   sudo systemctl reload caddy
+#
+# PREVIEW MODE (below): only the `preview.` and `pb.` subdomains point at this
+# box, so the live store can stay on Shopify at the apex. Each subdomain's cert
+# issues independently via HTTP-01 — the apex does NOT need to point here.
+# To GO LIVE later: point casadecuentos.ch + www A/AAAA at this box, uncomment
+# the apex/www blocks at the bottom, switch ORIGIN to https://casadecuentos.ch,
+# and reload.
 
 {
 	email me@sebastinez.dev
 }
 
-# Storefront + /api/checkout, /api/webhooks/stripe, /api/catalogo
-casadecuentos.ch {
+# Public storefront (preview). Serves the SvelteKit BFF + /api/* routes.
+preview.casadecuentos.ch {
 	reverse_proxy 127.0.0.1:3000
-}
-
-# www → apex
-www.casadecuentos.ch {
-	redir https://casadecuentos.ch{uri} permanent
 }
 
 # PocketBase: public /api/files (book covers + OG images) and the admin UI.
@@ -22,3 +24,11 @@ www.casadecuentos.ch {
 pb.casadecuentos.ch {
 	reverse_proxy 127.0.0.1:8090
 }
+
+# ── GO LIVE: uncomment when the apex DNS points here ─────────────────────────
+# casadecuentos.ch {
+# 	reverse_proxy 127.0.0.1:3000
+# }
+# www.casadecuentos.ch {
+# 	redir https://casadecuentos.ch{uri} permanent
+# }
