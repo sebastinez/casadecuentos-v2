@@ -155,7 +155,7 @@
 					<button
 						type="submit"
 						disabled={submitting}
-						class="rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-gray-300"
+						class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700 disabled:cursor-not-allowed disabled:bg-terracotta-200"
 					>
 						{submitting ? t('rsvp.submitting', locale) : t('rsvp.submit', locale)}
 					</button>

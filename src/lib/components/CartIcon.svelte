@@ -38,7 +38,7 @@
 	</svg>
 	{#if count > 0}
 		<span
-			class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-900 px-1 text-xs font-medium text-white"
+			class="absolute -top-0.5 -right-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-terracotta-600 px-1 text-xs font-medium text-white"
 			aria-hidden="true"
 		>
 			{count}

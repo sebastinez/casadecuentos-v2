@@ -24,7 +24,7 @@
 		<p class="mx-auto mt-3 max-w-prose text-gray-600">{t('home.tagline', locale)}</p>
 		<a
 			href="/libros"
-			class="mt-6 inline-block rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700"
+			class="mt-6 inline-block rounded-md bg-terracotta-600 px-4 py-2 text-sm font-medium text-white hover:bg-terracotta-700"
 		>
 			{t('nav.books', locale)}
 		</a>
@@ -92,7 +92,7 @@
 							<p class="text-xs text-gray-600">{book.author}</p>
 						{/if}
 						<div class="mt-2 flex items-center justify-between">
-							<span class="text-sm font-semibold">{priceFmt.format(book.price)}</span>
+							<span class="text-sm font-semibold text-terracotta-700">{priceFmt.format(book.price)}</span>
 							{#if book.stock <= 0}
 								<span class="text-xs text-red-600">{t('books.outOfStock', locale)}</span>
 							{/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
+	import logo from '$lib/assets/logo.webp';
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
 	import { site } from '$lib/site';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
@@ -34,15 +35,24 @@
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="flex min-h-screen flex-col">
-	<header class="sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur">
-		<nav class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-			<a href="/" class="text-lg font-semibold tracking-tight">{t('site.name', locale)}</a>
+	<header class="sticky top-0 z-10 border-b border-terracotta-100 bg-cream/90 backdrop-blur">
+		<nav class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
+			<a
+				href="/"
+				class="flex items-center gap-2 font-serif text-xl font-semibold tracking-tight text-terracotta-700 hover:text-terracotta-800"
+			>
+				<img src={logo} alt="" width="80" height="80" class="h-30 w-30 shrink-0" />
+			</a>
 			<div class="flex items-center gap-4">
 				<!-- Primary nav collapses into the mobile drawer below the `md` breakpoint;
 				     search + cart stay visible at all widths (stories 35/36). -->
 				<ul class="hidden items-center gap-4 text-sm md:flex">
 					{#each nav as item (item.href)}
-						<li><a href={item.href} class="hover:underline">{item.label}</a></li>
+						<li>
+							<a href={item.href} class="text-gray-700 hover:text-terracotta-700 hover:underline"
+								>{item.label}</a
+							>
+						</li>
 					{/each}
 				</ul>
 				<HeaderSearch />
@@ -56,7 +66,7 @@
 		{@render children()}
 	</main>
 
-	<footer class="border-t border-gray-200 bg-gray-50">
+	<footer class="border-t border-terracotta-100 bg-terracotta-50/50">
 		<div class="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-600">
 			<div class="flex flex-col gap-8 sm:flex-row sm:justify-between">
 				<nav aria-label={t('footer.policies', locale)}>

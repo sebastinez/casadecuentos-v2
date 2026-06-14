@@ -1,3 +1,96 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+/*
+ * Casa de Cuentos warm palette.
+ *
+ * Drawn from the brand logo: the terracotta-brown hedgehog + "Casa de Cuentos"
+ * script (primary), the sage foliage, honey/gold blooms, and dusty-rose petals,
+ * over a soft cream ground.
+ *
+ * Two moves:
+ *  1. The default `gray` scale is intentionally SHADOWED with Tailwind's warm
+ *     `stone` values, so the existing gray-heavy chrome (nav, footer, body copy)
+ *     warms up with zero markup changes. Anything using `*-gray-*` is now stone.
+ *  2. Four saturated brand scales (terracotta/sage/honey/blush) are added for
+ *     deliberate accents — wordmark, primary CTAs, links, prices — not for
+ *     drenching surfaces. Restraint matches the brand: cream base, warm
+ *     neutrals, color used sparingly.
+ */
+@theme {
+	/* Warm neutral — shadows Tailwind's default `gray` with `stone` hexes. */
+	--color-gray-50: #fafaf9;
+	--color-gray-100: #f5f5f4;
+	--color-gray-200: #e7e5e4;
+	--color-gray-300: #d6d3d1;
+	--color-gray-400: #a8a29e;
+	--color-gray-500: #78716c;
+	--color-gray-600: #57534e;
+	--color-gray-700: #44403c;
+	--color-gray-800: #292524;
+	--color-gray-900: #1c1917;
+	--color-gray-950: #0c0a09;
+
+	/* Primary — terracotta/clay (the hedgehog + the wordmark script). */
+	--color-terracotta-50: #faf4f1;
+	--color-terracotta-100: #f4e5dc;
+	--color-terracotta-200: #e8caba;
+	--color-terracotta-300: #d9a88f;
+	--color-terracotta-400: #c9876a;
+	--color-terracotta-500: #bc6f50;
+	--color-terracotta-600: #a85b3e;
+	--color-terracotta-700: #8b4733;
+	--color-terracotta-800: #6f392c;
+	--color-terracotta-900: #5c3127;
+	--color-terracotta-950: #321711;
+
+	/* Secondary — sage/olive foliage. */
+	--color-sage-50: #f6f7f1;
+	--color-sage-100: #e9ecdd;
+	--color-sage-200: #d4dabd;
+	--color-sage-300: #b7c194;
+	--color-sage-400: #9aa86e;
+	--color-sage-500: #7e8e52;
+	--color-sage-600: #62703f;
+	--color-sage-700: #4c5733;
+	--color-sage-800: #3e462c;
+	--color-sage-900: #353c28;
+	--color-sage-950: #1a1f12;
+
+	/* Accent — honey/gold blooms. */
+	--color-honey-50: #fdf8ef;
+	--color-honey-100: #faedd2;
+	--color-honey-200: #f4d9a3;
+	--color-honey-300: #ecbf6e;
+	--color-honey-400: #e5a847;
+	--color-honey-500: #dc8f2e;
+	--color-honey-600: #c37322;
+	--color-honey-700: #a2561f;
+	--color-honey-800: #844420;
+	--color-honey-900: #6e391e;
+	--color-honey-950: #3f1d0d;
+
+	/* Accent — dusty rose/blush petals. */
+	--color-blush-50: #fbf3f3;
+	--color-blush-100: #f6e4e5;
+	--color-blush-200: #eecdd0;
+	--color-blush-300: #dfaab0;
+	--color-blush-400: #cc818a;
+	--color-blush-500: #bb6571;
+	--color-blush-600: #a44c5b;
+	--color-blush-700: #883c49;
+	--color-blush-800: #723540;
+	--color-blush-900: #62303a;
+	--color-blush-950: #36161c;
+
+	/* Cream — the warm page ground. */
+	--color-cream: #faf6ef;
+}
+
+@layer base {
+	body {
+		background-color: var(--color-cream);
+		color: var(--color-gray-800);
+	}
+}

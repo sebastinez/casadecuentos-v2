@@ -99,7 +99,7 @@
 	</label>
 
 	<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
-		<button type="submit" class="rounded-md bg-gray-900 px-5 py-2.5 text-sm font-medium text-white">
+		<button type="submit" class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700">
 			{t('filter.apply', locale)}
 		</button>
 		{#if hasFilters}
@@ -126,7 +126,7 @@
 						<p class="text-sm text-gray-600">{book.author}</p>
 					{/if}
 					<div class="mt-3 flex items-center justify-between">
-						<span class="font-semibold">{priceFmt.format(book.price)}</span>
+						<span class="font-semibold text-terracotta-700">{priceFmt.format(book.price)}</span>
 						{#if book.stock <= 0}
 							<span class="text-sm text-red-600">{t('books.outOfStock', locale)}</span>
 						{/if}
