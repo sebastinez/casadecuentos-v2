@@ -1,6 +1,10 @@
 import type PocketBase from 'pocketbase';
-import { ClientResponseError } from 'pocketbase';
+import { ClientResponseError, type ListResult } from 'pocketbase';
 import type { SearchEntry } from '$lib/search/catalog-index';
+
+// Books per listing page. PocketBase defaults `perPage` to 30, so this is passed
+// explicitly to `getList`. The listing UI also uses it to render its page index.
+export const BOOKS_PER_PAGE = 20;
 
 // A taxonomy record (genre / publisher / book language). Small relation lists
 // powering filters and rename-without-code; `name` is the displayed label.
@@ -66,6 +70,7 @@ export interface BookListOptions {
 	language?: string;
 	q?: string;
 	sort?: string;
+	page?: number;
 }
 
 // Thin read-wrapper over PocketBase (integration-tested, not unit-tested, per
@@ -74,7 +79,15 @@ export interface BookListOptions {
 // sub-field (e.g. `genre.slug`), so URL params stay human-readable and stable
 // across renames. `pb.filter` parameterizes every value, so user-supplied
 // search text and slugs can't inject into the filter expression.
-export async function listBooks(pb: PocketBase, opts: BookListOptions = {}): Promise<Book[]> {
+//
+// Returns a paginated `ListResult` (`items` + page/total metadata) rather than
+// the whole catalog: the listing shows `BOOKS_PER_PAGE` at a time with a page
+// index. `page` is 1-based; an out-of-range page yields empty `items` (not an
+// error), which the listing renders as "no results".
+export async function listBooks(
+	pb: PocketBase,
+	opts: BookListOptions = {}
+): Promise<ListResult<Book>> {
 	const parts: string[] = [];
 
 	if (opts.age) parts.push(pb.filter('age_band = {:age}', { age: opts.age }));
@@ -88,8 +101,9 @@ export async function listBooks(pb: PocketBase, opts: BookListOptions = {}): Pro
 	}
 
 	const sort = opts.sort && opts.sort in SORTS ? SORTS[opts.sort as BookSort] : SORTS.newest;
+	const page = opts.page && opts.page >= 1 ? opts.page : 1;
 
-	return pb.collection('books').getFullList<Book>({
+	return pb.collection('books').getList<Book>(page, BOOKS_PER_PAGE, {
 		filter: parts.join(' && '),
 		sort
 	});

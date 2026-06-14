@@ -16,6 +16,29 @@
 	// catalog" message and decides if the Clear link is worth showing.
 	const hasFilters = $derived(!!(f.age || f.genre || f.publisher || f.language || f.q));
 
+	const pagination = $derived(data.pagination);
+	// Flat list of page numbers (1…totalPages) for the index.
+	const pageNumbers = $derived(
+		Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+	);
+
+	// Build a /libros URL for a given page that preserves the active
+	// filter/search/sort state. `URLSearchParams` encodes values (a `q` with
+	// spaces/special chars stays intact), and empty filters are omitted so the
+	// links stay clean.
+	function pageHref(page: number): string {
+		const params = new URLSearchParams();
+		if (f.q) params.set('q', f.q);
+		if (f.age) params.set('age', f.age);
+		if (f.genre) params.set('genre', f.genre);
+		if (f.publisher) params.set('publisher', f.publisher);
+		if (f.language) params.set('language', f.language);
+		if (f.sort) params.set('sort', f.sort);
+		if (page > 1) params.set('page', String(page));
+		const qs = params.toString();
+		return qs ? `/libros?${qs}` : '/libros';
+	}
+
 	const sortOptions = [
 		{ value: 'newest', label: t('sort.newest', locale) },
 		{ value: 'price-asc', label: t('sort.priceAsc', locale) },
@@ -139,4 +162,69 @@
 			</li>
 		{/each}
 	</ul>
+
+	{#if pagination.totalPages > 1}
+		<nav aria-label={t('pagination.label', locale)} class="mt-10 flex justify-center">
+			<ul class="flex flex-wrap items-center gap-1">
+				<li>
+					{#if pagination.page > 1}
+						<a
+							href={pageHref(pagination.page - 1)}
+							rel="prev"
+							class="rounded-md border border-gray-300 px-3 py-2 text-sm hover:border-gray-400"
+						>
+							{t('pagination.previous', locale)}
+						</a>
+					{:else}
+						<span
+							aria-disabled="true"
+							class="rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-300"
+						>
+							{t('pagination.previous', locale)}
+						</span>
+					{/if}
+				</li>
+
+				{#each pageNumbers as n (n)}
+					<li>
+						{#if n === pagination.page}
+							<span
+								aria-current="page"
+								class="rounded-md border border-terracotta-600 bg-terracotta-600 px-3.5 py-2 text-sm font-medium text-white"
+							>
+								{n}
+							</span>
+						{:else}
+							<a
+								href={pageHref(n)}
+								aria-label="{t('pagination.goToPage', locale)} {n}"
+								class="rounded-md border border-gray-300 px-3.5 py-2 text-sm hover:border-gray-400"
+							>
+								{n}
+							</a>
+						{/if}
+					</li>
+				{/each}
+
+				<li>
+					{#if pagination.page < pagination.totalPages}
+						<a
+							href={pageHref(pagination.page + 1)}
+							rel="next"
+							class="rounded-md border border-gray-300 px-3 py-2 text-sm hover:border-gray-400"
+						>
+							{t('pagination.next', locale)}
+						</a>
+					{:else}
+						<span
+							aria-disabled="true"
+							class="rounded-md border border-gray-200 px-3 py-2 text-sm text-gray-300"
+						>
+							{t('pagination.next', locale)}
+						</span>
+					{/if}
+				</li>
+			</ul>
+		</nav>
+	{/if}
 {/if}

@@ -38,6 +38,12 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'books.noResults': 'No se encontraron libros con estos filtros.',
 		'books.outOfStock': 'Agotado',
 
+		// Listing pagination
+		'pagination.label': 'Paginación',
+		'pagination.previous': 'Anterior',
+		'pagination.next': 'Siguiente',
+		'pagination.goToPage': 'Ir a la página',
+
 		// Listing filters / search / sort
 		'filter.age': 'Edad',
 		'filter.genre': 'Género',

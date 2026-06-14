@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { createPocketBase } from '$lib/server/pocketbase';
-import { listBooks, listTaxonomy, type BookListOptions } from '$lib/server/catalog';
+import { listBooks, listTaxonomy } from '$lib/server/catalog';
 
 // Server-only load: the browser hits this SvelteKit endpoint, which talks to
 // PocketBase. Filtering/search/sort come in as URL query params (shareable,
@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ url }) => {
 	// Parse the facet/search/sort state straight off the URL. Missing params read
 	// as '' (the catalog treats empty as "not set"), so the same parsing covers a
 	// native GET form's empty controls and a hand-typed/shared URL alike.
-	const filters: Required<BookListOptions> = {
+	const filters = {
 		age: url.searchParams.get('age') ?? '',
 		genre: url.searchParams.get('genre') ?? '',
 		publisher: url.searchParams.get('publisher') ?? '',
@@ -21,9 +21,15 @@ export const load: PageServerLoad = async ({ url }) => {
 		sort: url.searchParams.get('sort') ?? ''
 	};
 
+	// 1-based listing page off the URL. Coerce defensively: `?page=abc` → NaN,
+	// `?page=0`/negatives are out of range — all clamp to page 1. Changing a
+	// filter via the GET form produces a URL with no `page`, which lands here as
+	// 1, so filtering always resets to the first page.
+	const page = Math.max(1, Math.floor(Number(url.searchParams.get('page'))) || 1);
+
 	// Facets for the filter dropdowns load alongside the (filtered) listing.
-	const [rawBooks, genres, publishers, languages] = await Promise.all([
-		listBooks(pb, filters),
+	const [result, genres, publishers, languages] = await Promise.all([
+		listBooks(pb, { ...filters, page }),
 		listTaxonomy(pb, 'genres'),
 		listTaxonomy(pb, 'publishers'),
 		listTaxonomy(pb, 'book_languages')
@@ -33,10 +39,19 @@ export const load: PageServerLoad = async ({ url }) => {
 	// public thumbnail URL here — same load-level minting the detail page does —
 	// so the browser fetches covers straight from PocketBase's file endpoint
 	// instead of resolving a bare filename against the current page (→ 404).
-	const books = rawBooks.map((b) => ({
+	const books = result.items.map((b) => ({
 		...b,
 		cover: b.cover ? pb.files.getURL(b, b.cover, { thumb: '300x0' }) : null
 	}));
 
-	return { books, filters, facets: { genres, publishers, languages } };
+	return {
+		books,
+		filters,
+		facets: { genres, publishers, languages },
+		pagination: {
+			page: result.page,
+			totalPages: result.totalPages,
+			totalItems: result.totalItems
+		}
+	};
 };
