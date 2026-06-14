@@ -46,7 +46,7 @@
 		{@const subtitle = localizedField(banner, 'subtitle', locale)}
 		{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 		<div
-			class="flex min-h-[18rem] flex-col items-start justify-end bg-gradient-to-br from-gray-800 to-gray-600 bg-cover bg-center p-8 text-white sm:min-h-[24rem]"
+			class="flex min-h-[18rem] flex-col items-start justify-end bg-gradient-to-br from-green-800 to-green-600 bg-cover bg-center p-8 text-white sm:min-h-[24rem]"
 			class:hidden={i !== current}
 			style={banner.image ? `background-image:url('${banner.image}')` : ''}
 			role="group"
@@ -76,22 +76,6 @@
 	{/each}
 
 	{#if multiple}
-		<button
-			type="button"
-			onclick={() => go(current - 1)}
-			aria-label={t('home.hero.prev', locale)}
-			class="absolute top-1/2 left-3 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-900 hover:bg-white"
-		>
-			<span aria-hidden="true">‹</span>
-		</button>
-		<button
-			type="button"
-			onclick={() => go(current + 1)}
-			aria-label={t('home.hero.next', locale)}
-			class="absolute top-1/2 right-3 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/80 text-gray-900 hover:bg-white"
-		>
-			<span aria-hidden="true">›</span>
-		</button>
 		<div class="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
 			{#each banners as banner, i (banner.id)}
 				<button
