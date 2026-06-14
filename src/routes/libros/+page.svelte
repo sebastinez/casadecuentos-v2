@@ -99,7 +99,10 @@
 	</label>
 
 	<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
-		<button type="submit" class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700">
+		<button
+			type="submit"
+			class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700"
+		>
 			{t('filter.apply', locale)}
 		</button>
 		{#if hasFilters}
@@ -121,6 +124,7 @@
 					href="/libros/{book.slug}"
 					class="flex h-full flex-col rounded-lg border border-gray-200 p-4 hover:border-gray-400"
 				>
+					<img src={book.cover} alt="" class="mb-4 aspect-3/4 w-full object-cover" />
 					<h2 class="font-medium">{book.title}</h2>
 					{#if book.author}
 						<p class="text-sm text-gray-600">{book.author}</p>

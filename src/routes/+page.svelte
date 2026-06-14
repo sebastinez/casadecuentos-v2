@@ -41,7 +41,7 @@
 			{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 			<a
 				href={banner.cta_link || '/libros'}
-				class="group relative flex min-h-48 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-gray-700 to-gray-500 bg-cover bg-center p-6 text-white"
+				class="group relative flex min-h-48 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-green-700 to-green-500 bg-cover bg-center p-6 text-white"
 				style={banner.image ? `background-image:url('${banner.image}')` : ''}
 			>
 				<div class="absolute inset-0 bg-black/25 transition group-hover:bg-black/35"></div>
@@ -92,7 +92,9 @@
 							<p class="text-xs text-gray-600">{book.author}</p>
 						{/if}
 						<div class="mt-2 flex items-center justify-between">
-							<span class="text-sm font-semibold text-terracotta-700">{priceFmt.format(book.price)}</span>
+							<span class="text-sm font-semibold text-terracotta-700"
+								>{priceFmt.format(book.price)}</span
+							>
 							{#if book.stock <= 0}
 								<span class="text-xs text-red-600">{t('books.outOfStock', locale)}</span>
 							{/if}
