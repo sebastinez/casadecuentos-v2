@@ -17,10 +17,26 @@
 	const hasFilters = $derived(!!(f.age || f.genre || f.publisher || f.language || f.q));
 
 	const pagination = $derived(data.pagination);
-	// Flat list of page numbers (1…totalPages) for the index.
-	const pageNumbers = $derived(
-		Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-	);
+
+	// Windowed page index: always show the first and last page, the current page
+	// with its 3 neighbours on each side, and a `…` gap wherever a stretch of
+	// pages is collapsed. Keeps the control compact on a 29-page catalog while
+	// still offering one-click jumps to the ends. Items are typed so the `…`
+	// placeholders carry stable keys for the `{#each}`.
+	const WINDOW = 3;
+	type PageItem = { type: 'page'; n: number } | { type: 'gap'; key: string };
+	const pageItems = $derived.by<PageItem[]>(() => {
+		const { page, totalPages } = pagination;
+		const start = Math.max(2, page - WINDOW);
+		const end = Math.min(totalPages - 1, page + WINDOW);
+
+		const items: PageItem[] = [{ type: 'page', n: 1 }];
+		if (start > 2) items.push({ type: 'gap', key: 'gap-left' });
+		for (let n = start; n <= end; n++) items.push({ type: 'page', n });
+		if (end < totalPages - 1) items.push({ type: 'gap', key: 'gap-right' });
+		items.push({ type: 'page', n: totalPages });
+		return items;
+	});
 
 	// Build a /libros URL for a given page that preserves the active
 	// filter/search/sort state. `URLSearchParams` encodes values (a `q` with
@@ -185,22 +201,24 @@
 					{/if}
 				</li>
 
-				{#each pageNumbers as n (n)}
+				{#each pageItems as item (item.type === 'page' ? item.n : item.key)}
 					<li>
-						{#if n === pagination.page}
+						{#if item.type === 'gap'}
+							<span class="px-2 py-2 text-sm text-gray-400" aria-hidden="true">…</span>
+						{:else if item.n === pagination.page}
 							<span
 								aria-current="page"
 								class="rounded-md border border-terracotta-600 bg-terracotta-600 px-3.5 py-2 text-sm font-medium text-white"
 							>
-								{n}
+								{item.n}
 							</span>
 						{:else}
 							<a
-								href={pageHref(n)}
-								aria-label="{t('pagination.goToPage', locale)} {n}"
+								href={pageHref(item.n)}
+								aria-label="{t('pagination.goToPage', locale)} {item.n}"
 								class="rounded-md border border-gray-300 px-3.5 py-2 text-sm hover:border-gray-400"
 							>
-								{n}
+								{item.n}
 							</a>
 						{/if}
 					</li>
