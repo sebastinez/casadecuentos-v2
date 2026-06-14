@@ -55,6 +55,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'filter.all': 'Todos',
 		'filter.apply': 'Filtrar',
 		'filter.clear': 'Limpiar',
+		'filter.toggle': 'Filtros',
 		'sort.newest': 'Más recientes',
 		'sort.priceAsc': 'Precio: menor a mayor',
 		'sort.priceDesc': 'Precio: mayor a menor',

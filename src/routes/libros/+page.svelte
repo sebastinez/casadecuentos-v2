@@ -62,94 +62,120 @@
 	];
 </script>
 
-<h1 class="mb-6 text-2xl font-semibold">{t('books.heading', locale)}</h1>
-
-<!-- Native GET form: submitting navigates to /libros?… so the filter state
-     lives in the URL (shareable, bookmarkable, back-button correct) and the
-     server `load` re-runs the PocketBase filter query. No client JS needed. -->
-<form
-	method="GET"
-	action="/libros"
-	class="mb-8 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-2 lg:grid-cols-3"
->
-	<label class="flex flex-col gap-1 text-sm">
-		<span class="text-gray-500">{t('filter.search', locale)}</span>
-		<input
-			type="search"
-			name="q"
-			value={f.q}
-			placeholder={t('filter.searchPlaceholder', locale)}
-			class="rounded-md border border-gray-300 px-3 py-2"
-		/>
-	</label>
-
-	<label class="flex flex-col gap-1 text-sm">
-		<span class="text-gray-500">{t('filter.age', locale)}</span>
-		<select name="age" class="rounded-md border border-gray-300 px-3 py-2">
-			<option value="" selected={f.age === ''}>{t('filter.all', locale)}</option>
-			{#each AGE_BANDS as band (band)}
-				<option value={band} selected={f.age === band}>{t(`age.${band}`, locale)}</option>
-			{/each}
-		</select>
-	</label>
-
-	<label class="flex flex-col gap-1 text-sm">
-		<span class="text-gray-500">{t('filter.genre', locale)}</span>
-		<select name="genre" class="rounded-md border border-gray-300 px-3 py-2">
-			<option value="" selected={f.genre === ''}>{t('filter.all', locale)}</option>
-			{#each data.facets.genres as g (g.id)}
-				<option value={g.slug} selected={f.genre === g.slug}>{g.name}</option>
-			{/each}
-		</select>
-	</label>
-
-	<label class="flex flex-col gap-1 text-sm">
-		<span class="text-gray-500">{t('filter.publisher', locale)}</span>
-		<select name="publisher" class="rounded-md border border-gray-300 px-3 py-2">
-			<option value="" selected={f.publisher === ''}>{t('filter.all', locale)}</option>
-			{#each data.facets.publishers as p (p.id)}
-				<option value={p.slug} selected={f.publisher === p.slug}>{p.name}</option>
-			{/each}
-		</select>
-	</label>
-
-	<label class="flex flex-col gap-1 text-sm">
-		<span class="text-gray-500">{t('filter.language', locale)}</span>
-		<select name="language" class="rounded-md border border-gray-300 px-3 py-2">
-			<option value="" selected={f.language === ''}>{t('filter.all', locale)}</option>
-			{#each data.facets.languages as l (l.id)}
-				<option value={l.slug} selected={f.language === l.slug}>{l.name}</option>
-			{/each}
-		</select>
-	</label>
-
-	<label class="flex flex-col gap-1 text-sm">
-		<span class="text-gray-500">{t('filter.sort', locale)}</span>
-		<select name="sort" class="rounded-md border border-gray-300 px-3 py-2">
-			{#each sortOptions as opt (opt.value)}
-				<option
-					value={opt.value}
-					selected={f.sort === opt.value || (f.sort === '' && opt.value === 'newest')}
-				>
-					{opt.label}
-				</option>
-			{/each}
-		</select>
-	</label>
-
-	<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
-		<button
-			type="submit"
-			class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700"
-		>
-			{t('filter.apply', locale)}
-		</button>
-		{#if hasFilters}
-			<a href="/libros" class="text-sm text-gray-600 hover:underline">{t('filter.clear', locale)}</a
+<!-- Native <details>: the filter panel is collapsed by default and toggled with
+     no client JS. The <summary> spans the heading row so the title sits on the
+     left and the toggle on the right. Opens automatically when filters are
+     active so a shared/bookmarked URL shows its applied facets. -->
+<details class="group mb-8" open={hasFilters}>
+	<summary
+		class="flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden"
+	>
+		<h1 class="text-2xl font-semibold">{t('books.heading', locale)}</h1>
+		<span class="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900">
+			{t('filter.toggle', locale)}
+			<svg
+				class="size-4 transition-transform group-open:rotate-180"
+				viewBox="0 0 20 20"
+				fill="currentColor"
+				aria-hidden="true"
 			>
-		{/if}
-	</div>
-</form>
+				<path
+					fill-rule="evenodd"
+					d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.17l3.71-3.94a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z"
+					clip-rule="evenodd"
+				/>
+			</svg>
+		</span>
+	</summary>
+
+	<!-- Native GET form: submitting navigates to /libros?… so the filter state
+	     lives in the URL (shareable, bookmarkable, back-button correct) and the
+	     server `load` re-runs the PocketBase filter query. No client JS needed. -->
+	<form
+		method="GET"
+		action="/libros"
+		class="mt-4 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-2 lg:grid-cols-3"
+	>
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="text-gray-500">{t('filter.search', locale)}</span>
+			<input
+				type="search"
+				name="q"
+				value={f.q}
+				placeholder={t('filter.searchPlaceholder', locale)}
+				class="rounded-md border border-gray-300 px-3 py-2"
+			/>
+		</label>
+
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="text-gray-500">{t('filter.age', locale)}</span>
+			<select name="age" class="rounded-md border border-gray-300 px-3 py-2">
+				<option value="" selected={f.age === ''}>{t('filter.all', locale)}</option>
+				{#each AGE_BANDS as band (band)}
+					<option value={band} selected={f.age === band}>{t(`age.${band}`, locale)}</option>
+				{/each}
+			</select>
+		</label>
+
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="text-gray-500">{t('filter.genre', locale)}</span>
+			<select name="genre" class="rounded-md border border-gray-300 px-3 py-2">
+				<option value="" selected={f.genre === ''}>{t('filter.all', locale)}</option>
+				{#each data.facets.genres as g (g.id)}
+					<option value={g.slug} selected={f.genre === g.slug}>{g.name}</option>
+				{/each}
+			</select>
+		</label>
+
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="text-gray-500">{t('filter.publisher', locale)}</span>
+			<select name="publisher" class="rounded-md border border-gray-300 px-3 py-2">
+				<option value="" selected={f.publisher === ''}>{t('filter.all', locale)}</option>
+				{#each data.facets.publishers as p (p.id)}
+					<option value={p.slug} selected={f.publisher === p.slug}>{p.name}</option>
+				{/each}
+			</select>
+		</label>
+
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="text-gray-500">{t('filter.language', locale)}</span>
+			<select name="language" class="rounded-md border border-gray-300 px-3 py-2">
+				<option value="" selected={f.language === ''}>{t('filter.all', locale)}</option>
+				{#each data.facets.languages as l (l.id)}
+					<option value={l.slug} selected={f.language === l.slug}>{l.name}</option>
+				{/each}
+			</select>
+		</label>
+
+		<label class="flex flex-col gap-1 text-sm">
+			<span class="text-gray-500">{t('filter.sort', locale)}</span>
+			<select name="sort" class="rounded-md border border-gray-300 px-3 py-2">
+				{#each sortOptions as opt (opt.value)}
+					<option
+						value={opt.value}
+						selected={f.sort === opt.value || (f.sort === '' && opt.value === 'newest')}
+					>
+						{opt.label}
+					</option>
+				{/each}
+			</select>
+		</label>
+
+		<div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
+			<button
+				type="submit"
+				class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700"
+			>
+				{t('filter.apply', locale)}
+			</button>
+			{#if hasFilters}
+				<a href="/libros" class="text-sm text-gray-600 hover:underline"
+					>{t('filter.clear', locale)}</a
+				>
+			{/if}
+		</div>
+	</form>
+</details>
 
 {#if data.books.length === 0}
 	<p class="text-gray-600">
