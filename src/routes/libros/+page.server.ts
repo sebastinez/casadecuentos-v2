@@ -22,12 +22,21 @@ export const load: PageServerLoad = async ({ url }) => {
 	};
 
 	// Facets for the filter dropdowns load alongside the (filtered) listing.
-	const [books, genres, publishers, languages] = await Promise.all([
+	const [rawBooks, genres, publishers, languages] = await Promise.all([
 		listBooks(pb, filters),
 		listTaxonomy(pb, 'genres'),
 		listTaxonomy(pb, 'publishers'),
 		listTaxonomy(pb, 'book_languages')
 	]);
+
+	// `listBooks` returns raw records (`cover` is the stored filename). Mint the
+	// public thumbnail URL here — same load-level minting the detail page does —
+	// so the browser fetches covers straight from PocketBase's file endpoint
+	// instead of resolving a bare filename against the current page (→ 404).
+	const books = rawBooks.map((b) => ({
+		...b,
+		cover: b.cover ? pb.files.getURL(b, b.cover, { thumb: '300x0' }) : null
+	}));
 
 	return { books, filters, facets: { genres, publishers, languages } };
 };
