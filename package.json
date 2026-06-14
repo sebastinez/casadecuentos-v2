@@ -13,7 +13,8 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"import:shopify": "node scripts/import-shopify.mjs"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
