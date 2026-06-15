@@ -44,3 +44,21 @@ export function formatEventDate(date: string, locale: Locale = DEFAULT_LOCALE): 
 		year: 'numeric'
 	}).format(at);
 }
+
+// Format a video's `published` value as a short day-month-year date (e.g.
+// `5 de julio de 2026`). Unlike events — whose `date` is a civil-date TEXT field
+// — a video's `published` is a PocketBase `date` (datetime), serialized as
+// `YYYY-MM-DD HH:MM:SS.sssZ`. We only care about the calendar day, so the
+// leading 10 chars are taken and (like `formatEventDate`) anchored at noon UTC
+// to avoid any timezone rollover. An unparseable value returns as-is.
+export function formatPublishedDate(published: string, locale: Locale = DEFAULT_LOCALE): string {
+	const day = published.slice(0, 10);
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return published;
+	const at = new Date(`${day}T12:00:00Z`);
+	return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
+		timeZone: 'UTC',
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric'
+	}).format(at);
+}

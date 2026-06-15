@@ -8,6 +8,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'nav.home': 'Inicio',
 		'nav.books': 'Libros',
 		'nav.events': 'Eventos',
+		'nav.videos': 'Entrevistas',
 		'nav.about': 'Nosotros',
 		'nav.contact': 'Contacto',
 		'nav.cart': 'Carrito',
@@ -158,6 +159,17 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.where': 'Lugar',
 		'email.rsvp.closing': 'Te esperamos. Si no puedes asistir, no necesitas hacer nada.',
 		'email.rsvp.signature': 'Casa de Cuentos',
+
+		// Videos page + live-interview banner (Phase: videos). YouTube link-out
+		// cards; "Entrevistas" is an editorial nav label distinct from the
+		// `/videos` slug — the page holds all channel videos, not only interviews.
+		'videos.heading': 'Entrevistas y vídeos',
+		'videos.metaDescription':
+			'Lecturas, entrevistas y vídeos de Casa de Cuentos en nuestro canal de YouTube.',
+		'videos.empty': 'Todavía no hay vídeos. Vuelve pronto.',
+		'videos.liveLabel': 'Próxima entrevista en directo',
+		'videos.liveBadge': 'En directo',
+		'video.thumbnailAlt': 'Miniatura del vídeo',
 
 		// Contact page + form (Phase 10)
 		'contact.heading': 'Contacto',

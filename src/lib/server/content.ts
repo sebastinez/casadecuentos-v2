@@ -6,11 +6,18 @@ import type PocketBase from 'pocketbase';
 // tests). Image URLs are minted server-side so the browser never talks to
 // PocketBase — same invariant the catalog reads keep.
 
-export type BannerType = 'hero' | 'featured';
+// `live_interview` (Phase: videos) reuses this collection for the /videos
+// live-interview announcement; `image`/`sort` are unused for that placement and
+// its `cta_link` holds an absolute YouTube URL (hero/featured treat it as a
+// relative path). See `LiveInterviewBanner` + the next-interview selector.
+export type BannerType = 'hero' | 'featured' | 'live_interview';
 
 // Banner as the landing page consumes it: localizable copy in base columns
 // (read through `localizedField` in the component for v2-readiness) plus a
 // ready-to-render image URL (or null → the page shows a gradient fallback).
+// `start` (the schedule-window lower bound, empty when unset) carries through so
+// the next-interview selector can pick the most imminent `live_interview`; the
+// in-window check already happened inside `listBanners`.
 export interface Banner {
 	id: string;
 	type: BannerType;
@@ -19,6 +26,7 @@ export interface Banner {
 	cta_label: string;
 	cta_link: string;
 	image: string | null;
+	start: string;
 }
 
 // Raw banner record. `image` is the stored filename here; `start`/`end` are the

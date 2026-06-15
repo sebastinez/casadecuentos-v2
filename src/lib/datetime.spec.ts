@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { zurichToday, formatEventDate } from './datetime';
+import { zurichToday, formatEventDate, formatPublishedDate } from './datetime';
 
 describe('zurichToday', () => {
 	it('returns the civil date in YYYY-MM-DD form', () => {
@@ -43,5 +43,28 @@ describe('formatEventDate', () => {
 
 	it('returns a malformed value unchanged instead of throwing', () => {
 		expect(formatEventDate('not-a-date')).toBe('not-a-date');
+	});
+});
+
+describe('formatPublishedDate', () => {
+	it('formats a PocketBase datetime as a short Spanish date (day stripped of time)', () => {
+		// 2026-07-05 is a Sunday; the trailing time component is dropped.
+		const out = formatPublishedDate('2026-07-05 10:30:00.000Z', 'es');
+		expect(out).toContain('5');
+		expect(out).toContain('julio');
+		expect(out).toContain('2026');
+	});
+
+	it('shows the stored calendar day exactly (no timezone drift)', () => {
+		expect(formatPublishedDate('2026-01-01 23:59:00.000Z', 'es')).toContain('1');
+		expect(formatPublishedDate('2026-01-01 23:59:00.000Z', 'es')).toContain('enero');
+	});
+
+	it('accepts a bare YYYY-MM-DD value too', () => {
+		expect(formatPublishedDate('2026-07-05', 'es')).toContain('julio');
+	});
+
+	it('returns a malformed value unchanged instead of throwing', () => {
+		expect(formatPublishedDate('not-a-date')).toBe('not-a-date');
 	});
 });
