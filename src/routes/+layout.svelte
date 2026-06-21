@@ -1,6 +1,6 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '$lib/assets/favicon.ico';
 	import logo from '$lib/assets/logo.webp';
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
 	import { site } from '$lib/site';
