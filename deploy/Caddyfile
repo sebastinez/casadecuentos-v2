@@ -17,6 +17,16 @@ preview.casadecuentos.ch {
 	reverse_proxy 127.0.0.1:3000
 }
 
+# Stable static assets (brand logo, email images, anything that needs a URL that
+# never changes).
+#
+assets.casadecuentos.ch {
+	root * /var/www/casadecuentos/assets
+	file_server
+	encode gzip zstd
+	header Cache-Control "public, max-age=86400"
+}
+
 # PocketBase. Public surface is reduced to the read-only file endpoint that
 # browsers + the OG crawlers need; the admin UI, collections API, and settings
 # are reachable only from the box itself (the BFF connects via the /etc/hosts

@@ -126,6 +126,8 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.confirm.closing':
 			'Te enviaremos otro correo con el número de seguimiento cuando tu pedido salga.',
 		'email.confirm.signature': 'Casa de Cuentos',
+		'email.confirm.help': 'Si tienes alguna pregunta, responde a este correo o escríbenos a',
+		'email.confirm.orderSummary': 'Resumen del pedido',
 
 		// Events listing + detail (Phase 9)
 		'events.heading': 'Eventos',
