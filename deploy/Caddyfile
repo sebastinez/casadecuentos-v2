@@ -13,9 +13,9 @@
 }
 
 # Public storefront (preview). Serves the SvelteKit BFF + /api/* routes.
-preview.casadecuentos.ch {
-	reverse_proxy 127.0.0.1:3000
-}
+# preview.casadecuentos.ch {
+#	reverse_proxy 127.0.0.1:3000
+# }
 
 # Stable static assets (brand logo, email images, anything that needs a URL that
 # never changes).
@@ -58,10 +58,9 @@ pb.casadecuentos.ch {
 # model instead? Replace this whole block with:
 #     pb.casadecuentos.ch { reverse_proxy 127.0.0.1:8090 }
 
-# ── GO LIVE: uncomment when the apex DNS points here ─────────────────────────
-# casadecuentos.ch {
-# 	reverse_proxy 127.0.0.1:3000
-# }
-# www.casadecuentos.ch {
-# 	redir https://casadecuentos.ch{uri} permanent
-# }
+casadecuentos.ch {
+	reverse_proxy 127.0.0.1:3000
+}
+www.casadecuentos.ch {
+	redir https://casadecuentos.ch{uri} permanent
+}
