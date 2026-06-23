@@ -46,7 +46,7 @@
 		{@const subtitle = localizedField(banner, 'subtitle', locale)}
 		{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 		<div
-			class="flex min-h-[18rem] flex-col items-start justify-end bg-gradient-to-br from-green-800 to-green-600 bg-cover bg-center p-8 text-white sm:min-h-[24rem]"
+			class="flex min-h-[18rem] flex-col items-start justify-end bg-gradient-to-br from-green-800 to-green-600 bg-cover bg-bottom p-8 text-white sm:min-h-[24rem]"
 			class:hidden={i !== current}
 			style={banner.image ? `background-image:url('${banner.image}')` : ''}
 			role="group"
