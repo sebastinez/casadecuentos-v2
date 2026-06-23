@@ -1,7 +1,4 @@
 <script lang="ts">
-	// Static "About" page — hardcoded Spanish prose per the PRD (no admin surface
-	// for content pages in v1). Only the title/chrome flows through i18n; the v2
-	// German version is a separate page component, not message keys.
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
 	import { site } from '$lib/site';
 
@@ -20,30 +17,40 @@
 	<h1>{t('about.heading', locale)}</h1>
 
 	<p>
-		<strong>Casa de Cuentos</strong> es una librería en línea dedicada a los libros infantiles y juveniles
-		en español, pensada para las familias hispanohablantes que viven en Suiza.
+		<strong>Hola!</strong> Me es muy grato darles la bienvenida a nuestra librería Casa de Cuentos.
 	</p>
 
 	<p>
-		Nacimos del deseo de que niñas y niños sigan leyendo en su lengua materna, lejos de su país de
-		origen. Seleccionamos a mano cada título —desde los primeros libros de cartón hasta las novelas
-		juveniles— buscando historias que emocionen, acompañen y hagan crecer.
+		Mi nombre es <strong>María Eugenia</strong> y junto a mi familia planeamos este hermoso proyecto que
+		hoy cobra vida en Suiza. Estamos ubicados en la ciudad de Rüti, cantón de Zurich. Desde aquí abrimos
+		las puertas, deseamos que les guste y disfruten de nuestro catalogo seleccionado de cuentos en español
+		y los invitamos a ser parte de ella.
 	</p>
 
 	<p>
-		Somos una tienda exclusivamente en línea: enviamos a toda Suiza con seguimiento. Nuestra
-		dirección, <strong>{site.address}</strong>, es un punto de contacto y referencia, pero
-		<strong>no es una tienda física con venta al público</strong>.
+		En <strong>Casa de Cuentos</strong> van a encontrar una variada selección de títulos proveniente de
+		diferentes editoriales tanto hispanas como latinoamericanas. Encontraran libros para todas las edades
+		desde una beboteca con una colección de libros con rimas y canciones especiales para las manitos de
+		los bebes, pasando por los más bellos libros álbumes, libros para primeros lectores de aventuras y
+		emociones, luego los clásicos de la literatura infantil y juvenil (narrativas universales). Libros
+		de recetas de cocina, botánica y naturaleza. Dando también lugar a una sección de poemarios, siempre
+		pensando en variados intereses y perspectivas.
 	</p>
 
 	<p>
-		Además de vender libros, organizamos eventos comunitarios gratuitos —cuentacuentos,
-		presentaciones y encuentros— para reunir a la comunidad en torno a la lectura. Puedes verlos en
-		la sección <a href="/eventos">Eventos</a> y reservar tu plaza.
+		Les cuento que soy mamá de Anna y Elena, junto a Sebastián formamos nuestra familia en Buenos
+		Aires (Argentina) y decididos a explorar nuevas aventuras, nos abrimos camino en Suiza. Soy de
+		formación psicóloga especializada en Niñez y Familia y gracias a ella confirmo una y otra vez,
+		la importancia de mantener un vínculo constante con aquella cultura de mi niñez y el intento por
+		acercarla y entrelazarla con la nueva cultura que hoy abrazamos. Quiero compartirlo con otras
+		personas que recorren el mismo viaje de vida, quienes desean mantener a Hispanoamérica viva en
+		el corazón europeo. El momento es ahora ¡lo marca el reloj suizo, no puede fallar! Exploremos
+		juntos los relatos hispanoamericanos más bonitos del mundo…
 	</p>
 
 	<p>
-		¿Quieres saber más o buscas un libro en concreto? Escríbenos desde la página de
-		<a href="/contacto">Contacto</a>.
+		<strong>Casa de Cuentos</strong> es una librería de puertas adentro, nos pueden visitar de forma presencial
+		en nuestro Showroom o también vía web, y siempre serán bienvenidos a explorar nuevos libros de literatura
+		infantil y juvenil en español. Los esperamos!
 	</p>
 </article>
