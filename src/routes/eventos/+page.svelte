@@ -18,7 +18,7 @@
 {#if data.events.length === 0}
 	<p class="text-gray-600">{t('events.empty', locale)}</p>
 {:else}
-	<ul class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+	<ul class="grid grid-cols-1 gap-6">
 		{#each data.events as event (event.id)}
 			<li>
 				<a
