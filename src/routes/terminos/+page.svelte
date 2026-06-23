@@ -56,6 +56,7 @@
 	<h2>Impressum</h2>
 	<p>
 		Nombre comercial: Bücherei Casa de Cuentos von M.E. Raffo<br />
+		Rechtsform: Einzelunternehmen<br />
 		Número de teléfono: 076 474 3828<br />
 		Correo electrónico: info@casadecuentos.ch<br />
 		Dirección física: Ahornweg 22, 8630 Rüti, Switzerland<br />
