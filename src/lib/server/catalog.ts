@@ -88,7 +88,7 @@ export async function listBooks(
 	pb: PocketBase,
 	opts: BookListOptions = {}
 ): Promise<ListResult<Book>> {
-	const parts: string[] = [];
+	const parts: string[] = [pb.filter('stock > 0')];
 
 	if (opts.age) parts.push(pb.filter('age_band = {:age}', { age: opts.age }));
 	if (opts.genre) parts.push(pb.filter('genre.slug = {:genre}', { genre: opts.genre }));
