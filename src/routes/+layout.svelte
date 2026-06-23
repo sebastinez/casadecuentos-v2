@@ -81,6 +81,8 @@
 				<div>
 					<h2 class="font-medium text-gray-900">{t('footer.contactHeading', locale)}</h2>
 					<address class="mt-2 flex flex-col gap-1 not-italic">
+						<span>Maria Eugenia Raffo</span>
+						<span>Bücherei Casa de Cuentos von M.E. Raffo</span>
 						<span>{site.address}</span>
 						<a href="mailto:{site.email}" class="hover:underline">{site.email}</a>
 						<a href={site.instagramUrl} class="hover:underline" rel="noopener" target="_blank"
