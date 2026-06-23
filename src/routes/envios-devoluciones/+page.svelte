@@ -1,8 +1,4 @@
 <script lang="ts">
-	// Static shipping & returns — hardcoded Spanish prose. Must state BOTH halves
-	// (PRD): warranty honored for defective/wrong items (Swiss Code of
-	// Obligations) AND no change-of-mind returns (no statutory withdrawal right in
-	// Switzerland).
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
 	import { site } from '$lib/site';
 
@@ -22,9 +18,7 @@
 
 	<h2>Envíos</h2>
 	<p>
-		Enviamos a toda Suiza a través de <strong>Correos Suizos (Swiss Post)</strong>. Aplicamos una
-		<strong>tarifa de envío plana</strong> que se muestra durante el pago, independientemente del número
-		de libros de tu pedido.
+		Enviamos a toda Suiza a través de <strong>Correos Suizos (Swiss Post)</strong>.
 	</p>
 	<p>
 		Preparamos los pedidos en los días siguientes a la confirmación del pago. Cuando tu pedido sale,

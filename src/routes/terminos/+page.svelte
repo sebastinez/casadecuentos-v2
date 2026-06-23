@@ -29,15 +29,15 @@
 
 	<h2>Pedidos y pago</h2>
 	<p>
-		El pago se realiza a través de una página de pago segura (TWINT o tarjeta). El pedido se
-		confirma una vez recibido el pago; recibirás un correo de confirmación. El precio que se cobra
-		es siempre el precio del catálogo verificado en nuestro servidor.
+		El pago se realiza a través de una página de pago segura. El pedido se confirma una vez recibido
+		el pago; recibirás un correo de confirmación. El precio que se cobra es siempre el precio del
+		catálogo verificado en nuestro servidor.
 	</p>
 
 	<h2>Disponibilidad</h2>
 	<p>
-		Trabajamos con existencias limitadas. En el caso excepcional de que un libro figure como
-		disponible pero ya no lo esté tras tu compra, te lo comunicaremos y te reembolsaremos el importe
+		Trabajamos con stock limitado. En el caso excepcional de que un libro figure como disponible
+		pero ya no lo esté tras tu compra, te lo comunicaremos y te reembolsaremos el importe
 		correspondiente.
 	</p>
 
