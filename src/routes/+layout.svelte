@@ -16,7 +16,7 @@
 	const nav = [
 		{ href: '/', label: t('nav.home', locale) },
 		{ href: '/libros', label: t('nav.books', locale) },
-		{ href: '/eventos', label: t('nav.events', locale) },
+		{ href: '/actividades', label: t('nav.events', locale) },
 		{ href: '/videos', label: t('nav.videos', locale) },
 		{ href: '/quienes-somos', label: t('nav.about', locale) },
 		{ href: '/contacto', label: t('nav.contact', locale) }

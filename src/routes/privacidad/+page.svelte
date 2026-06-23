@@ -28,7 +28,7 @@
 			se procesa de forma segura y nosotros nunca vemos ni almacenamos los datos completos de tu tarjeta.
 		</li>
 		<li>
-			<strong>Reservas de eventos:</strong> nombre, apellido, correo electrónico y teléfono.
+			<strong>Reservas de actividades:</strong> nombre, apellido, correo electrónico y teléfono.
 		</li>
 		<li>
 			<strong>Formulario de contacto:</strong> nombre, correo electrónico, asunto y mensaje.

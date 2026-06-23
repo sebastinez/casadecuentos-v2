@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		throw error(404, 'Evento no encontrado');
 	}
 
-	const canonicalUrl = `${url.origin}/eventos/${event.slug}`;
+	const canonicalUrl = `${url.origin}/actividades/${event.slug}`;
 	return { event, canonicalUrl };
 };
 
@@ -50,7 +50,7 @@ export const actions: Actions = {
 		const pubPb = createPocketBase();
 		const event = await getEventBySlug(pubPb, params.slug);
 		if (!event) {
-			throw error(404, 'Evento no encontrado');
+			throw error(404, 'Actividad no encontrada');
 		}
 
 		const pb = await createAdminPocketBase();

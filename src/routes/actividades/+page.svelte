@@ -22,7 +22,7 @@
 		{#each data.events as event (event.id)}
 			<li>
 				<a
-					href="/eventos/{event.slug}"
+					href="/actividades/{event.slug}"
 					class="flex h-full flex-col rounded-lg border border-gray-200 p-4 hover:border-gray-400"
 				>
 					<p class="text-sm font-medium text-gray-500">

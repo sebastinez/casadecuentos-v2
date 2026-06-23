@@ -7,7 +7,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 	es: {
 		'nav.home': 'Inicio',
 		'nav.books': 'Libros',
-		'nav.events': 'Eventos',
+		'nav.events': 'Actividades',
 		'nav.videos': 'Entrevistas',
 		'nav.about': 'Quienes somos',
 		'nav.contact': 'Contacto',
@@ -129,14 +129,13 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.confirm.help': 'Si tienes alguna pregunta, responde a este correo o escríbenos a',
 		'email.confirm.orderSummary': 'Resumen del pedido',
 
-		// Events listing + detail (Phase 9)
-		'events.heading': 'Eventos',
-		'events.empty': 'No hay eventos próximos por el momento.',
-		'events.upcoming': 'Próximos eventos',
+		'events.heading': 'Actividades',
+		'events.empty': 'No hay actividades próximas por el momento.',
+		'events.upcoming': 'Próximas actividades',
 		'event.when': 'Fecha y hora',
 		'event.where': 'Lugar',
 		'event.timeSuffix': 'h',
-		'event.backTolist': 'Volver a eventos',
+		'event.backTolist': 'Volver a actividades',
 		'event.mapLabel': 'Ubicación del evento',
 
 		// RSVP form (Phase 9). Free events, no capacity/waitlist.

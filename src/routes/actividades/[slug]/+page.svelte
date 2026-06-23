@@ -45,7 +45,7 @@
 
 <article class="flex flex-col gap-8">
 	<header>
-		<a href="/eventos" class="text-sm text-gray-600 hover:underline"
+		<a href="/actividades" class="text-sm text-gray-600 hover:underline"
 			>← {t('event.backTolist', locale)}</a
 		>
 		<h1 class="mt-2 text-2xl font-semibold">{title}</h1>
