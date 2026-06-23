@@ -9,7 +9,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'nav.books': 'Libros',
 		'nav.events': 'Eventos',
 		'nav.videos': 'Entrevistas',
-		'nav.about': 'Nosotros',
+		'nav.about': 'Quienes somos',
 		'nav.contact': 'Contacto',
 		'nav.cart': 'Carrito',
 		'nav.menu': 'Menú',
@@ -197,14 +197,14 @@ export const messages: Record<Locale, Record<string, string>> = {
 
 		// Static content pages (Phase 10). Page bodies are hardcoded Spanish prose
 		// in their components; only titles/chrome flow through i18n.
-		'about.heading': 'Nosotros',
+		'about.heading': 'Quienes somos',
 		'privacy.heading': 'Política de privacidad',
 		'terms.heading': 'Términos y condiciones',
 		'shipping.heading': 'Envíos y devoluciones',
 
 		// Footer (Phase 10): policy links + contact info + copyright.
 		'footer.policies': 'Información',
-		'footer.about': 'Nosotros',
+		'footer.about': 'Quienes somos',
 		'footer.privacy': 'Privacidad',
 		'footer.terms': 'Términos',
 		'footer.shipping': 'Envíos y devoluciones',

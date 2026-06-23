@@ -21,11 +21,9 @@
 	/>
 
 	<article class="prose prose-sm max-w-none">
-		<h1>{t('about.heading', locale)}</h1>
+		<h1>Hola!</h1>
 
-		<p>
-			<strong>Hola!</strong> Me es muy grato darles la bienvenida a nuestra librería Casa de Cuentos.
-		</p>
+		<p>Me es muy grato darles la bienvenida a nuestra librería Casa de Cuentos.</p>
 
 		<p>
 			Mi nombre es <strong>María Eugenia</strong> y junto a mi familia planeamos este hermoso proyecto

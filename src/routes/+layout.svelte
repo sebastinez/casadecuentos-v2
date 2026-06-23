@@ -18,14 +18,14 @@
 		{ href: '/libros', label: t('nav.books', locale) },
 		{ href: '/eventos', label: t('nav.events', locale) },
 		{ href: '/videos', label: t('nav.videos', locale) },
-		{ href: '/nosotros', label: t('nav.about', locale) },
+		{ href: '/quienes-somos', label: t('nav.about', locale) },
 		{ href: '/contacto', label: t('nav.contact', locale) }
 	];
 
 	// Footer policy links (Phase 10). Separate from the primary nav: these are the
 	// "information" links — About + the hardcoded legal pages + contact.
 	const footerLinks = [
-		{ href: '/nosotros', label: t('footer.about', locale) },
+		{ href: '/quienes-somos', label: t('footer.about', locale) },
 		{ href: '/envios-devoluciones', label: t('footer.shipping', locale) },
 		{ href: '/privacidad', label: t('footer.privacy', locale) },
 		{ href: '/terminos', label: t('footer.terms', locale) },
