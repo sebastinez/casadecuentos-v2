@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
-	import { site } from '$lib/site';
+	import euge from '$lib/assets/euge.webp';
 
 	const locale = DEFAULT_LOCALE;
 </script>
@@ -13,44 +13,52 @@
 	/>
 </svelte:head>
 
-<article class="prose prose-sm max-w-none">
-	<h1>{t('about.heading', locale)}</h1>
+<div class="grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
+	<img
+		src={euge}
+		alt="María Eugenia, fundadora de Casa de Cuentos"
+		class="w-full rounded-lg md:sticky md:top-8"
+	/>
 
-	<p>
-		<strong>Hola!</strong> Me es muy grato darles la bienvenida a nuestra librería Casa de Cuentos.
-	</p>
+	<article class="prose prose-sm max-w-none">
+		<h1>{t('about.heading', locale)}</h1>
 
-	<p>
-		Mi nombre es <strong>María Eugenia</strong> y junto a mi familia planeamos este hermoso proyecto que
-		hoy cobra vida en Suiza. Estamos ubicados en la ciudad de Rüti, cantón de Zurich. Desde aquí abrimos
-		las puertas, deseamos que les guste y disfruten de nuestro catalogo seleccionado de cuentos en español
-		y los invitamos a ser parte de ella.
-	</p>
+		<p>
+			<strong>Hola!</strong> Me es muy grato darles la bienvenida a nuestra librería Casa de Cuentos.
+		</p>
 
-	<p>
-		En <strong>Casa de Cuentos</strong> van a encontrar una variada selección de títulos proveniente de
-		diferentes editoriales tanto hispanas como latinoamericanas. Encontraran libros para todas las edades
-		desde una beboteca con una colección de libros con rimas y canciones especiales para las manitos de
-		los bebes, pasando por los más bellos libros álbumes, libros para primeros lectores de aventuras y
-		emociones, luego los clásicos de la literatura infantil y juvenil (narrativas universales). Libros
-		de recetas de cocina, botánica y naturaleza. Dando también lugar a una sección de poemarios, siempre
-		pensando en variados intereses y perspectivas.
-	</p>
+		<p>
+			Mi nombre es <strong>María Eugenia</strong> y junto a mi familia planeamos este hermoso proyecto
+			que hoy cobra vida en Suiza. Estamos ubicados en la ciudad de Rüti, cantón de Zurich. Desde aquí
+			abrimos las puertas, deseamos que les guste y disfruten de nuestro catalogo seleccionado de cuentos
+			en español y los invitamos a ser parte de ella.
+		</p>
 
-	<p>
-		Les cuento que soy mamá de Anna y Elena, junto a Sebastián formamos nuestra familia en Buenos
-		Aires (Argentina) y decididos a explorar nuevas aventuras, nos abrimos camino en Suiza. Soy de
-		formación psicóloga especializada en Niñez y Familia y gracias a ella confirmo una y otra vez,
-		la importancia de mantener un vínculo constante con aquella cultura de mi niñez y el intento por
-		acercarla y entrelazarla con la nueva cultura que hoy abrazamos. Quiero compartirlo con otras
-		personas que recorren el mismo viaje de vida, quienes desean mantener a Hispanoamérica viva en
-		el corazón europeo. El momento es ahora ¡lo marca el reloj suizo, no puede fallar! Exploremos
-		juntos los relatos hispanoamericanos más bonitos del mundo…
-	</p>
+		<p>
+			En <strong>Casa de Cuentos</strong> van a encontrar una variada selección de títulos proveniente
+			de diferentes editoriales tanto hispanas como latinoamericanas. Encontraran libros para todas las
+			edades desde una beboteca con una colección de libros con rimas y canciones especiales para las
+			manitos de los bebes, pasando por los más bellos libros álbumes, libros para primeros lectores de
+			aventuras y emociones, luego los clásicos de la literatura infantil y juvenil (narrativas universales).
+			Libros de recetas de cocina, botánica y naturaleza. Dando también lugar a una sección de poemarios,
+			siempre pensando en variados intereses y perspectivas.
+		</p>
 
-	<p>
-		<strong>Casa de Cuentos</strong> es una librería de puertas adentro, nos pueden visitar de forma presencial
-		en nuestro Showroom o también vía web, y siempre serán bienvenidos a explorar nuevos libros de literatura
-		infantil y juvenil en español. Los esperamos!
-	</p>
-</article>
+		<p>
+			Les cuento que soy mamá de Anna y Elena, junto a Sebastián formamos nuestra familia en Buenos
+			Aires (Argentina) y decididos a explorar nuevas aventuras, nos abrimos camino en Suiza. Soy de
+			formación psicóloga especializada en Niñez y Familia y gracias a ella confirmo una y otra vez,
+			la importancia de mantener un vínculo constante con aquella cultura de mi niñez y el intento
+			por acercarla y entrelazarla con la nueva cultura que hoy abrazamos. Quiero compartirlo con
+			otras personas que recorren el mismo viaje de vida, quienes desean mantener a Hispanoamérica
+			viva en el corazón europeo. El momento es ahora ¡lo marca el reloj suizo, no puede fallar!
+			Exploremos juntos los relatos hispanoamericanos más bonitos del mundo…
+		</p>
+
+		<p>
+			<strong>Casa de Cuentos</strong> es una librería de puertas adentro, nos pueden visitar de forma
+			presencial en nuestro Showroom o también vía web, y siempre serán bienvenidos a explorar nuevos
+			libros de literatura infantil y juvenil en español. Los esperamos!
+		</p>
+	</article>
+</div>
