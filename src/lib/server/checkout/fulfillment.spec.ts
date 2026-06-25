@@ -98,11 +98,12 @@ describe('fulfillCheckout', () => {
 
 		await fulfillCheckout(EVENT, deps);
 
-		expect(send).toHaveBeenCalledTimes(1);
-		expect(sent[0].to).toBe('cliente@example.com');
-		expect(sent[0].subject).toContain('#1042');
-		expect(sent[0].subject).toContain('Confirmación de pedido');
-		expect(sent[0].text).toContain('El Principito');
+		expect(send).toHaveBeenCalledTimes(2);
+		expect(sent[0].to).toBe('info@casadecuentos.ch');
+		expect(sent[1].to).toBe('cliente@example.com');
+		expect(sent[1].subject).toContain('#1042');
+		expect(sent[1].subject).toContain('Confirmación de pedido');
+		expect(sent[1].text).toContain('El Principito');
 	});
 
 	it('is idempotent: a redelivered event marks paid and decrements stock exactly once', async () => {
@@ -116,7 +117,7 @@ describe('fulfillCheckout', () => {
 		// Side effects fired exactly once across both deliveries.
 		expect(orders.markPaid).toHaveBeenCalledTimes(1);
 		expect(decrement).toHaveBeenCalledTimes(1);
-		expect(send).toHaveBeenCalledTimes(1);
+		expect(send).toHaveBeenCalledTimes(2);
 		// No second order number was burned on the redelivery.
 		expect(orders.calls.nextOrderNumber).toBe(1);
 	});
@@ -179,6 +180,6 @@ describe('fulfillCheckout', () => {
 
 		expect(result.outcome).toBe('fulfilled');
 		expect(decrement).toHaveBeenCalledTimes(1);
-		expect(send).not.toHaveBeenCalled();
+		expect(send).toHaveBeenCalledTimes(1);
 	});
 });

@@ -111,7 +111,7 @@ describe('handleStripeWebhook', () => {
 		expect(result.outcome).toBe('fulfilled');
 		expect(f.markPaid).toHaveBeenCalledTimes(1);
 		expect(f.decrement).toHaveBeenCalledTimes(1);
-		expect(f.send).toHaveBeenCalledTimes(1);
+		expect(f.send).toHaveBeenCalledTimes(2);
 	});
 
 	it('is idempotent on redelivery: same event twice → side effects fire exactly once', async () => {
@@ -130,7 +130,7 @@ describe('handleStripeWebhook', () => {
 		expect(second.outcome).toBe('already_processed');
 		expect(f.markPaid).toHaveBeenCalledTimes(1);
 		expect(f.decrement).toHaveBeenCalledTimes(1);
-		expect(f.send).toHaveBeenCalledTimes(1);
+		expect(f.send).toHaveBeenCalledTimes(2);
 	});
 
 	it('acknowledges (200) an event type it does not act on, touching no ports', async () => {
