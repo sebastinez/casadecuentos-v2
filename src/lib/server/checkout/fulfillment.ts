@@ -1,4 +1,5 @@
 import { canTransition, type OrderStatus } from './order-state';
+import { site } from '$lib/site';
 import type { OrderLine } from './order';
 import type { MailTransport } from '$lib/server/mail';
 import { orderConfirmationEmail } from '$lib/server/mail';
@@ -121,6 +122,22 @@ export async function fulfillCheckout(
 		shippingAddress: input.shippingAddress,
 		eventId: input.eventId
 	});
+
+	try {
+		await deps.mail.send(
+			orderConfirmationEmail({
+				orderNumber,
+				email: site.email,
+				lines: order.items,
+				itemsTotal: order.items_total,
+				shipping: order.shipping_total,
+				total: order.total,
+				currency: order.currency
+			})
+		);
+	} catch (err) {
+		console.error(`[fulfillment] creation of new order email failed for order ${order.id}:`, err);
+	}
 
 	// --- Best-effort, post-latch ---
 	// Everything below runs *after* the latch, which blocks re-entry: a Stripe
