@@ -43,11 +43,9 @@ export function buildSessionParams({
 		mode: 'payment',
 		// Spanish hosted checkout (PRD: checkout UI in Spanish).
 		locale: 'es',
-		// Cards only for now; Apple/Google Pay ride on `card` where the device
-		// supports it. No tax handling (not VAT-registered, books-only).
-		// TWINT is temporarily disabled until Stripe finishes activating it on the
-		// account — re-add 'twint' here once the dashboard shows it active.
-		payment_method_types: ['card'],
+		// TWINT + cards; Apple/Google Pay ride on `card` where the device supports
+		// it. No tax handling (not VAT-registered, books-only).
+		payment_method_types: ['card', 'twint'],
 		line_items: lineItems,
 		// Flat-rate shipping as a Stripe shipping option (single, fixed CHF amount).
 		shipping_options: [

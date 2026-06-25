@@ -60,10 +60,10 @@ describe('buildSessionParams', () => {
 		expect(rate?.fixed_amount).toEqual({ currency: 'chf', amount: 800 });
 	});
 
-	it('configures Spanish hosted checkout, cards only (TWINT temporarily off), CH-only address', () => {
+	it('configures Spanish hosted checkout, TWINT + cards, CH-only address', () => {
 		expect(params.mode).toBe('payment');
 		expect(params.locale).toBe('es');
-		expect(params.payment_method_types).toEqual(['card']);
+		expect(params.payment_method_types).toEqual(['card', 'twint']);
 		expect(params.shipping_address_collection?.allowed_countries).toEqual(['CH']);
 	});
 
