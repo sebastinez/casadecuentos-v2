@@ -13,5 +13,5 @@ export const site = {
 	address: 'Ahornweg 22, 8630 Rüti ZH, Suiza',
 	// Instagram handle + canonical profile URL.
 	instagram: '@casadecuentos',
-	instagramUrl: 'https://instagram.com/casadecuentos'
+	instagramUrl: 'https://instagram.com/casadecuentos.ch'
 } as const;
