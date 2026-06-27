@@ -90,16 +90,18 @@ describe('buildOrder', () => {
 	it('throws out_of_stock when a quantity exceeds available stock', async () => {
 		const catalog = fakeCatalog(CATALOG);
 		// `b` has stock 2; requesting 3 is over.
-		await expect(buildOrder([{ id: 'b', qty: 3 }], catalog, FLAT)).rejects.toMatchObject(
-			{ code: 'out_of_stock', bookIds: ['b'] }
-		);
+		await expect(buildOrder([{ id: 'b', qty: 3 }], catalog, FLAT)).rejects.toMatchObject({
+			code: 'out_of_stock',
+			bookIds: ['b']
+		});
 	});
 
 	it('treats a zero-stock book as out of stock', async () => {
 		const catalog = fakeCatalog(CATALOG);
-		await expect(buildOrder([{ id: 'c', qty: 1 }], catalog, FLAT)).rejects.toMatchObject(
-			{ code: 'out_of_stock', bookIds: ['c'] }
-		);
+		await expect(buildOrder([{ id: 'c', qty: 1 }], catalog, FLAT)).rejects.toMatchObject({
+			code: 'out_of_stock',
+			bookIds: ['c']
+		});
 	});
 
 	it('collects every under-stocked id, not just the first', async () => {

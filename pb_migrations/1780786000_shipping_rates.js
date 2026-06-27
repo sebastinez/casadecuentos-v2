@@ -53,9 +53,7 @@ migrate(
 
 		// --- seed placeholder tiers (owner edits real prices in admin) ---------
 		const seed = (urgency, maxWeight, cost) =>
-			app.save(
-				new Record(collection, { urgency, max_weight: maxWeight, cost_in_chf: cost })
-			);
+			app.save(new Record(collection, { urgency, max_weight: maxWeight, cost_in_chf: cost }));
 
 		// Economy (Swiss Post Economy, ~2–3 days).
 		seed('economy', 1000, 6.9);

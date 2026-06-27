@@ -34,7 +34,9 @@ const flag = (name) => args.includes(name);
 const DRY_RUN = flag('--dry-run');
 const limitIdx = args.indexOf('--limit');
 const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : Infinity;
-const csvPath = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--limit') || 'products_export_1-2.csv';
+const csvPath =
+	args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--limit') ||
+	'products_export_1-2.csv';
 
 const PB_URL = process.env.POCKETBASE_URL || 'https://pb.casadecuentos.ch';
 const ADMIN_EMAIL = process.env.POCKETBASE_ADMIN_EMAIL;
@@ -43,7 +45,9 @@ const ADMIN_PASSWORD = process.env.POCKETBASE_ADMIN_PASSWORD;
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
 	console.error(
 		'Missing POCKETBASE_ADMIN_EMAIL / POCKETBASE_ADMIN_PASSWORD env vars.\n' +
-			'These must be the PRODUCTION superuser credentials for ' + PB_URL + '.'
+			'These must be the PRODUCTION superuser credentials for ' +
+			PB_URL +
+			'.'
 	);
 	process.exit(1);
 }
@@ -124,7 +128,9 @@ async function main() {
 	console.log(`Mode:       ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE'}`);
 	console.log('');
 
-	await pb.collection('_superusers').authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD, { requestKey: null });
+	await pb
+		.collection('_superusers')
+		.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD, { requestKey: null });
 	console.log(`Authenticated as ${ADMIN_EMAIL}\n`);
 
 	const rows = parseCSV(readFileSync(csvPath, 'utf8'));
@@ -135,7 +141,9 @@ async function main() {
 
 	const ISBN_COL = 'ISBN (product.metafields.facts.isbn)';
 	if (col['Variant Grams'] === undefined || col[ISBN_COL] === undefined) {
-		console.error('CSV is missing the "Variant Grams" or ISBN column. Got headers:\n' + header.join(' | '));
+		console.error(
+			'CSV is missing the "Variant Grams" or ISBN column. Got headers:\n' + header.join(' | ')
+		);
 		process.exit(1);
 	}
 
@@ -180,7 +188,9 @@ async function main() {
 
 		let book = null;
 		try {
-			book = await pb.collection('books').getFirstListItem(`ISBN="${escFilter(isbn)}"`, { requestKey: null });
+			book = await pb
+				.collection('books')
+				.getFirstListItem(`ISBN="${escFilter(isbn)}"`, { requestKey: null });
 		} catch (e) {
 			if (e?.status !== 404) throw e;
 		}
@@ -199,7 +209,9 @@ async function main() {
 
 		try {
 			if (DRY_RUN) {
-				console.log(`~ would set ${handle} — ISBN ${isbn} | ${book.weight_grams ?? '∅'} → ${grams} g`);
+				console.log(
+					`~ would set ${handle} — ISBN ${isbn} | ${book.weight_grams ?? '∅'} → ${grams} g`
+				);
 			} else {
 				await pb.collection('books').update(book.id, { weight_grams: grams }, { requestKey: null });
 				console.log(`~ updated ${handle} — ISBN ${isbn} | ${grams} g`);

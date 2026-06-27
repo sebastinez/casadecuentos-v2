@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
 	import { AGE_BANDS } from '$lib/age-bands';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	let { data }: { data: PageData } = $props();
 
@@ -43,7 +44,7 @@
 	// spaces/special chars stays intact), and empty filters are omitted so the
 	// links stay clean.
 	function pageHref(page: number): string {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (f.q) params.set('q', f.q);
 		if (f.age) params.set('age', f.age);
 		if (f.genre) params.set('genre', f.genre);

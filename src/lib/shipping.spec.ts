@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	shippingCost,
-	totalWeightGrams,
-	parseUrgency,
-	type ShippingRate
-} from './shipping';
+import { shippingCost, totalWeightGrams, parseUrgency, type ShippingRate } from './shipping';
 
 // A two-tier table per urgency: ≤1000g and ≤5000g, priority dearer than economy.
 const RATES: ShippingRate[] = [

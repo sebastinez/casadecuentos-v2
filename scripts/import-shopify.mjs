@@ -45,7 +45,9 @@ const DRY_RUN = flag('--dry-run');
 const FORCE_COVER = flag('--force-cover');
 const limitIdx = args.indexOf('--limit');
 const LIMIT = limitIdx !== -1 ? parseInt(args[limitIdx + 1], 10) : Infinity;
-const csvPath = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--limit') || 'products_export_1-3.csv';
+const csvPath =
+	args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--limit') ||
+	'products_export_1-3.csv';
 
 const PB_URL = process.env.POCKETBASE_URL || 'https://pb.casadecuentos.ch';
 const ADMIN_EMAIL = process.env.POCKETBASE_ADMIN_EMAIL;
@@ -54,7 +56,9 @@ const ADMIN_PASSWORD = process.env.POCKETBASE_ADMIN_PASSWORD;
 if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
 	console.error(
 		'Missing POCKETBASE_ADMIN_EMAIL / POCKETBASE_ADMIN_PASSWORD env vars.\n' +
-			'These must be the PRODUCTION superuser credentials for ' + PB_URL + '.'
+			'These must be the PRODUCTION superuser credentials for ' +
+			PB_URL +
+			'.'
 	);
 	process.exit(1);
 }
@@ -134,7 +138,7 @@ const FORMAT_MAP = {
 	'tapa dura': 'Tapa dura',
 	'tapa blanda': 'Tapa blanda',
 	cartone: 'Cartoné',
-	'cartoné': 'Cartoné',
+	cartoné: 'Cartoné',
 	cartonado: 'Cartoné'
 };
 const normalizeFormat = (s) => {
@@ -181,14 +185,18 @@ async function findOrCreate(collection, name, cache) {
 	if (cache.has(key)) return cache.get(key);
 	let id;
 	try {
-		const rec = await pb.collection(collection).getFirstListItem(`slug="${slug}"`, { requestKey: null });
+		const rec = await pb
+			.collection(collection)
+			.getFirstListItem(`slug="${slug}"`, { requestKey: null });
 		id = rec.id;
 	} catch (e) {
 		if (e?.status !== 404) throw e;
 		if (DRY_RUN) {
 			id = `(would-create ${collection}/${slug})`;
 		} else {
-			const rec = await pb.collection(collection).create({ name: name.trim(), slug }, { requestKey: null });
+			const rec = await pb
+				.collection(collection)
+				.create({ name: name.trim(), slug }, { requestKey: null });
 			id = rec.id;
 			console.log(`  + created ${collection}: "${name.trim()}" (${slug})`);
 		}
@@ -219,10 +227,14 @@ function toFormData(data, file) {
 async function main() {
 	console.log(`PocketBase: ${PB_URL}`);
 	console.log(`CSV:        ${csvPath}`);
-	console.log(`Mode:       ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE'}${FORCE_COVER ? ' +force-cover' : ''}`);
+	console.log(
+		`Mode:       ${DRY_RUN ? 'DRY RUN (no writes)' : 'LIVE'}${FORCE_COVER ? ' +force-cover' : ''}`
+	);
 	console.log('');
 
-	await pb.collection('_superusers').authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD, { requestKey: null });
+	await pb
+		.collection('_superusers')
+		.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD, { requestKey: null });
 	console.log(`Authenticated as ${ADMIN_EMAIL}\n`);
 
 	const rows = parseCSV(readFileSync(csvPath, 'utf8'));
@@ -287,7 +299,9 @@ async function main() {
 		// Find existing book by slug.
 		let existing = null;
 		try {
-			existing = await pb.collection('books').getFirstListItem(`slug="${handle}"`, { requestKey: null });
+			existing = await pb
+				.collection('books')
+				.getFirstListItem(`slug="${handle}"`, { requestKey: null });
 		} catch (e) {
 			if (e?.status !== 404) throw e;
 		}
@@ -311,7 +325,9 @@ async function main() {
 				);
 			} else if (existing) {
 				if (file) {
-					await pb.collection('books').update(existing.id, toFormData(data, file), { requestKey: null });
+					await pb
+						.collection('books')
+						.update(existing.id, toFormData(data, file), { requestKey: null });
 					coversUploaded++;
 				} else {
 					await pb.collection('books').update(existing.id, data, { requestKey: null });

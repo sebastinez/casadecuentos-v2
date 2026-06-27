@@ -34,17 +34,17 @@
 			<strong>Formulario de contacto:</strong> nombre, correo electrónico, asunto y mensaje.
 		</li>
 		<li>
-			<strong>Carrito:</strong> recordamos los artículos que añades únicamente en tu navegador. No lo recibimos
-			en nuestros servidores hasta que inicias el pago.
+			<strong>Carrito:</strong> recordamos los artículos que añades únicamente en tu navegador. No lo
+			recibimos en nuestros servidores hasta que inicias el pago.
 		</li>
 	</ul>
 
 	<h2>Cookies</h2>
 	<p>
-		En nuestras páginas no usamos cookies de seguimiento, de análisis ni de publicidad. Lo único que se
-		guarda en tu navegador es tu carrito, para que no pierdas lo que has añadido hasta que decidas pagar.
-		Por eso no verás un aviso de cookies pidiéndote permiso: no hay nada que rastrear ni que aceptar o
-		rechazar.
+		En nuestras páginas no usamos cookies de seguimiento, de análisis ni de publicidad. Lo único que
+		se guarda en tu navegador es tu carrito, para que no pierdas lo que has añadido hasta que
+		decidas pagar. Por eso no verás un aviso de cookies pidiéndote permiso: no hay nada que rastrear
+		ni que aceptar o rechazar.
 	</p>
 	<p>
 		Cuando inicias el pago te llevamos a <strong>Stripe</strong>, nuestro proveedor de pagos, que sí

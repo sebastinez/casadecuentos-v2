@@ -71,7 +71,9 @@
 	// Total shipping weight of the cart, in grams (a book with no weight set adds
 	// 0). Drives the tiered shipping cost below.
 	const weightGrams = $derived(
-		totalWeightGrams(lines.map(({ item, book }) => ({ weightGrams: book.weightGrams, qty: item.qty })))
+		totalWeightGrams(
+			lines.map(({ item, book }) => ({ weightGrams: book.weightGrams, qty: item.qty }))
+		)
 	);
 
 	// Shipping cost for the current weight + urgency, resolved against the rate
@@ -208,14 +210,27 @@
 
 	<!-- Delivery speed: the customer picks a tier; shipping recomputes live. -->
 	<fieldset class="mt-6 border-t border-gray-100 pt-4">
-		<legend class="mb-2 text-sm font-medium text-gray-700">{t('cart.deliverySpeed', locale)}</legend>
+		<legend class="mb-2 text-sm font-medium text-gray-700">{t('cart.deliverySpeed', locale)}</legend
+		>
 		<div class="flex flex-col gap-2">
 			<label class="flex items-center gap-2 text-sm">
-				<input type="radio" name="urgency" value="economy" bind:group={urgency} class="accent-terracotta-600" />
+				<input
+					type="radio"
+					name="urgency"
+					value="economy"
+					bind:group={urgency}
+					class="accent-terracotta-600"
+				/>
 				{t('cart.delivery.economy', locale)}
 			</label>
 			<label class="flex items-center gap-2 text-sm">
-				<input type="radio" name="urgency" value="priority" bind:group={urgency} class="accent-terracotta-600" />
+				<input
+					type="radio"
+					name="urgency"
+					value="priority"
+					bind:group={urgency}
+					class="accent-terracotta-600"
+				/>
 				{t('cart.delivery.priority', locale)}
 			</label>
 		</div>

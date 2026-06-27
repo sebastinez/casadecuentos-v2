@@ -70,7 +70,9 @@ describe('buildSessionParams', () => {
 			successUrl: 'https://shop.test/pago/exito',
 			cancelUrl: 'https://shop.test/pago/cancelado'
 		});
-		expect(priority.shipping_options?.[0].shipping_rate_data?.display_name).toBe('Envío prioritario');
+		expect(priority.shipping_options?.[0].shipping_rate_data?.display_name).toBe(
+			'Envío prioritario'
+		);
 	});
 
 	it('configures Spanish hosted checkout, TWINT + cards, CH-only address', () => {

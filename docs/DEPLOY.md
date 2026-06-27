@@ -51,7 +51,7 @@ both `.env` files, and `/etc/hosts`).
 ## 1. Create the VPS + first login
 
 - **Type:** CX22 (Intel, 2 vCPU/4 GB) or CPX21 (AMD) — both fine. Avoid the ARM
-  CAX line only if you'd download the wrong PocketBase/Node arch; if you *do*
+  CAX line only if you'd download the wrong PocketBase/Node arch; if you _do_
   use CAX, swap `linux_amd64` → `linux_arm64` for the PocketBase binary and use
   the arm64 Node — everything else is identical.
 - **Image:** Debian 13.
@@ -74,12 +74,12 @@ are independent, and Caddy issues a cert per hostname via HTTP-01 — the apex
 never has to point here. This runs a fully working preview while the live store
 stays put.
 
-| Type | Name      | Value           |
-| ---- | --------- | --------------- |
-| A    | `pb`      | `<server IPv4>` |
-| A    | `preview` | `<server IPv4>` |
-| AAAA | `pb`      | `<server IPv6>` *(optional — only if the box's IPv6 works)* |
-| AAAA | `preview` | `<server IPv6>` *(optional)* |
+| Type | Name      | Value                                                       |
+| ---- | --------- | ----------------------------------------------------------- |
+| A    | `pb`      | `<server IPv4>`                                             |
+| A    | `preview` | `<server IPv4>`                                             |
+| AAAA | `pb`      | `<server IPv6>` _(optional — only if the box's IPv6 works)_ |
+| AAAA | `preview` | `<server IPv6>` _(optional)_                                |
 
 A-records alone suffice. The committed [`Caddyfile`](../deploy/Caddyfile) and
 `ORIGIN` are preconfigured for `preview.casadecuentos.ch`.
@@ -120,7 +120,7 @@ chown -R casadecuentos:casadecuentos /var/lib/pocketbase
 ## 5. Get the code onto the box
 
 Push this repo to a (private) GitHub repo, then clone it. The app dir stays
-owned by `root` (the service only needs to *read* it):
+owned by `root` (the service only needs to _read_ it):
 
 ```sh
 git clone https://github.com/<you>/casadecuentos-v2 /opt/casadecuentos
@@ -282,10 +282,10 @@ ls /tmp/pb-restore/storage                      # uploaded images present
 
 - **Deploy a code change:** push to GitHub, then on the box
   `sudo /opt/casadecuentos/deploy/update.sh` (pulls, `pnpm install`, `pnpm
-  build`, restarts both services — see [`deploy/update.sh`](../deploy/update.sh)).
+build`, restarts both services — see [`deploy/update.sh`](../deploy/update.sh)).
   New `pb_migrations/*.js` apply on the PocketBase restart it does.
 - **Change a secret:** edit `/etc/casadecuentos/*.env`, then `systemctl restart
-  casadecuentos` (and/or `pocketbase`).
+casadecuentos` (and/or `pocketbase`).
 - **Logs:** `journalctl -u casadecuentos -f` / `-u pocketbase -f` / `-u caddy -f`.
 - **Owner's daily loop** stays entirely in `https://pb.<domain>/_/` (catalog,
   featured, banners, events, RSVPs, contact messages, order fulfillment).
@@ -294,12 +294,12 @@ ls /tmp/pb-restore/storage                      # uploaded images present
 
 ## Acceptance-criteria mapping (Phase 12)
 
-| Criterion                                                | Where                                            |
-| -------------------------------------------------------- | ------------------------------------------------ |
-| PB + SvelteKit + Caddy as systemd services on one VPS    | `deploy/*.service`, `deploy/Caddyfile`, steps 6–8 |
-| Domain A/AAAA → VPS; automatic HTTPS                     | step 2 + Caddy (ACME)                            |
-| Secrets injected at runtime, not world-readable          | `/etc/casadecuentos/*.env` (chmod 600), steps 6–7 |
-| Stripe webhook at a stable public HTTPS URL              | Caddy apex proxy + step 10                       |
-| Automated DB + image backups, restore-verified           | step 12 (PocketBase backup-to-S3)                |
-| SPF + DKIM + DMARC from a dedicated subdomain            | step 11                                          |
-| Owner operates everything from PocketBase admin          | step 9 (public `pb.<domain>/_/`)                 |
+| Criterion                                             | Where                                             |
+| ----------------------------------------------------- | ------------------------------------------------- |
+| PB + SvelteKit + Caddy as systemd services on one VPS | `deploy/*.service`, `deploy/Caddyfile`, steps 6–8 |
+| Domain A/AAAA → VPS; automatic HTTPS                  | step 2 + Caddy (ACME)                             |
+| Secrets injected at runtime, not world-readable       | `/etc/casadecuentos/*.env` (chmod 600), steps 6–7 |
+| Stripe webhook at a stable public HTTPS URL           | Caddy apex proxy + step 10                        |
+| Automated DB + image backups, restore-verified        | step 12 (PocketBase backup-to-S3)                 |
+| SPF + DKIM + DMARC from a dedicated subdomain         | step 11                                           |
+| Owner operates everything from PocketBase admin       | step 9 (public `pb.<domain>/_/`)                  |
