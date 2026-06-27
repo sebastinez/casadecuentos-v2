@@ -34,10 +34,22 @@
 			<strong>Formulario de contacto:</strong> nombre, correo electrónico, asunto y mensaje.
 		</li>
 		<li>
-			<strong>Carrito:</strong> se guarda únicamente en tu navegador (almacenamiento local). No lo recibimos
+			<strong>Carrito:</strong> recordamos los artículos que añades únicamente en tu navegador. No lo recibimos
 			en nuestros servidores hasta que inicias el pago.
 		</li>
 	</ul>
+
+	<h2>Cookies</h2>
+	<p>
+		En nuestras páginas no usamos cookies de seguimiento, de análisis ni de publicidad. Lo único que se
+		guarda en tu navegador es tu carrito, para que no pierdas lo que has añadido hasta que decidas pagar.
+		Por eso no verás un aviso de cookies pidiéndote permiso: no hay nada que rastrear ni que aceptar o
+		rechazar.
+	</p>
+	<p>
+		Cuando inicias el pago te llevamos a <strong>Stripe</strong>, nuestro proveedor de pagos, que sí
+		utiliza sus propias cookies para procesar la transacción de forma segura.
+	</p>
 
 	<h2>Con quién compartimos tus datos</h2>
 	<p>
@@ -59,6 +71,11 @@
 		<li>
 			<strong>PocketBase</strong> — la base de datos donde guardamos el catálogo, los pedidos, las reservas
 			y los mensajes de contacto, en el servidor anterior.
+		</li>
+		<li>
+			<strong>YouTube (Google) y OpenStreetMap</strong> — algunas miniaturas de vídeo y los mapas se cargan
+			desde sus servidores, que pueden registrar tu dirección IP. No usamos reproductores ni rastreadores
+			incrustados.
 		</li>
 	</ul>
 
