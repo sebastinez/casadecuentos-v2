@@ -17,15 +17,11 @@ async function loadShippingRates(pb: PocketBase): Promise<ShippingRate[]> {
 	return rows.map((r) => ({ maxWeight: r.max_weight, cost: r.cost_in_chf, urgency: r.urgency }));
 }
 
-// Orchestrates checkout initiation — the integration seam (covered via mocked
-// SDK / integration tests, not deep unit tests, per the PRD). The price-integrity
-// logic it leans on (`buildOrder`) is the unit-tested part.
-//
-// Sequence: build the authoritative order → create the `pending` order (cart
-// snapshot + totals) → create the Stripe session carrying `metadata.orderId` →
-// write the session id back onto the order. The order exists before the redirect
-// and the success redirect is never trusted; the Phase 6b webhook is the only
-// thing that flips it to `paid`.
+// Orchestrates checkout initiation. Sequence: build the authoritative order →
+// create the `pending` order (cart snapshot + totals) → create the Stripe session
+// carrying `metadata.orderId` → write the session id back onto the order. The order
+// exists before the redirect and the success redirect is never trusted; the webhook
+// is the only thing that flips it to `paid`.
 export async function startCheckout(
 	items: CartItem[],
 	urgency: Urgency,
@@ -40,8 +36,8 @@ export async function startCheckout(
 		resolveShipping: (grams) => shippingCost(grams, rates, urgency)
 	});
 
-	// `pending`: order_number stays unset (assigned at `paid` in Phase 6b); the
-	// session id is filled in immediately below once Stripe returns it.
+	// `pending`: order_number stays unset (assigned at `paid`); the session id is
+	// filled in immediately below once Stripe returns it.
 	const record = await pb.collection('orders').create({
 		status: 'pending',
 		items: order.lines,

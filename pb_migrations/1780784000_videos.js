@@ -1,8 +1,8 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase: videos — the `videos` collection (the owner's YouTube content, surfaced
-// at `/videos` as link-out cards) + extend `banners.type` with a third
-// placement `live_interview` for the page's "next live interview" announcement.
+// The `videos` collection (the owner's YouTube content, surfaced at `/videos` as
+// link-out cards) + extend `banners.type` with a third placement `live_interview`
+// for the page's "next live interview" announcement.
 //
 // `videos` is public-readable (it backs the public `/videos` page); writes are
 // superuser-only via the admin, same posture as `books`/`banners`/`events`. The
@@ -12,7 +12,7 @@
 // half-entered record never shows publicly.
 //
 // Localizable copy (`title`, `description`) lives in unsuffixed base columns
-// (Spanish in v1) per the Phase 1 convention; `*_de` is a v2 data-entry task.
+// (Spanish in v1) per the localized-field convention; `*_de` is a v2 data-entry task.
 //
 // For the `live_interview` banner type: `image`/`sort` are unused; the interview
 // content maps onto existing fields (`title`/`subtitle` = info, `cta_label`/

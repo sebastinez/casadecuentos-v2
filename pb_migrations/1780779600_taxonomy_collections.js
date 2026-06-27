@@ -1,8 +1,8 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 2 — taxonomy as relation collections.
-// `genres`, `publishers`, `book_languages` power clean filter facets (Phase 3)
-// and let the owner rename a label without a code change. Each is a tiny
+// Taxonomy as relation collections. `genres`, `publishers`, `book_languages` power
+// clean filter facets and let the owner rename a label without a code change. Each is
+// a tiny
 // `name` + `slug` collection: public list/view (they back public filters),
 // superuser-only writes via the PocketBase admin. `name` is `presentable` so
 // it shows as the label in relation pickers and previews. `slug` is unique and

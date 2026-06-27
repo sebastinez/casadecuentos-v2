@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 9 — seed a couple of events so `/eventos` renders against real data and
-// the owner has working examples to edit. Spanish content (v1 is Spanish-only).
+// Seed a couple of events so `/eventos` renders against real data and the owner has
+// working examples to edit. Spanish content (v1 is Spanish-only).
 // One event is in the future (shows in the listing) and one is in the past (to
 // demonstrate that the upcoming-only filter auto-hides it). `date`/`time` are
 // Europe/Zurich wall-clock text (`YYYY-MM-DD` / `HH:MM`); lat/lng point at real

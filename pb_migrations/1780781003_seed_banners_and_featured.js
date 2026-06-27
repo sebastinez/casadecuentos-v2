@@ -1,13 +1,13 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 8 — seed banners + featured-books curation so `/` renders against real
-// data (and the owner has working examples to edit). Spanish content (v1 is
-// Spanish-only). Banners are seeded WITHOUT images: migrations can't attach file
-// uploads, and the landing page renders a gradient fallback when `image` is
-// empty, so text-only seeds still display. The owner adds images in the admin.
+// Seed banners + featured-books curation so `/` renders against real data (and the
+// owner has working examples to edit). Spanish content (v1 is Spanish-only). Banners
+// are seeded WITHOUT images: migrations can't attach file uploads, and the landing
+// page renders a gradient fallback when `image` is empty, so text-only seeds still
+// display. The owner adds images in the admin.
 //
-// `featured_books` points at the three Phase 1/2 seed books in a deliberate
-// order. CTA links target real listing filters (Phase 3).
+// `featured_books` points at the three seed books in a deliberate order. CTA links
+// target real listing filters.
 migrate(
 	(app) => {
 		// --- banners ----------------------------------------------------------

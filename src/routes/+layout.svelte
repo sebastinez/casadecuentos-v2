@@ -22,8 +22,8 @@
 		{ href: '/contacto', label: t('nav.contact', locale) }
 	];
 
-	// Footer policy links (Phase 10). Separate from the primary nav: these are the
-	// "information" links — About + the hardcoded legal pages + contact.
+	// Footer policy links, separate from the primary nav: the "information" links —
+	// About + the hardcoded legal pages + contact.
 	const footerLinks = [
 		{ href: '/quienes-somos', label: t('footer.about', locale) },
 		{ href: '/envios-devoluciones', label: t('footer.shipping', locale) },

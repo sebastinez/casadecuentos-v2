@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase: videos — seed a couple of `videos` records + one active `live_interview`
-// banner so both the card grid and the banner path are verifiable on first boot.
+// Seed a couple of `videos` records + one active `live_interview` banner so both the
+// card grid and the banner path are verifiable on first boot.
 //
 // Spanish content (v1 is Spanish-only). The banner is seeded WITHOUT an image
 // (unused for `live_interview`) and with a `start` fixed just before now + an

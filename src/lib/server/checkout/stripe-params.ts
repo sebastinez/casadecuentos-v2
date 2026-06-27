@@ -2,13 +2,12 @@ import type Stripe from 'stripe';
 import type { BuiltOrder } from './order';
 
 // Pure mapping from a validated `BuiltOrder` to the params for a hosted Stripe
-// Checkout session. No SDK call happens here (the type import is erased at
-// runtime), so the money-critical conversion is unit-testable without Stripe.
-// The endpoint passes the result straight to `stripe.checkout.sessions.create`.
+// Checkout session. No SDK call here, so the money-critical conversion is
+// unit-testable without Stripe.
 
-// CHF prices are decimal (e.g. 24.90); Stripe wants an integer minor unit
-// (rappen). Round rather than truncate — float math makes 24.90 * 100 land at
-// 2489.9999…, which `Math.trunc` would wrongly drop to 2489.
+// CHF prices are decimal (e.g. 24.90); Stripe wants integer minor units (rappen).
+// Round, not truncate — float math makes 24.90 * 100 land at 2489.9999…, which
+// `Math.trunc` would wrongly drop to 2489.
 export function toMinorUnits(chf: number): number {
 	return Math.round(chf * 100);
 }
@@ -17,8 +16,8 @@ const CURRENCY = 'chf';
 
 export interface SessionParamOptions {
 	order: BuiltOrder;
-	// Opaque id of the `pending` order, echoed back on the webhook to correlate
-	// the payment with our order (Phase 6b reads it from `metadata`).
+	// Opaque id of the `pending` order, echoed back on the webhook (via `metadata`)
+	// to correlate the payment with our order.
 	orderId: string;
 	successUrl: string;
 	cancelUrl: string;
@@ -41,15 +40,14 @@ export function buildSessionParams({
 
 	return {
 		mode: 'payment',
-		// Spanish hosted checkout (PRD: checkout UI in Spanish).
+		// Spanish hosted checkout.
 		locale: 'es',
-		// TWINT + cards; Apple/Google Pay ride on `card` where the device supports
-		// it. No tax handling (not VAT-registered, books-only).
+		// TWINT + cards; Apple/Google Pay ride on `card`. No tax (not VAT-registered,
+		// books-only).
 		payment_method_types: ['card', 'twint'],
 		line_items: lineItems,
-		// Weight-based shipping as a single fixed Stripe shipping option — the cost
-		// + delivery speed were already chosen in our cart, so Stripe just displays
-		// the resolved amount (it doesn't offer the choice).
+		// Weight-based shipping as a single fixed option — the cost + delivery speed
+		// were already chosen in our cart, so Stripe just displays the resolved amount.
 		shipping_options: [
 			{
 				shipping_rate_data: {
@@ -66,8 +64,7 @@ export function buildSessionParams({
 		shipping_address_collection: { allowed_countries: ['CH'] },
 		success_url: successUrl,
 		cancel_url: cancelUrl,
-		// Correlate the eventual `checkout.session.completed` event back to our
-		// `pending` order (the success redirect is never trusted for fulfilment).
+		// Correlate the `checkout.session.completed` event back to our `pending` order.
 		metadata: { orderId }
 	};
 }

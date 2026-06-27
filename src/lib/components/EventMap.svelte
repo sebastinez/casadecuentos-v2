@@ -9,10 +9,9 @@
 	import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 	// A keyless OpenStreetMap pin for one venue. Leaflet touches `window`/`document`,
-	// so it must run client-side only — hence the dynamic import inside `onMount`
-	// (this component is never reached during SSR). Per the PRD: Leaflet + OSM, free
-	// and keyless, respecting OSM's tile-usage policy at our low volume (attribution
-	// shown; default tile server only).
+	// so it must run client-side only — hence the dynamic import inside `onMount`.
+	// Respects OSM's tile-usage policy at our low volume (attribution shown; default
+	// tile server only).
 	let { latitude, longitude, label }: { latitude: number; longitude: number; label: string } =
 		$props();
 

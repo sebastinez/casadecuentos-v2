@@ -1,8 +1,8 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 1 — a couple of seed books so `/libros` renders against real data.
-// Spanish content (v1 is Spanish-only). One book is out of stock to exercise
-// the unavailable path in later phases. No cover files (added via admin).
+// A couple of seed books so `/libros` renders against real data. Spanish content (v1
+// is Spanish-only). One book is out of stock to exercise the unavailable path. No
+// cover files (added via admin).
 migrate(
 	(app) => {
 		const collection = app.findCollectionByNameOrId('books');

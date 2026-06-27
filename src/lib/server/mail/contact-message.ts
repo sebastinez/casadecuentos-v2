@@ -1,26 +1,22 @@
 import { t, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
 import type { MailMessage } from './transport';
 
-// Pure builder for the contact-message email sent TO the owner. Given a
-// submitted message it renders a `MailMessage` addressed to the business inbox.
-// No I/O and no provider knowledge — so it is unit-testable and the form action
-// stays the only place that actually sends. Copy flows through the i18n layer
-// (`t`) for consistency, though the audience here is the owner, not a customer.
+// Pure builder for the contact-message email sent TO the owner. No I/O and no
+// provider knowledge, so it is unit-testable and the form action stays the only
+// place that actually sends.
 
 export interface ContactMessageData {
-	// The business inbox (the `to`). Passed in from `site.email` so this builder
-	// stays pure and config-free.
+	// The business inbox; passed in (from `site.email`) so this builder stays pure.
 	to: string;
-	// All four fields below are ATTACKER-CONTROLLED (public form input), so every
-	// one is escaped before interpolating into the HTML body.
+	// name/email/subject/message are ATTACKER-CONTROLLED (public form input), so
+	// every one is escaped before interpolating into the HTML body.
 	name: string;
 	email: string;
 	subject: string;
 	message: string;
 }
 
-// Escape the few characters that would break out of HTML text/attribute
-// context. Every field is user-supplied here, so escape all of them.
+// Escape HTML metacharacters; every field here is user-supplied.
 function escapeHtml(value: string): string {
 	return value
 		.replace(/&/g, '&amp;')

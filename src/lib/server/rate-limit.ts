@@ -1,11 +1,10 @@
-// A tiny in-memory fixed-window rate limiter. Sufficient for v1: one VPS, one
-// Node process (per the PRD's single-box deploy), so process-local state is the
-// whole picture — no Redis, no shared store. Used to throttle contact-form
-// submissions per client IP (honeypot handles bots; this handles flooding).
+// A tiny in-memory fixed-window rate limiter. Sufficient for v1's single-box deploy
+// (one VPS, one Node process), so process-local state is the whole picture — no
+// Redis, no shared store. Used to throttle contact-form submissions per client IP
+// (honeypot handles bots; this handles flooding).
 //
-// Caveat for Phase 12: behind Caddy, `getClientAddress()` must see the real
-// client IP (proxy forwards it), else every request shares one key and the
-// limit becomes global. Not a concern in local dev.
+// Caveat: behind Caddy, `getClientAddress()` must see the real client IP (the proxy
+// must forward it), else every request shares one key and the limit becomes global.
 
 interface Window {
 	count: number;

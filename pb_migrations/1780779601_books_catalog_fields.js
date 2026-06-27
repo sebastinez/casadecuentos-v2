@@ -1,12 +1,12 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 2 — grow `books` from the Phase 1 skeleton into the full catalog model.
-// Adds the remaining intrinsic bibliographic fields, the optional image gallery,
-// the `age_band` enum, and the three taxonomy relations (genre/publisher/
-// language → the collections created in the previous migration).
+// Grow `books` from the initial skeleton into the full catalog model. Adds the
+// remaining intrinsic bibliographic fields, the optional image gallery, the
+// `age_band` enum, and the three taxonomy relations (genre/publisher/language → the
+// collections created in the previous migration).
 //
-// All new columns are OPTIONAL on purpose: the Phase 1 seed records have no
-// taxonomy yet, and the next migration re-saves them to populate values. A
+// All new columns are OPTIONAL on purpose: the initial seed records have no taxonomy
+// yet, and the next migration re-saves them to populate values. A
 // required relation would make those existing rows invalid. Tighten later if a
 // hard constraint is ever wanted; nothing in v1 needs DB-level required here.
 migrate(
@@ -27,7 +27,7 @@ migrate(
 		collection.fields.add(new TextField({ name: 'book_size', max: 100 }));
 		collection.fields.add(new NumberField({ name: 'publication_year', min: 0, onlyInt: true }));
 
-		// Optional secondary images alongside the single `cover` from Phase 1.
+		// Optional secondary images alongside the single `cover`.
 		collection.fields.add(
 			new FileField({
 				name: 'gallery',
@@ -37,7 +37,7 @@ migrate(
 			})
 		);
 
-		// Age band: structured single-select enum (PRD bands).
+		// Age band: structured single-select enum.
 		collection.fields.add(
 			new SelectField({
 				name: 'age_band',

@@ -1,6 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 10 — contact-form messages (backup copy of every submission).
+// Contact-form messages (backup copy of every submission).
 //
 // `contact_messages` is FULLY closed (every rule null), same posture as `rsvps`
 // and `orders`: the SvelteKit BFF writes a record authenticating as a superuser

@@ -2,11 +2,10 @@ import { t, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
 import { formatEventDate } from '$lib/datetime';
 import type { MailMessage } from './transport';
 
-// Pure builder for the RSVP-confirmation email. Given the reserved event's
-// display details it renders a Spanish `MailMessage`. No I/O and no provider
-// knowledge — so it is unit-testable and the form action stays the only place
-// that actually sends. All copy flows through the i18n layer (`t`), so a future
-// `de` table localizes the same template with no code change (bilingual-ready).
+// Pure builder for the RSVP-confirmation email. No I/O and no provider knowledge, so
+// it is unit-testable and the form action stays the only place that actually sends.
+// All copy flows through the i18n layer (`t`), so a future `de` table localizes the
+// same template with no code change.
 
 export interface RsvpConfirmationData {
 	email: string;
@@ -18,9 +17,8 @@ export interface RsvpConfirmationData {
 	venueAddress: string;
 }
 
-// Escape the few characters that would break out of HTML context. The event
-// title/address are owner-entered and `name` is user-supplied — escape both
-// defensively before interpolating into the HTML body.
+// Escape HTML metacharacters. Event title/address are owner-entered and `name` is
+// user-supplied — escape both before interpolating into the HTML body.
 function escapeHtml(value: string): string {
 	return value
 		.replace(/&/g, '&amp;')

@@ -2,10 +2,9 @@ import type PocketBase from 'pocketbase';
 import { ClientResponseError } from 'pocketbase';
 import type { FulfillmentOrder, OrdersPort, StockPort } from './fulfillment';
 
-// Production implementations of the fulfilment ports, backed by PocketBase.
-// Thin I/O wrappers (integration-tested, not unit-tested, per the PRD) — all the
-// fulfilment *logic* lives in `fulfillment.ts` behind these interfaces. The
-// webhook route wires these to a superuser-authenticated client.
+// Production implementations of the fulfilment ports, backed by PocketBase. Thin
+// I/O wrappers — all the fulfilment *logic* lives in `fulfillment.ts` behind these
+// interfaces. The webhook route wires these to a superuser-authenticated client.
 
 // Human-readable order numbers start here, so the first real order reads as a
 // four-digit number rather than `1`.

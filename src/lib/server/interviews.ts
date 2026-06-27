@@ -1,15 +1,12 @@
 import type { Banner } from './content';
 
-// Pure tie-break for the /videos live-interview banner. The page shows at most
-// ONE interview announcement; given the active, in-window `live_interview`
-// banners (already filtered by `listBanners`), pick the single most imminent one
-// — the earliest `start`. Isolated and unit-tested because it is the one bit of
-// real logic here; the PocketBase read that feeds it is integration-tested.
+// Pure tie-break for the /videos live-interview banner. The page shows at most ONE
+// announcement; given the active, in-window `live_interview` banners (already
+// filtered by `listBanners`), pick the most imminent one — the earliest `start`.
 //
-// `start` is the schedule-window lower bound (empty string when the owner left
-// it unset). An unset `start` sorts last: a banner with no explicit start is
-// "always on" with no announced moment, so a banner that names an imminent time
-// takes precedence. Returns `null` when there are no interviews.
+// An unset `start` (empty string) sorts last: such a banner is "always on" with no
+// announced moment, so one that names an imminent time takes precedence. Returns
+// `null` when there are no interviews.
 export function selectNextInterview(banners: Banner[]): Banner | null {
 	let next: Banner | null = null;
 

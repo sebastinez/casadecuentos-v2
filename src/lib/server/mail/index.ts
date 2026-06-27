@@ -7,9 +7,7 @@ export { rsvpConfirmationEmail, type RsvpConfirmationData } from './rsvp-confirm
 export { contactMessageEmail, type ContactMessageData } from './contact-message';
 
 // Resend HTTP transport — a minimal `fetch` POST to the Resend API, no SDK
-// dependency (mirrors the Phase 7 `pb_hooks` "minimal Resend POST" approach).
-// Resend is EU-hosted per the PRD. Real domain/key provisioning is a Phase 12
-// deploy concern; this just needs `RESEND_API_KEY` + `MAIL_FROM` to be live.
+// dependency. Needs `RESEND_API_KEY` + `MAIL_FROM` to be live.
 function resendTransport(apiKey: string, from: string): MailTransport {
 	return {
 		async send(message: MailMessage): Promise<void> {
@@ -29,11 +27,9 @@ function resendTransport(apiKey: string, from: string): MailTransport {
 				})
 			});
 			if (!res.ok) {
-				// Throw so the caller knows the send failed. Note the failure is *not*
-				// recovered by a Stripe retry: the order is already `paid` (the latch),
-				// so a redelivery short-circuits at the idempotency guard. Fulfilment
-				// therefore treats this send as best-effort — it logs and moves on
-				// rather than emitting a pointless 500 (see `fulfillment.ts`).
+				// Throw so the caller knows the send failed. Fulfilment treats this as
+				// best-effort (logs, no 500) since the order is already `paid` and a Stripe
+				// retry short-circuits at the idempotency guard — see fulfillment.ts.
 				const detail = await res.text().catch(() => '');
 				throw new Error(`Resend send failed (${res.status}): ${detail}`);
 			}
@@ -41,19 +37,17 @@ function resendTransport(apiKey: string, from: string): MailTransport {
 	};
 }
 
-// Dev/fallback transport — logs instead of sending. Lets local checkout +
-// webhook flow run end-to-end without Resend credentials (the BFF has no deploy
-// spine before Phase 12). Never used when `RESEND_API_KEY`/`MAIL_FROM` are set.
+// Dev/fallback transport — logs instead of sending, so local checkout + webhook run
+// end-to-end without Resend credentials. Never used when `RESEND_API_KEY`/`MAIL_FROM`
+// are set.
 const logTransport: MailTransport = {
 	async send(message: MailMessage): Promise<void> {
 		console.info(`[mail:dev] would send "${message.subject}" to ${message.to}`);
 	}
 };
 
-// Pick the transport for the current environment: real Resend when both the key
-// and a from-address are configured, otherwise the logging fallback. Resolved
-// per call (cheap) so config changes don't require a restart of nothing — the
-// webhook builds its deps fresh each request.
+// Real Resend when both the key and a from-address are configured, otherwise the
+// logging fallback. Resolved per call (the webhook builds its deps fresh each request).
 export function createMailTransport(): MailTransport {
 	const apiKey = env.RESEND_API_KEY;
 	const from = env.MAIL_FROM;

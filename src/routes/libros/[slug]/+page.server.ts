@@ -4,11 +4,10 @@ import { createPocketBase } from '$lib/server/pocketbase';
 import { getBookBySlug } from '$lib/server/catalog';
 
 // Server-only load for the product detail page. Reads one book (with taxonomy
-// expanded) from PocketBase; an unknown slug yields a 404. Image URLs are built
-// here server-side from PocketBase file storage — per the PRD, images are the
-// one resource the browser fetches from PocketBase directly (thumbnails via its
-// query params), so the BFF only mints the URLs. `canonicalUrl` is absolute so
-// OG/canonical tags are correct when shared on WhatsApp/Instagram.
+// expanded) from PocketBase; an unknown slug yields a 404. Image URLs are minted
+// here server-side (the image file itself is the one resource the browser fetches
+// from PocketBase directly). `canonicalUrl` is absolute so OG/canonical tags are
+// correct when shared on WhatsApp/Instagram.
 export const load: PageServerLoad = async ({ params, url }) => {
 	const pb = createPocketBase();
 	const book = await getBookBySlug(pb, params.slug);

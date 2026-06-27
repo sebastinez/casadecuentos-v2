@@ -1,14 +1,13 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 8 — the `banners` collection (landing-page hero carousel + featured
-// promo strips). One collection drives both placements, distinguished by `type`
-// (`hero` | `featured`). The owner manages these in the PocketBase admin: text,
-// image, CTA, sort order, an active flag, and an optional schedule window for
-// timed promotions.
+// The `banners` collection (landing-page hero carousel + featured promo strips). One
+// collection drives both placements, distinguished by `type` (`hero` | `featured`).
+// The owner manages these in the PocketBase admin: text, image, CTA, sort order, an
+// active flag, and an optional schedule window for timed promotions.
 //
-// Localizable text lives in unsuffixed base columns (Spanish in v1) following
-// the Phase 1 localized-field convention — `title_de` / `subtitle_de` /
-// `cta_label_de` become a v2 data-entry task; no `*_de` columns are pre-created.
+// Localizable text lives in unsuffixed base columns (Spanish in v1) following the
+// localized-field convention — `title_de` / `subtitle_de` / `cta_label_de` become a
+// v2 data-entry task; no `*_de` columns are pre-created.
 // Bibliographic intrinsics don't apply here, so every text field is localizable.
 //
 // Public list/view (these back the public landing page); writes are

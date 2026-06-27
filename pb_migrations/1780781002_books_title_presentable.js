@@ -1,6 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 8 — make `books.title` presentable.
+// Make `books.title` presentable.
 // The `featured_books.book` relation picker (and any future book relation) shows
 // the `presentable` field as each option's label. Without this, the owner curates
 // the featured strip against opaque record IDs. The taxonomy collections already

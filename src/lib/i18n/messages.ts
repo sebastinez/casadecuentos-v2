@@ -117,9 +117,8 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'pago.backToCart': 'Volver al carrito',
 		'pago.keepBrowsing': 'Seguir explorando',
 
-		// Order-confirmation email (Phase 6b). Sent in Spanish from the payment
-		// webhook; bilingual-ready (keys, not hardcoded strings, so a future `de`
-		// table localizes the same template).
+		// Order-confirmation email. Sent in Spanish from the payment webhook; keys
+		// (not hardcoded strings) so a future `de` table localizes the same template.
 		'email.confirm.subject': 'Confirmación de pedido',
 		'email.confirm.greeting': 'Gracias por tu compra en Casa de Cuentos.',
 		'email.confirm.intro': 'Hemos recibido tu pago y estamos preparando tu pedido.',
@@ -144,7 +143,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'event.backTolist': 'Volver a actividades',
 		'event.mapLabel': 'Ubicación del evento',
 
-		// RSVP form (Phase 9). Free events, no capacity/waitlist.
+		// RSVP form. Free events, no capacity/waitlist.
 		'rsvp.heading': 'Reserva tu plaza',
 		'rsvp.intro': 'Las plazas son gratuitas. Déjanos tus datos y te confirmaremos por correo.',
 		'rsvp.name': 'Nombre',
@@ -157,7 +156,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'rsvp.error': 'No se pudo completar la reserva. Inténtalo de nuevo.',
 		'rsvp.invalid': 'Por favor revisa los campos: todos son obligatorios.',
 
-		// RSVP confirmation email (Phase 9). Sent in Spanish; bilingual-ready.
+		// RSVP confirmation email. Sent in Spanish; bilingual-ready.
 		'email.rsvp.subject': 'Confirmación de reserva',
 		'email.rsvp.greeting': 'Gracias por reservar tu plaza en Casa de Cuentos.',
 		'email.rsvp.intro': 'Hemos registrado tu reserva para el siguiente evento:',
@@ -167,9 +166,9 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.closing': 'Te esperamos. Si no puedes asistir, no necesitas hacer nada.',
 		'email.rsvp.signature': 'Casa de Cuentos',
 
-		// Videos page + live-interview banner (Phase: videos). YouTube link-out
-		// cards; "Entrevistas" is an editorial nav label distinct from the
-		// `/videos` slug — the page holds all channel videos, not only interviews.
+		// Videos page + live-interview banner. YouTube link-out cards; "Entrevistas"
+		// is an editorial nav label distinct from the `/videos` slug — the page holds
+		// all channel videos, not only interviews.
 		'videos.heading': 'Entrevistas y vídeos',
 		'videos.metaDescription':
 			'Lecturas, entrevistas y vídeos de Casa de Cuentos en nuestro canal de YouTube.',
@@ -178,7 +177,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'videos.liveBadge': 'En directo',
 		'video.thumbnailAlt': 'Miniatura del vídeo',
 
-		// Contact page + form (Phase 10)
+		// Contact page + form
 		'contact.heading': 'Contacto',
 		'contact.intro': '¿Tienes una pregunta o buscas un libro? Escríbenos.',
 		'contact.name': 'Nombre',
@@ -196,18 +195,18 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'contact.emailLabel': 'Correo',
 		'contact.instagramLabel': 'Instagram',
 
-		// Contact-message email (sent to the owner; Phase 10).
+		// Contact-message email (sent to the owner).
 		'email.contact.subject': 'Nuevo mensaje de contacto',
 		'email.contact.intro': 'Has recibido un nuevo mensaje desde el formulario de contacto:',
 
-		// Static content pages (Phase 10). Page bodies are hardcoded Spanish prose
-		// in their components; only titles/chrome flow through i18n.
+		// Static content pages. Page bodies are hardcoded Spanish prose in their
+		// components; only titles/chrome flow through i18n.
 		'about.heading': 'Quienes somos',
 		'privacy.heading': 'Política de privacidad',
 		'terms.heading': 'Términos y condiciones',
 		'shipping.heading': 'Envíos y devoluciones',
 
-		// Footer (Phase 10): policy links + contact info + copyright.
+		// Footer: policy links + contact info + copyright.
 		'footer.policies': 'Información',
 		'footer.about': 'Quienes somos',
 		'footer.privacy': 'Privacidad',

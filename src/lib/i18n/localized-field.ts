@@ -2,7 +2,7 @@ import { DEFAULT_LOCALE, type Locale } from './locales';
 
 // Read a localizable *content* field off a record, with Spanish fallback.
 //
-// Convention (painful to retrofit, so it is fixed here in Phase 1):
+// Convention (painful to retrofit, so it is fixed early):
 //   - Spanish lives in the unsuffixed base column, e.g. `description`.
 //   - Other locales live in `<field>_<locale>`, e.g. `description_de`.
 //   - Those suffixed columns are NOT pre-created (a v2 data-entry task), so they

@@ -1,11 +1,11 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 1 — minimal `books` collection (walking skeleton).
-// Intentionally narrow: only the fields the listing skeleton needs. The full
-// catalog model (genres/publishers/book_languages relations, age_band, gallery,
-// etc.) lands in Phase 2. The store's own blurb lives in the unsuffixed
-// `description` column — Spanish is the base; German becomes `description_de`
-// in v2 (the Spanish-fallback convention; no `*_de` columns pre-created).
+// Minimal `books` collection (walking skeleton). Intentionally narrow: only the
+// fields the listing skeleton needs; the full catalog model
+// (genres/publishers/book_languages relations, age_band, gallery, etc.) is added by a
+// later migration. The store's own blurb lives in the unsuffixed `description` column
+// — Spanish is the base; German becomes `description_de` in v2 (the Spanish-fallback
+// convention; no `*_de` columns pre-created).
 migrate(
 	(app) => {
 		const collection = new Collection({

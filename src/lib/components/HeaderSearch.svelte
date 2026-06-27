@@ -50,9 +50,8 @@
 		if (open && event.key === 'Escape') closeSearch();
 	}
 
-	// Move focus into the input as the panel opens; on close, `closeSearch`
-	// returns focus to the toggle button. (Full focus-trap/scroll-lock is the
-	// mobile drawer's job in Phase 11 — this dropdown keeps it light.)
+	// Move focus into the input as the panel opens; on close, `closeSearch` returns
+	// focus to the toggle button.
 	$effect(() => {
 		if (open && inputEl) inputEl.focus();
 	});

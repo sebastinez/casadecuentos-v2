@@ -1,7 +1,7 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 2 — seed the taxonomy lists and enrich the Phase 1 seed books so the
-// product detail page renders every field against real data (relations included).
+// Seed the taxonomy lists and enrich the initial seed books so the product detail
+// page renders every field against real data (relations included).
 // Spanish content (v1 is Spanish-only). One book ("Donde viven los monstruos")
 // stays at stock 0 to exercise the unavailable / disabled-buy path.
 migrate(

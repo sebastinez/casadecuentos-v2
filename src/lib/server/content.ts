@@ -1,23 +1,18 @@
 import type PocketBase from 'pocketbase';
 
-// Phase 8 — landing-page content reads (banners + curated featured books).
-// Thin read-wrappers over PocketBase, integration-tested rather than unit-tested
-// (PRD: "Content" reads are covered by a real PocketBase, not mock-heavy unit
-// tests). Image URLs are minted server-side so the browser never talks to
-// PocketBase — same invariant the catalog reads keep.
+// Landing-page content reads (banners + curated featured books). Image URLs are
+// minted server-side so the browser never talks to PocketBase.
 
-// `live_interview` (Phase: videos) reuses this collection for the /videos
-// live-interview announcement; `image`/`sort` are unused for that placement and
-// its `cta_link` holds an absolute YouTube URL (hero/featured treat it as a
-// relative path). See `LiveInterviewBanner` + the next-interview selector.
+// `live_interview` reuses this collection for the /videos live-interview
+// announcement; `image`/`sort` are unused for that placement and its `cta_link`
+// holds an absolute YouTube URL (hero/featured treat it as a relative path).
 export type BannerType = 'hero' | 'featured' | 'live_interview';
 
-// Banner as the landing page consumes it: localizable copy in base columns
-// (read through `localizedField` in the component for v2-readiness) plus a
-// ready-to-render image URL (or null → the page shows a gradient fallback).
-// `start` (the schedule-window lower bound, empty when unset) carries through so
-// the next-interview selector can pick the most imminent `live_interview`; the
-// in-window check already happened inside `listBanners`.
+// Banner as the landing page consumes it: localizable copy in base columns (read
+// through `localizedField` in the component) plus a ready-to-render image URL (null
+// → the page shows a gradient fallback). `start` carries through so the
+// next-interview selector can pick the most imminent `live_interview`; the in-window
+// check already happened inside `listBanners`.
 export interface Banner {
 	id: string;
 	type: BannerType;
@@ -29,10 +24,9 @@ export interface Banner {
 	start: string;
 }
 
-// Raw banner record. `image` is the stored filename here; `start`/`end` are the
-// optional schedule bounds (empty string when unset). `collectionId`/
-// `collectionName` are needed by `pb.files.getURL`. Carries through any future
-// `*_de` columns implicitly (no `fields` projection), so `localizedField` works.
+// Raw banner record. `image` is the stored filename; `start`/`end` are the optional
+// schedule bounds (empty string when unset). No `fields` projection, so future
+// `*_de` columns carry through for `localizedField`.
 interface BannerSource {
 	id: string;
 	type: BannerType;
@@ -47,28 +41,23 @@ interface BannerSource {
 	collectionName: string;
 }
 
-// A banner is shown only while inside its (optional) schedule window. An empty
-// bound means "no limit". Done in JS rather than the PocketBase filter on
-// purpose: PocketBase stores an unset date as an empty string, and folding that
-// into a `@now` comparison risks silently dropping windowless banners — the
-// explicit empty-check here is unambiguous. PocketBase emits dates as
-// `YYYY-MM-DD HH:MM:SS.sssZ`; normalize the space to `T` for `Date.parse`.
+// A banner shows only inside its (optional) schedule window; an empty bound means
+// "no limit". Done in JS, not the PocketBase filter: PocketBase stores an unset date
+// as an empty string, and folding that into a `@now` comparison risks silently
+// dropping windowless banners. PocketBase emits dates as `YYYY-MM-DD HH:MM:SS.sssZ`;
+// normalize the space to `T` for `Date.parse`.
 function inWindow(banner: BannerSource, now: number): boolean {
 	if (banner.start && Date.parse(banner.start.replace(' ', 'T')) > now) return false;
 	if (banner.end && Date.parse(banner.end.replace(' ', 'T')) < now) return false;
 	return true;
 }
 
-// List active, in-window banners of one placement (`hero` | `featured`) in the
-// owner-defined sort order. `active = true` and the type are filtered in
-// PocketBase; the schedule window is applied here. `type` is a fixed literal,
-// not user input, but it is still parameterized through `pb.filter` for
-// consistency with the catalog reads.
+// List active, in-window banners of one placement in the owner-defined sort order.
+// `active` + type are filtered in PocketBase; the schedule window is applied here.
 export async function listBanners(pb: PocketBase, type: BannerType): Promise<Banner[]> {
 	const records = await pb.collection('banners').getFullList<BannerSource>({
-		// Hero + featured are read from the same collection in one parallel
-		// `Promise.all`; without a distinct request key the SDK auto-cancels the
-		// duplicate `banners` request. Key per-type to keep them independent.
+		// Hero + featured read the same collection in one parallel `Promise.all`;
+		// without a distinct request key the SDK auto-cancels the duplicate request.
 		requestKey: `banners-${type}`,
 		filter: pb.filter('type = {:type} && active = true', { type }),
 		sort: 'sort'
@@ -97,8 +86,7 @@ export interface FeaturedBook {
 	cover: string | null;
 }
 
-// Source book as it arrives under `expand.book` (intrinsic fields + the cover
-// filename and the file-URL metadata to mint a thumbnail).
+// Source book as it arrives under `expand.book`.
 interface FeaturedBookSource {
 	id: string;
 	title: string;
@@ -116,10 +104,9 @@ interface FeaturedRecord {
 	expand?: { book?: FeaturedBookSource };
 }
 
-// List the curated featured books in the owner-defined order. Only `active`
-// rows, sorted by `sort`, with the book relation expanded. A curation row whose
-// book was deleted (or whose expand didn't resolve) is dropped — same posture as
-// `getBooksByIds` dropping unresolved ids — so a stale row never renders blank.
+// List the curated featured books in the owner-defined order: `active` rows, sorted
+// by `sort`, with the book relation expanded. A row whose book was deleted (or whose
+// expand didn't resolve) is dropped so a stale row never renders blank.
 export async function listFeaturedBooks(pb: PocketBase): Promise<FeaturedBook[]> {
 	const records = await pb.collection('featured_books').getFullList<FeaturedRecord>({
 		filter: 'active = true',

@@ -1,9 +1,8 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 6a — the `orders` collection.
-// An order is created as `pending` (a cart snapshot + Stripe session id) before
-// the redirect to hosted Stripe Checkout. The signature-verified Stripe webhook
-// (Phase 6b) is the only thing that flips it to `paid` — the success redirect is
+// The `orders` collection. An order is created as `pending` (a cart snapshot + Stripe
+// session id) before the redirect to hosted Stripe Checkout. The signature-verified
+// Stripe webhook is the only thing that flips it to `paid` — the success redirect is
 // never trusted. Lifecycle: `pending → paid → shipped`.
 //
 // Access rules are all superuser-only (null). Orders are created and updated
@@ -24,8 +23,8 @@ migrate(
 			fields: [
 				// Human-readable incremental order number, surfaced in emails. Left
 				// UNSET (0) at `pending`: most pending orders are abandoned, so the
-				// customer-facing sequence is assigned at the `paid` transition
-				// (Phase 6b) to avoid gaps and a max+1 race in the checkout hot path.
+				// customer-facing sequence is assigned at the `paid` transition, to
+				// avoid gaps and a max+1 race in the checkout hot path.
 				{ name: 'order_number', type: 'number', onlyInt: true, min: 0 },
 
 				// Lifecycle state. Single-select enum; the BFF/webhook drive transitions.
@@ -55,11 +54,11 @@ migrate(
 
 				// Stripe correlation. `stripe_session_id` is set right after the session
 				// is created (the order is created first, then updated). `stripe_event_id`
-				// is recorded by the Phase 6b webhook for idempotent dedupe.
+				// is recorded by the webhook for idempotent dedupe.
 				{ name: 'stripe_session_id', type: 'text', max: 255 },
 				{ name: 'stripe_event_id', type: 'text', max: 255 },
 
-				// Fulfilment (Phase 7). Swiss Post only in v1.
+				// Fulfilment. Swiss Post only in v1.
 				{ name: 'carrier', type: 'text', max: 100 },
 				{ name: 'tracking_number', type: 'text', max: 255 },
 

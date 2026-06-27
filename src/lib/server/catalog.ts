@@ -2,24 +2,20 @@ import type PocketBase from 'pocketbase';
 import { ClientResponseError, type ListResult } from 'pocketbase';
 import type { SearchEntry } from '$lib/search/catalog-index';
 
-// Books per listing page. PocketBase defaults `perPage` to 30, so this is passed
-// explicitly to `getList`. The listing UI also uses it to render its page index.
+// Also drives the listing's page index. Passed explicitly because PocketBase
+// defaults `perPage` to 30.
 export const BOOKS_PER_PAGE = 20;
 
-// A taxonomy record (genre / publisher / book language). Small relation lists
-// powering filters and rename-without-code; `name` is the displayed label.
+// A taxonomy record (genre / publisher / language); `name` is the displayed label.
 export interface Taxon {
 	id: string;
 	name: string;
 	slug: string;
 }
 
-// Phase 2 shape of a catalog book — the full model. Intrinsic bibliographic
-// fields (title/author/illustrator/ISBN/…) are never translated; only the
-// store's own `description` blurb is localizable (read via `localizedField`).
-// Taxonomy lives in relations (`genre`/`publisher`/`language`); their full
-// records arrive under `expand` when the read requests it. Newer fields are
-// optional because not every record fills them.
+// Bibliographic fields (title/author/illustrator/ISBN/…) are never translated;
+// only `description` is localizable (via `localizedField`). Taxonomy lives in
+// relations whose full records arrive under `expand` when the read requests it.
 export interface Book {
 	id: string;
 	title: string;
@@ -47,10 +43,8 @@ export interface Book {
 	};
 }
 
-// Closed whitelist of sort modes → PocketBase `sort` expressions. Keys are the
-// values used in the `sort` URL param; an unknown/absent key falls back to
-// newest. Never pass a raw param straight to PocketBase — an unknown column
-// errors the query.
+// Whitelist of sort modes → PocketBase `sort` expressions. An unknown/absent key
+// falls back to newest; a raw param passed straight through would error the query.
 const SORTS = {
 	newest: '-created',
 	'price-asc': 'price',
@@ -59,10 +53,8 @@ const SORTS = {
 
 export type BookSort = keyof typeof SORTS;
 
-// Listing query: facet filters keyed by taxonomy slug / age-band value, a
-// substring search, and a sort mode. All optional — an empty object lists the
-// whole catalog newest-first (the Phase 1/2 behavior). Empty strings are
-// treated as "not set" so a native GET form's empty controls are ignored.
+// Listing query params, all optional. Empty strings count as "not set" so a
+// native GET form's empty controls are ignored.
 export interface BookListOptions {
 	age?: string;
 	genre?: string;
@@ -73,17 +65,10 @@ export interface BookListOptions {
 	page?: number;
 }
 
-// Thin read-wrapper over PocketBase (integration-tested, not unit-tested, per
-// the PRD). Builds a server-side PocketBase filter from the facet/search params
-// and applies the whitelisted sort. Relations are matched by their `slug`
-// sub-field (e.g. `genre.slug`), so URL params stay human-readable and stable
-// across renames. `pb.filter` parameterizes every value, so user-supplied
-// search text and slugs can't inject into the filter expression.
-//
-// Returns a paginated `ListResult` (`items` + page/total metadata) rather than
-// the whole catalog: the listing shows `BOOKS_PER_PAGE` at a time with a page
-// index. `page` is 1-based; an out-of-range page yields empty `items` (not an
-// error), which the listing renders as "no results".
+// Relations are matched by their `slug` sub-field (e.g. `genre.slug`) so URL
+// params stay human-readable and stable across renames. `pb.filter` parameterizes
+// every value, so search text and slugs can't inject into the filter expression.
+// An out-of-range `page` (1-based) yields empty `items`, not an error.
 export async function listBooks(
 	pb: PocketBase,
 	opts: BookListOptions = {}
@@ -109,9 +94,6 @@ export async function listBooks(
 	});
 }
 
-// List a taxonomy collection (`genres` / `publishers` / `book_languages`) for
-// the listing's filter facets, alphabetically by label. Thin read-wrapper,
-// integration-tested per the PRD.
 export async function listTaxonomy(
 	pb: PocketBase,
 	collection: 'genres' | 'publishers' | 'book_languages'
@@ -119,9 +101,8 @@ export async function listTaxonomy(
 	return pb.collection(collection).getFullList<Taxon>({ sort: 'name' });
 }
 
-// The subset of book fields needed to build a search-index entry. `cover` is the
-// raw filename here; the URL is minted below. `collectionId`/`collectionName`
-// are required by `pb.files.getURL` to construct a thumbnail URL.
+// `cover` is the raw filename; `collectionId`/`collectionName` let `pb.files.getURL`
+// mint the thumbnail URL below.
 interface SearchEntrySource {
 	id: string;
 	title: string;
@@ -133,12 +114,9 @@ interface SearchEntrySource {
 	collectionName: string;
 }
 
-// Build the lightweight, precomputed catalog index served to the header fuzzy
-// search. Projects only the matchable + display fields (PocketBase `fields`
-// keeps the payload small) and mints a small cover thumbnail URL server-side —
-// the browser never talks to PocketBase. Thin read-wrapper, integration-tested
-// per the PRD. Fuzzy matching itself is client-side (in `catalog-index.ts`); this
-// only assembles the data.
+// Lightweight catalog index for the header fuzzy search. Mints a small cover
+// thumbnail URL server-side so the browser never talks to PocketBase. Fuzzy
+// matching itself is client-side (`catalog-index.ts`); this only assembles the data.
 export async function listSearchEntries(pb: PocketBase): Promise<SearchEntry[]> {
 	const records = await pb.collection('books').getFullList<SearchEntrySource>({
 		fields: 'id,title,author,illustrator,slug,cover,collectionId,collectionName',
@@ -155,11 +133,9 @@ export async function listSearchEntries(pb: PocketBase): Promise<SearchEntry[]> 
 	}));
 }
 
-// The display shape the cart page needs per line: enough to render a row and a
-// running total, resolved fresh by id (the cart itself stores only id + qty).
-// `price`/`stock` are read server-authoritatively here for *display*; the real
-// pricing + stock check happen at checkout (Phase 6a). `cover` is a minted
-// thumbnail URL (or null) so the browser never touches PocketBase.
+// One cart line, resolved fresh by id (the cart stores only id + qty).
+// `price`/`stock` are read server-authoritatively for *display*; the real pricing
+// and stock check happen at checkout. `cover` is a minted thumbnail URL (or null).
 export interface CartBook {
 	id: string;
 	title: string;
@@ -167,14 +143,12 @@ export interface CartBook {
 	price: number;
 	stock: number;
 	cover: string | null;
-	// Shipping weight in grams (0 when the book has none set). Carried here so the
-	// cart page can sum the order weight and the checkout port can price shipping
-	// — this shape structurally satisfies the checkout's `AuthoritativeBook` port.
+	// Shipping weight in grams (0 when unset). Lets the cart sum order weight and
+	// the checkout port price shipping; structurally satisfies `AuthoritativeBook`.
 	weightGrams: number;
 }
 
-// As above plus the file-URL fields PocketBase needs to mint a thumbnail. `cover`
-// and `weight_grams` are the raw record fields (snake_case) before projection.
+// Raw record fields (snake_case) before projection, plus the file-URL fields.
 interface CartBookSource extends Omit<CartBook, 'cover' | 'weightGrams'> {
 	cover: string;
 	weight_grams: number;
@@ -182,12 +156,9 @@ interface CartBookSource extends Omit<CartBook, 'cover' | 'weightGrams'> {
 	collectionName: string;
 }
 
-// Resolve a set of book ids to their cart-display detail. Thin read-wrapper,
-// integration-tested per the PRD. Each id is parameterized through `pb.filter`
-// (never string-concatenated) so the comma-separated `ids` query param can't
-// inject into the filter. An empty id list short-circuits to no query. Ids that
-// match no book are simply absent from the result — the caller renders only what
-// resolves (a stale/deleted id drops out of the cart view).
+// Resolve book ids to cart-display detail. Each id is parameterized through
+// `pb.filter` so the comma-separated `ids` query param can't inject. Ids matching
+// no book are absent from the result (a stale/deleted id drops out of the cart).
 export async function getBooksByIds(pb: PocketBase, ids: string[]): Promise<CartBook[]> {
 	if (ids.length === 0) return [];
 
@@ -208,11 +179,9 @@ export async function getBooksByIds(pb: PocketBase, ids: string[]): Promise<Cart
 	}));
 }
 
-// Fetch a single book by its slug, expanding the taxonomy relations so the
-// detail page can show genre/publisher/language labels. Returns `null` when no
-// book matches (the route turns that into a 404); any other error propagates so
-// real failures aren't masked as "not found". `pb.filter` parameterizes the
-// slug so it is safe against filter injection.
+// Returns `null` when no book matches (the route turns that into a 404); any other
+// error propagates so real failures aren't masked as "not found". `pb.filter`
+// parameterizes the slug.
 export async function getBookBySlug(pb: PocketBase, slug: string): Promise<Book | null> {
 	try {
 		return await pb

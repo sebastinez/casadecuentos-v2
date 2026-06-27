@@ -1,12 +1,10 @@
-// Weight-based shipping, the pure core. Lives outside `$lib/server` on purpose:
-// both the cart page (client) and the checkout BFF (server) compute the same
-// shipping cost from the same rate table, so the logic can't be server-only.
-// Framework-free and side-effect-free — unit-testable in plain Node.
+// Weight-based shipping, the pure core. Outside `$lib/server` on purpose: both the
+// cart page (client) and the checkout BFF (server) compute the same cost from the
+// same rate table. Framework- and side-effect-free, unit-testable in plain Node.
 //
 // The rate table is the admin-editable `shipping_rates` collection: each row is a
-// weight ceiling (`max_weight`, grams), a price (`cost_in_chf`), and a delivery
-// tier (`urgency`). The cost for an order is the cheapest tier whose ceiling
-// still covers the order's total weight.
+// weight ceiling (`max_weight`, grams), a price (`cost_in_chf`), and a delivery tier
+// (`urgency`). An order's cost is the cheapest tier whose ceiling covers its weight.
 
 // Delivery speed the customer picks in the cart. `priority` is next-day (Swiss
 // Post Priority), `economy` is 2–3 days (Swiss Post Economy).
@@ -28,21 +26,16 @@ export interface ShippingRate {
 	urgency: Urgency;
 }
 
-// Sum the order's shipping weight: each line's per-book weight times its
-// quantity. A book with no weight set contributes 0 (weights come from the
-// Shopify import; an unimported book just doesn't add to the total).
+// Sum the order's shipping weight: each line's per-book weight × quantity. A book
+// with no weight set contributes 0.
 export function totalWeightGrams(lines: { weightGrams: number; qty: number }[]): number {
 	return lines.reduce((sum, line) => sum + line.weightGrams * line.qty, 0);
 }
 
-// Resolve the shipping cost for a given total weight + chosen urgency against the
-// rate table. Picks the cheapest tier (smallest `maxWeight`) that still covers
-// `grams`. If the order is heavier than every tier, clamps to the heaviest tier
-// rather than failing the sale — Swiss Post's hard ceiling is far above any
-// realistic book order, and overshooting the table shouldn't block checkout.
-//
-// Throws if the table has no row for the chosen urgency (a misconfigured /
-// unseeded collection) — the caller surfaces that rather than charging 0.
+// Resolve the shipping cost for a total weight + urgency: the cheapest tier
+// (smallest `maxWeight`) that still covers `grams`. Heavier than every tier clamps
+// to the heaviest rather than failing the sale. Throws if no row exists for the
+// urgency (a misconfigured/unseeded collection) rather than charging 0.
 export function shippingCost(grams: number, rates: ShippingRate[], urgency: Urgency): number {
 	const tiers = rates
 		.filter((rate) => rate.urgency === urgency)

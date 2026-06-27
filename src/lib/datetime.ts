@@ -1,23 +1,20 @@
 import { DEFAULT_LOCALE, type Locale } from './i18n';
 
-// Pure date/time helpers for events. Events store their day/time as Europe/Zurich
-// wall-clock text (`YYYY-MM-DD` / `HH:MM`), so the only real logic here is (a)
-// computing "today" in Zurich for the upcoming-only filter, and (b) formatting a
-// civil date for display. Both are pure (no I/O), so they're unit-tested — they're
-// the most bug-prone part of Phase 9, where the thin PocketBase read-wrappers are
-// not (per the PRD testing split).
+// Pure date/time helpers for events. Events store day/time as Europe/Zurich
+// wall-clock text (`YYYY-MM-DD` / `HH:MM`), so the only real logic here is computing
+// "today" in Zurich for the upcoming-only filter and formatting a civil date for
+// display — the bug-prone parts, kept pure and unit-tested.
 
 const ZURICH = 'Europe/Zurich';
 
 // Map locale → a BCP-47 tag for Intl. Spanish dates for v1; German ready for v2.
 const INTL_LOCALE: Record<Locale, string> = { es: 'es-ES', de: 'de-DE' };
 
-// "Today" as a Europe/Zurich civil date string `YYYY-MM-DD`. Used to build the
-// upcoming-events filter: because event `date` is stored in the SAME civil-date
-// representation, the comparison is a trivial lexical string compare against this
-// — no instant↔timezone math, so no off-by-one-day at the UTC boundary. `en-CA`
-// formats as `YYYY-MM-DD`; `timeZone: 'Europe/Zurich'` makes it DST-correct (the
-// civil day rolls over at Zurich midnight, not UTC midnight).
+// "Today" as a Europe/Zurich civil date `YYYY-MM-DD`, for the upcoming-events filter.
+// Event `date` is stored in the same civil-date form, so the comparison is a lexical
+// string compare — no instant↔timezone math, no off-by-one-day at the UTC boundary.
+// `en-CA` formats as `YYYY-MM-DD`; `timeZone` makes the rollover DST-correct (Zurich
+// midnight, not UTC).
 export function zurichToday(now: Date = new Date()): string {
 	return new Intl.DateTimeFormat('en-CA', {
 		timeZone: ZURICH,
@@ -27,12 +24,10 @@ export function zurichToday(now: Date = new Date()): string {
 	}).format(now);
 }
 
-// Format a civil date `YYYY-MM-DD` as a long, human-readable date in the locale
-// (e.g. `domingo, 5 de julio de 2026`). The string is a bare calendar day with no
-// timezone, so we anchor it at noon UTC and format in UTC — noon avoids any
-// midnight rollover, and formatting in UTC means the displayed day always equals
-// the stored day regardless of the server's timezone. An unparseable value
-// returns as-is rather than throwing.
+// Format a civil date `YYYY-MM-DD` as a long localized date (e.g. `domingo, 5 de
+// julio de 2026`). The string is a bare calendar day, so anchor at noon UTC and
+// format in UTC — noon avoids any midnight rollover, UTC keeps the displayed day
+// equal to the stored day regardless of the server's timezone. Unparseable → as-is.
 export function formatEventDate(date: string, locale: Locale = DEFAULT_LOCALE): string {
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
 	const at = new Date(`${date}T12:00:00Z`);
@@ -45,12 +40,10 @@ export function formatEventDate(date: string, locale: Locale = DEFAULT_LOCALE): 
 	}).format(at);
 }
 
-// Format a video's `published` value as a short day-month-year date (e.g.
-// `5 de julio de 2026`). Unlike events — whose `date` is a civil-date TEXT field
-// — a video's `published` is a PocketBase `date` (datetime), serialized as
-// `YYYY-MM-DD HH:MM:SS.sssZ`. We only care about the calendar day, so the
-// leading 10 chars are taken and (like `formatEventDate`) anchored at noon UTC
-// to avoid any timezone rollover. An unparseable value returns as-is.
+// Format a video's `published` as a short localized date (e.g. `5 de julio de 2026`).
+// Unlike events' civil-date text, `published` is a PocketBase datetime
+// (`YYYY-MM-DD HH:MM:SS.sssZ`); we take the leading 10 chars (the calendar day) and,
+// like `formatEventDate`, anchor at noon UTC. Unparseable → as-is.
 export function formatPublishedDate(published: string, locale: Locale = DEFAULT_LOCALE): string {
 	const day = published.slice(0, 10);
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return published;

@@ -1,9 +1,9 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 8 — the `featured_books` curated join.
-// A tiny join collection (relation to a book + explicit `sort` + `active`) that
-// lets the owner hand-curate the landing-page "featured books" strip in a
-// deliberate order — independent of the catalog's own newest/price sorting.
+// The `featured_books` curated join. A tiny join collection (relation to a book +
+// explicit `sort` + `active`) that lets the owner hand-curate the landing-page
+// "featured books" strip in a deliberate order — independent of the catalog's own
+// newest/price sorting.
 //
 // `book` cascadeDeletes: a featured entry is meaningless once its book is gone,
 // so deleting a book removes its curation row (vs. leaving a dangling relation).

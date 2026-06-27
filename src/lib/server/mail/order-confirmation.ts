@@ -3,12 +3,11 @@ import { site } from '$lib/site';
 import type { OrderLine } from '$lib/server/checkout/order';
 import type { MailMessage } from './transport';
 
-// Pure builder for the order-confirmation email. Given the paid order's snapshot
-// (the same `OrderLine[]` + totals captured at checkout) it renders a Spanish
-// `MailMessage`. No I/O and no provider knowledge — so the template is unit-
-// testable, and the webhook stays the only place that actually sends. All copy
-// flows through the i18n layer (`t`), so a future `de` table localizes the same
-// template with no code change (bilingual-ready, per the PRD).
+// Pure builder for the order-confirmation email: given the paid order's snapshot it
+// renders a Spanish `MailMessage`. No I/O and no provider knowledge, so the template
+// is unit-testable and the webhook stays the only place that actually sends. All
+// copy flows through the i18n layer (`t`), so a future `de` table localizes the same
+// template with no code change.
 
 export interface OrderConfirmationData {
 	orderNumber: number;
@@ -20,15 +19,13 @@ export interface OrderConfirmationData {
 	currency: string;
 }
 
-// Format a plain CHF amount for display (e.g. `24.9` → `CHF 24.90`). Two
-// decimals because these are tax-inclusive prices the customer actually paid.
+// Format a plain CHF amount (e.g. `24.9` → `CHF 24.90`); two decimals, tax-inclusive.
 function money(amount: number, currency: string): string {
 	return `${currency} ${amount.toFixed(2)}`;
 }
 
-// Escape the few characters that would break out of HTML text/attribute
-// context. Book titles are owner-entered, but rendering them into an email body
-// without escaping would still be an injection footgun — escape defensively.
+// Escape HTML metacharacters. Titles are owner-entered, but rendering them into an
+// email body unescaped would still be an injection footgun.
 function escapeHtml(value: string): string {
 	return value
 		.replace(/&/g, '&amp;')
@@ -65,10 +62,9 @@ export function orderConfirmationEmail(
 	];
 	const text = textLines.join('\n');
 
-	// Brand palette pulled from the site theme (terracotta on cream) so the email
-	// reads as Casa de Cuentos, not a generic transactional notice. All styling is
-	// inline + table-based: that's the only thing email clients (Gmail, Outlook,
-	// Apple Mail) render reliably — no <style> blocks, no flexbox, no rem units.
+	// Brand palette (terracotta on cream). Styling is inline + table-based only —
+	// the one thing email clients (Gmail, Outlook, Apple Mail) render reliably: no
+	// <style> blocks, no flexbox, no rem units.
 	const accent = '#8b4733'; // terracotta-700 (wordmark)
 	const ink = '#1c1917'; // gray-900
 	const muted = '#57534e'; // gray-600
@@ -77,16 +73,13 @@ export function orderConfirmationEmail(
 	const font =
 		"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-	// Brand logo, served from the dedicated static-asset host (Caddy file_server,
-	// see deploy/Caddyfile). This URL is deliberately stable: it is decoupled from
-	// the SvelteKit build hashes, and the `assets.` subdomain survives the
-	// preview → live cutover, so it needs no touching at go-live. The alt text
-	// carries the brand if the image is blocked (webp also doesn't render in
-	// Outlook-on-Windows).
+	// Brand logo on the dedicated static-asset host (Caddy file_server, see
+	// deploy/Caddyfile). URL is deliberately stable — decoupled from build hashes and
+	// the `assets.` subdomain survives the preview → live cutover. alt text carries
+	// the brand if the image is blocked (webp also doesn't render in Outlook/Windows).
 	const logoUrl = 'https://assets.casadecuentos.ch/logo.webp';
 
-	// One line item per row: cover-less but with the same shape as the Shopify
-	// summary — "title × qty" on the left, the line total right-aligned, a hairline
+	// One row per line item: "title × qty" left, line total right-aligned, hairline
 	// rule between rows.
 	const rowsHtml = lines
 		.map(
@@ -100,8 +93,7 @@ export function orderConfirmationEmail(
 		)
 		.join('');
 
-	// A subtotal/shipping/total line. The total is emphasised (heavier + accent),
-	// matching the Shopify "Gesamt" treatment.
+	// A subtotal/shipping/total line; the total is emphasised (heavier + accent).
 	const summaryRow = (label: string, value: string, emphasis = false): string =>
 		`<tr>` +
 		`<td style="padding:4px 0;font-size:15px;color:${emphasis ? ink : muted};${emphasis ? 'font-weight:700;padding-top:12px;' : ''}">${label}</td>` +

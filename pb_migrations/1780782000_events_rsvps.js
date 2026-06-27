@@ -1,6 +1,6 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Phase 9 — free community events + their RSVPs.
+// Free community events + their RSVPs.
 //
 // `events` is public-readable (it backs `/eventos` and `/eventos/[slug]`);
 // writes are superuser-only via the admin, same posture as `books`/`banners`.
@@ -28,7 +28,7 @@
 // lexical `sort: 'date,time'` is also chronological (`"09:00"` < `"18:30"`).
 //
 // Localizable copy (`title`, `description`) lives in unsuffixed base columns
-// (Spanish in v1) per the Phase 1 convention; `*_de` is a v2 data-entry task.
+// (Spanish in v1) per the localized-field convention; `*_de` is a v2 data-entry task.
 migrate(
 	(app) => {
 		// --- events -----------------------------------------------------------

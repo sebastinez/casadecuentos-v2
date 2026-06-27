@@ -13,16 +13,15 @@ export function createPocketBase(): PocketBase {
 	return new PocketBase(url);
 }
 
-// Module-scoped superuser client. The BFF is the *only* write identity in v1
-// (guest checkout, no customer accounts): it creates `pending` orders, and from
-// Phase 6b flips them to `paid` and decrements stock. The `orders` collection is
-// superuser-only, so privileged writes go through a client authenticated as a
-// superuser — distinct from `createPocketBase`, which is unauthenticated and
-// per-request for public catalog reads.
+// Module-scoped superuser client. The BFF is the *only* write identity in v1 (guest
+// checkout, no customer accounts): it creates `pending` orders, flips them to `paid`,
+// and decrements stock. The `orders` collection is superuser-only, so privileged
+// writes go through this authenticated client — distinct from `createPocketBase`,
+// which is unauthenticated and per-request for public catalog reads.
 //
-// Unlike a user session, this is the server's own long-lived identity, so the
-// instance + token are cached at module scope and re-authenticated only when the
-// token is missing or expired — one auth round-trip, not one per checkout.
+// As the server's own long-lived identity, the instance + token are cached at module
+// scope and re-authenticated only when missing or expired — one auth round-trip, not
+// one per checkout.
 let adminClient: PocketBase | null = null;
 
 export async function createAdminPocketBase(): Promise<PocketBase> {

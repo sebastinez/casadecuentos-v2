@@ -1,18 +1,14 @@
 import type PocketBase from 'pocketbase';
 import { watchUrl, thumbnailUrl } from '$lib/youtube';
 
-// Phase: videos — the `videos` read. A thin read-wrapper over PocketBase
-// (integration-tested, not unit-tested, per the repo split — the bug-prone
-// logic lives in the pure `$lib/youtube` module, which IS unit-tested). Mirrors
-// `listUpcomingEvents`/`listBanners`. Videos store only a bare YouTube
-// `video_id`; the watch + thumbnail URLs are derived server-side so the BFF
+// The `videos` read. Videos store only a bare YouTube `video_id`; the watch +
+// thumbnail URLs are derived server-side (via the pure `$lib/youtube`) so the BFF
 // shape is ready to render.
 
 // A video as the /videos page consumes it. `title`/`description` are localizable
-// base columns (read through `localizedField` in the card for v2-readiness);
-// `published` is the PocketBase datetime that drives ordering. `watchUrl` /
-// `thumbnailUrl` are derived from `video_id`. No `fields` projection, so any
-// future `*_de` column carries through implicitly for `localizedField`.
+// base columns (read through `localizedField`); `published` is the datetime that
+// drives ordering. `watchUrl`/`thumbnailUrl` are derived from `video_id`. No
+// `fields` projection, so any future `*_de` column carries through.
 export interface VideoRecord {
 	id: string;
 	video_id: string;
@@ -32,10 +28,8 @@ interface VideoSource {
 	published: string;
 }
 
-// List the active videos, newest `published` first. `active = true` is filtered
-// in PocketBase; ordering is purely by `published` (no manual reordering in v1).
-// The derived watch/thumbnail URLs are attached here so the page never sees a
-// bare `video_id`.
+// Active videos, newest `published` first. The derived watch/thumbnail URLs are
+// attached here so the page never sees a bare `video_id`.
 export async function listVideos(pb: PocketBase): Promise<VideoRecord[]> {
 	const records = await pb.collection('videos').getFullList<VideoSource>({
 		filter: 'active = true',
