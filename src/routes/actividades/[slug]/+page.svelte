@@ -49,13 +49,13 @@
 			>← {t('event.backTolist', locale)}</a
 		>
 		<h1 class="mt-2 text-2xl font-semibold">{title}</h1>
-		<dl class="mt-3 flex flex-col gap-1 text-sm text-gray-700">
-			<div class="flex gap-2">
+		<dl class="mt-3 flex flex-col gap-2 text-sm text-gray-700">
+			<div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
 				<dt class="font-medium text-gray-500">{t('event.when', locale)}:</dt>
 				<dd>{when}</dd>
 			</div>
 			{#if event.venue_address}
-				<div class="flex gap-2">
+				<div class="flex flex-col gap-0.5 sm:flex-row sm:gap-2">
 					<dt class="font-medium text-gray-500">{t('event.where', locale)}:</dt>
 					<dd>{event.venue_address}</dd>
 				</div>
