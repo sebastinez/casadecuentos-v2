@@ -4,6 +4,7 @@ import { createAdminPocketBase } from '$lib/server/pocketbase';
 import { createStripe } from '$lib/server/checkout/stripe-client';
 import { startCheckout, CheckoutError } from '$lib/server/checkout';
 import { parseCart } from '$lib/cart/cart';
+import { parseUrgency } from '$lib/shipping';
 
 // Initiates checkout: takes the cart's book ids + quantities, builds a server-
 // authoritative order, creates a `pending` order + Stripe session, and returns
@@ -25,12 +26,20 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	// `parseCart` expects the serialized array shape the cart stores; round-trip
 	// the posted items through it so only valid `{ id, qty }` entries survive.
 	const items = parseCart(JSON.stringify((body as { items?: unknown })?.items ?? []));
+	// Delivery speed the customer chose in the cart; anything unexpected falls
+	// back to the cheapest tier (`economy`). The cost is recomputed here from the
+	// authoritative rate table — the client only chooses the tier, never the price.
+	const urgency = parseUrgency((body as { urgency?: unknown })?.urgency);
 
 	const pb = await createAdminPocketBase();
 	const stripe = createStripe();
 
 	try {
-		const { url: checkoutUrl } = await startCheckout(items, { pb, stripe, origin: url.origin });
+		const { url: checkoutUrl } = await startCheckout(items, urgency, {
+			pb,
+			stripe,
+			origin: url.origin
+		});
 		return json({ url: checkoutUrl });
 	} catch (err) {
 		// Expected, customer-facing failures: surface the code + offending ids so

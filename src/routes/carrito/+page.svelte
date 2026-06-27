@@ -2,7 +2,11 @@
 	import { onMount } from 'svelte';
 	import { cart } from '$lib/cart/cart.svelte';
 	import type { CartBook } from '$lib/server/catalog';
+	import { shippingCost, totalWeightGrams, type Urgency } from '$lib/shipping';
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	const locale = DEFAULT_LOCALE;
 	const priceFmt = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' });
@@ -58,7 +62,30 @@
 			.filter((line): line is { item: (typeof cart.items)[number]; book: CartBook } => !!line.book)
 	);
 
-	const total = $derived(lines.reduce((sum, { item, book }) => sum + book.price * item.qty, 0));
+	const subtotal = $derived(lines.reduce((sum, { item, book }) => sum + book.price * item.qty, 0));
+
+	// Chosen delivery speed (cheapest tier by default). The customer picks it here;
+	// checkout recomputes the cost server-side from the authoritative rate table.
+	let urgency = $state<Urgency>('economy');
+
+	// Total shipping weight of the cart, in grams (a book with no weight set adds
+	// 0). Drives the tiered shipping cost below.
+	const weightGrams = $derived(
+		totalWeightGrams(lines.map(({ item, book }) => ({ weightGrams: book.weightGrams, qty: item.qty })))
+	);
+
+	// Shipping cost for the current weight + urgency, resolved against the rate
+	// table loaded on the server. `null` when the table is empty/misconfigured —
+	// the UI then shows "calculated at checkout" instead of a wrong 0.
+	const shipping = $derived.by(() => {
+		try {
+			return shippingCost(weightGrams, data.shippingRates, urgency);
+		} catch {
+			return null;
+		}
+	});
+
+	const grandTotal = $derived(subtotal + (shipping ?? 0));
 
 	// Checkout initiation. Posts the cart's ids + quantities to the BFF, which
 	// builds a server-authoritative order + Stripe session and returns the hosted
@@ -73,7 +100,7 @@
 			const res = await fetch('/api/checkout', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ items: cart.items })
+				body: JSON.stringify({ items: cart.items, urgency })
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
@@ -169,7 +196,7 @@
 		{/each}
 	</ul>
 
-	<div class="mt-6 flex items-center justify-between">
+	<div class="mt-6 flex justify-end">
 		<button
 			type="button"
 			onclick={() => cart.clear()}
@@ -177,10 +204,44 @@
 		>
 			{t('cart.clear', locale)}
 		</button>
-		<p class="text-lg font-semibold">
-			{t('cart.total', locale)}: {priceFmt.format(total)}
-		</p>
 	</div>
+
+	<!-- Delivery speed: the customer picks a tier; shipping recomputes live. -->
+	<fieldset class="mt-6 border-t border-gray-100 pt-4">
+		<legend class="mb-2 text-sm font-medium text-gray-700">{t('cart.deliverySpeed', locale)}</legend>
+		<div class="flex flex-col gap-2">
+			<label class="flex items-center gap-2 text-sm">
+				<input type="radio" name="urgency" value="economy" bind:group={urgency} class="accent-terracotta-600" />
+				{t('cart.delivery.economy', locale)}
+			</label>
+			<label class="flex items-center gap-2 text-sm">
+				<input type="radio" name="urgency" value="priority" bind:group={urgency} class="accent-terracotta-600" />
+				{t('cart.delivery.priority', locale)}
+			</label>
+		</div>
+	</fieldset>
+
+	<!-- Order summary: subtotal + shipping = total. -->
+	<dl class="mt-6 ml-auto max-w-xs space-y-1 text-sm">
+		<div class="flex justify-between">
+			<dt class="text-gray-600">{t('cart.subtotal', locale)}</dt>
+			<dd class="tabular-nums">{priceFmt.format(subtotal)}</dd>
+		</div>
+		<div class="flex justify-between">
+			<dt class="text-gray-600">{t('cart.shipping', locale)}</dt>
+			<dd class="tabular-nums">
+				{#if shipping === null}
+					<span class="text-gray-500">{t('cart.shippingUnavailable', locale)}</span>
+				{:else}
+					{priceFmt.format(shipping)}
+				{/if}
+			</dd>
+		</div>
+		<div class="flex justify-between border-t border-gray-100 pt-1 text-base font-semibold">
+			<dt>{t('cart.total', locale)}</dt>
+			<dd class="tabular-nums">{priceFmt.format(grandTotal)}</dd>
+		</div>
+	</dl>
 
 	<div class="mt-6 flex flex-col items-end gap-1">
 		<button

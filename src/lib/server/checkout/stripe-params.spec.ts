@@ -25,6 +25,8 @@ const ORDER: BuiltOrder = {
 		{ id: 'b', title: 'La Oruga', unitPrice: 12, qty: 1, lineTotal: 12 }
 	],
 	itemsTotal: 61.8,
+	totalWeightGrams: 1050,
+	urgency: 'economy',
 	shipping: 8,
 	total: 69.8
 };
@@ -54,10 +56,21 @@ describe('buildSessionParams', () => {
 		]);
 	});
 
-	it('adds the flat shipping as a fixed-amount CHF shipping option', () => {
+	it('adds the resolved shipping as a fixed-amount CHF option, labelled by urgency', () => {
 		const rate = params.shipping_options?.[0].shipping_rate_data;
 		expect(rate?.type).toBe('fixed_amount');
 		expect(rate?.fixed_amount).toEqual({ currency: 'chf', amount: 800 });
+		expect(rate?.display_name).toBe('Envío económico');
+	});
+
+	it('labels a priority order as such', () => {
+		const priority = buildSessionParams({
+			order: { ...ORDER, urgency: 'priority' },
+			orderId: 'ord123',
+			successUrl: 'https://shop.test/pago/exito',
+			cancelUrl: 'https://shop.test/pago/cancelado'
+		});
+		expect(priority.shipping_options?.[0].shipping_rate_data?.display_name).toBe('Envío prioritario');
 	});
 
 	it('configures Spanish hosted checkout, TWINT + cards, CH-only address', () => {

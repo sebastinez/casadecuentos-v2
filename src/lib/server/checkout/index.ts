@@ -1,19 +1,20 @@
 import type Stripe from 'stripe';
 import type PocketBase from 'pocketbase';
-import { env } from '$env/dynamic/private';
 import type { CartItem } from '$lib/cart/cart';
 import { getBooksByIds } from '$lib/server/catalog';
+import { shippingCost, type ShippingRate, type Urgency } from '$lib/shipping';
 import { buildOrder, type CatalogPort } from './order';
 import { buildSessionParams } from './stripe-params';
 
 export { CheckoutError } from './order';
 
-// Flat-rate shipping in CHF (PRD: predictable, single rate; Swiss Post only).
-// Overridable via env for the owner; defaults to a sane value for local dev.
-function shippingRate(): number {
-	const raw = env.SHIPPING_RATE_CHF;
-	const n = raw ? Number(raw) : NaN;
-	return Number.isFinite(n) && n >= 0 ? n : 8;
+// Read the admin-editable `shipping_rates` table and project it to the pure
+// `ShippingRate` shape (grams + plain CHF) the cost calculator consumes.
+async function loadShippingRates(pb: PocketBase): Promise<ShippingRate[]> {
+	const rows = await pb
+		.collection('shipping_rates')
+		.getFullList<{ max_weight: number; cost_in_chf: number; urgency: Urgency }>();
+	return rows.map((r) => ({ maxWeight: r.max_weight, cost: r.cost_in_chf, urgency: r.urgency }));
 }
 
 // Orchestrates checkout initiation — the integration seam (covered via mocked
@@ -27,12 +28,17 @@ function shippingRate(): number {
 // thing that flips it to `paid`.
 export async function startCheckout(
 	items: CartItem[],
+	urgency: Urgency,
 	deps: { pb: PocketBase; stripe: Stripe; origin: string }
 ): Promise<{ url: string }> {
 	const { pb, stripe, origin } = deps;
 
 	const catalog: CatalogPort = { getBooksByIds: (ids) => getBooksByIds(pb, ids) };
-	const order = await buildOrder(items, catalog, { shipping: shippingRate() });
+	const rates = await loadShippingRates(pb);
+	const order = await buildOrder(items, catalog, {
+		urgency,
+		resolveShipping: (grams) => shippingCost(grams, rates, urgency)
+	});
 
 	// `pending`: order_number stays unset (assigned at `paid` in Phase 6b); the
 	// session id is filled in immediately below once Stripe returns it.
@@ -41,6 +47,7 @@ export async function startCheckout(
 		items: order.lines,
 		items_total: order.itemsTotal,
 		shipping_total: order.shipping,
+		shipping_urgency: order.urgency,
 		total: order.total,
 		currency: 'CHF',
 		carrier: 'Swiss Post'

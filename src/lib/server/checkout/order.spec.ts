@@ -20,10 +20,14 @@ function fakeCatalog(books: AuthoritativeBook[]): CatalogPort & { askedFor: stri
 }
 
 const CATALOG: AuthoritativeBook[] = [
-	{ id: 'a', title: 'El Principito', price: 24.9, stock: 5 },
-	{ id: 'b', title: 'La Oruga', price: 12, stock: 2 },
-	{ id: 'c', title: 'Agotado', price: 30, stock: 0 }
+	{ id: 'a', title: 'El Principito', price: 24.9, stock: 5, weightGrams: 300 },
+	{ id: 'b', title: 'La Oruga', price: 12, stock: 2, weightGrams: 450 },
+	{ id: 'c', title: 'Agotado', price: 30, stock: 0, weightGrams: 500 }
 ];
+
+// Default shipping opts for tests not exercising weight: a flat stub cost +
+// economy urgency, mirroring the old flat-rate behavior.
+const FLAT = { urgency: 'economy' as const, resolveShipping: () => 8 };
 
 describe('buildOrder', () => {
 	it('builds correct line items with server-authoritative prices + flat shipping', async () => {
@@ -33,7 +37,7 @@ describe('buildOrder', () => {
 			{ id: 'b', qty: 1 }
 		];
 
-		const order = await buildOrder(items, catalog, { shipping: 8 });
+		const order = await buildOrder(items, catalog, FLAT);
 
 		expect(order.lines).toEqual([
 			{ id: 'a', title: 'El Principito', unitPrice: 24.9, qty: 2, lineTotal: 49.8 },
@@ -46,7 +50,7 @@ describe('buildOrder', () => {
 
 	it('reads price + stock from the catalog port by id', async () => {
 		const catalog = fakeCatalog(CATALOG);
-		await buildOrder([{ id: 'a', qty: 1 }], catalog, { shipping: 8 });
+		await buildOrder([{ id: 'a', qty: 1 }], catalog, FLAT);
 		expect(catalog.askedFor).toContain('a');
 	});
 
@@ -55,7 +59,7 @@ describe('buildOrder', () => {
 		// A tampered client posts a spoofed cheap price alongside id + qty.
 		const tampered = [{ id: 'a', qty: 1, price: 0.01, title: 'spoofed' }] as unknown as CartItem[];
 
-		const order = await buildOrder(tampered, catalog, { shipping: 8 });
+		const order = await buildOrder(tampered, catalog, FLAT);
 
 		expect(order.lines[0].unitPrice).toBe(24.9);
 		expect(order.lines[0].title).toBe('El Principito');
@@ -64,7 +68,7 @@ describe('buildOrder', () => {
 
 	it('throws empty_cart for no items', async () => {
 		const catalog = fakeCatalog(CATALOG);
-		await expect(buildOrder([], catalog, { shipping: 8 })).rejects.toMatchObject({
+		await expect(buildOrder([], catalog, FLAT)).rejects.toMatchObject({
 			name: 'CheckoutError',
 			code: 'empty_cart'
 		});
@@ -77,7 +81,7 @@ describe('buildOrder', () => {
 			{ id: 'ghost', qty: 1 }
 		];
 
-		await expect(buildOrder(items, catalog, { shipping: 8 })).rejects.toMatchObject({
+		await expect(buildOrder(items, catalog, FLAT)).rejects.toMatchObject({
 			code: 'invalid_id',
 			bookIds: ['ghost']
 		});
@@ -86,14 +90,14 @@ describe('buildOrder', () => {
 	it('throws out_of_stock when a quantity exceeds available stock', async () => {
 		const catalog = fakeCatalog(CATALOG);
 		// `b` has stock 2; requesting 3 is over.
-		await expect(buildOrder([{ id: 'b', qty: 3 }], catalog, { shipping: 8 })).rejects.toMatchObject(
+		await expect(buildOrder([{ id: 'b', qty: 3 }], catalog, FLAT)).rejects.toMatchObject(
 			{ code: 'out_of_stock', bookIds: ['b'] }
 		);
 	});
 
 	it('treats a zero-stock book as out of stock', async () => {
 		const catalog = fakeCatalog(CATALOG);
-		await expect(buildOrder([{ id: 'c', qty: 1 }], catalog, { shipping: 8 })).rejects.toMatchObject(
+		await expect(buildOrder([{ id: 'c', qty: 1 }], catalog, FLAT)).rejects.toMatchObject(
 			{ code: 'out_of_stock', bookIds: ['c'] }
 		);
 	});
@@ -105,7 +109,7 @@ describe('buildOrder', () => {
 			{ id: 'c', qty: 1 }
 		];
 		try {
-			await buildOrder(items, catalog, { shipping: 8 });
+			await buildOrder(items, catalog, FLAT);
 			expect.unreachable('should have thrown');
 		} catch (err) {
 			expect(err).toBeInstanceOf(CheckoutError);
@@ -115,7 +119,33 @@ describe('buildOrder', () => {
 
 	it('allows a quantity exactly equal to stock (boundary)', async () => {
 		const catalog = fakeCatalog(CATALOG);
-		const order = await buildOrder([{ id: 'b', qty: 2 }], catalog, { shipping: 8 });
+		const order = await buildOrder([{ id: 'b', qty: 2 }], catalog, FLAT);
 		expect(order.lines[0].qty).toBe(2);
+	});
+
+	it('sums weight (per-book grams × qty) and resolves shipping from it', async () => {
+		const catalog = fakeCatalog(CATALOG);
+		let seenGrams = -1;
+		// a: 300g × 2 = 600, b: 450g × 1 = 450 → 1050g total.
+		const order = await buildOrder(
+			[
+				{ id: 'a', qty: 2 },
+				{ id: 'b', qty: 1 }
+			],
+			catalog,
+			{
+				urgency: 'priority',
+				resolveShipping: (grams) => {
+					seenGrams = grams;
+					return 12.5;
+				}
+			}
+		);
+
+		expect(seenGrams).toBe(1050);
+		expect(order.totalWeightGrams).toBe(1050);
+		expect(order.urgency).toBe('priority');
+		expect(order.shipping).toBe(12.5);
+		expect(order.total).toBeCloseTo(order.itemsTotal + 12.5, 5);
 	});
 });

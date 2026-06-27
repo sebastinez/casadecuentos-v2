@@ -1,4 +1,5 @@
 import type { CartItem } from '$lib/cart/cart';
+import { totalWeightGrams, type Urgency } from '$lib/shipping';
 
 // The security-critical entry to payment. Given the cart's *ids + quantities*
 // only, this builds the authoritative order: it reads price and stock from a
@@ -18,6 +19,10 @@ export interface AuthoritativeBook {
 	title: string;
 	price: number;
 	stock: number;
+	// Shipping weight in grams (0 when unset). Summed across the cart to price
+	// weight-based shipping. `getBooksByIds`'s `CartBook` carries this field, so
+	// the real PocketBase read satisfies the port.
+	weightGrams: number;
 }
 
 // The injected catalog port: resolve a set of ids to their authoritative price
@@ -37,10 +42,14 @@ export interface OrderLine {
 	lineTotal: number;
 }
 
-// The built order: validated lines + flat shipping + totals, all in plain CHF.
+// The built order: validated lines + weight-based shipping + totals, all in plain
+// CHF. `urgency` and `totalWeightGrams` are carried for the order snapshot and so
+// the Stripe shipping-option label can name the chosen delivery speed.
 export interface BuiltOrder {
 	lines: OrderLine[];
 	itemsTotal: number;
+	totalWeightGrams: number;
+	urgency: Urgency;
 	shipping: number;
 	total: number;
 }
@@ -71,10 +80,15 @@ export class CheckoutError extends Error {
 // Rejects (as `CheckoutError`): an empty cart, any requested id that resolves to
 // no book (`invalid_id`), and any line whose quantity exceeds available stock
 // (`out_of_stock`). On success the lines carry server-authoritative prices.
+// `opts.resolveShipping` turns the order's total weight into a shipping cost. It
+// is injected (not folded in) so the PocketBase rate-table read stays out of this
+// pure builder: production passes a closure over the seeded `shipping_rates`,
+// tests pass a stub. `urgency` is the customer's chosen delivery speed, carried
+// onto the order for the snapshot + Stripe label.
 export async function buildOrder(
 	items: CartItem[],
 	catalog: CatalogPort,
-	opts: { shipping: number }
+	opts: { resolveShipping: (totalWeightGrams: number) => number; urgency: Urgency }
 ): Promise<BuiltOrder> {
 	if (items.length === 0) {
 		throw new CheckoutError('empty_cart');
@@ -112,10 +126,19 @@ export async function buildOrder(
 
 	const itemsTotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
 
+	// Order weight drives shipping: sum each book's per-unit weight × qty, then
+	// resolve the tiered cost for the chosen urgency via the injected callback.
+	const weightGrams = totalWeightGrams(
+		items.map((item) => ({ weightGrams: byId.get(item.id)!.weightGrams, qty: item.qty }))
+	);
+	const shipping = opts.resolveShipping(weightGrams);
+
 	return {
 		lines,
 		itemsTotal,
-		shipping: opts.shipping,
-		total: itemsTotal + opts.shipping
+		totalWeightGrams: weightGrams,
+		urgency: opts.urgency,
+		shipping,
+		total: itemsTotal + shipping
 	};
 }

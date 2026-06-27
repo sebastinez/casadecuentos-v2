@@ -47,12 +47,14 @@ export function buildSessionParams({
 		// it. No tax handling (not VAT-registered, books-only).
 		payment_method_types: ['card', 'twint'],
 		line_items: lineItems,
-		// Flat-rate shipping as a Stripe shipping option (single, fixed CHF amount).
+		// Weight-based shipping as a single fixed Stripe shipping option — the cost
+		// + delivery speed were already chosen in our cart, so Stripe just displays
+		// the resolved amount (it doesn't offer the choice).
 		shipping_options: [
 			{
 				shipping_rate_data: {
 					type: 'fixed_amount',
-					display_name: 'Envío',
+					display_name: order.urgency === 'priority' ? 'Envío prioritario' : 'Envío económico',
 					fixed_amount: {
 						currency: CURRENCY,
 						amount: toMinorUnits(order.shipping)

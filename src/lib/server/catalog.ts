@@ -167,11 +167,17 @@ export interface CartBook {
 	price: number;
 	stock: number;
 	cover: string | null;
+	// Shipping weight in grams (0 when the book has none set). Carried here so the
+	// cart page can sum the order weight and the checkout port can price shipping
+	// — this shape structurally satisfies the checkout's `AuthoritativeBook` port.
+	weightGrams: number;
 }
 
-// As above plus the file-URL fields PocketBase needs to mint a thumbnail.
-interface CartBookSource extends Omit<CartBook, 'cover'> {
+// As above plus the file-URL fields PocketBase needs to mint a thumbnail. `cover`
+// and `weight_grams` are the raw record fields (snake_case) before projection.
+interface CartBookSource extends Omit<CartBook, 'cover' | 'weightGrams'> {
 	cover: string;
+	weight_grams: number;
 	collectionId: string;
 	collectionName: string;
 }
@@ -188,7 +194,7 @@ export async function getBooksByIds(pb: PocketBase, ids: string[]): Promise<Cart
 	const filter = ids.map((id) => pb.filter('id = {:id}', { id })).join(' || ');
 	const records = await pb.collection('books').getFullList<CartBookSource>({
 		filter,
-		fields: 'id,title,slug,price,stock,cover,collectionId,collectionName'
+		fields: 'id,title,slug,price,stock,cover,weight_grams,collectionId,collectionName'
 	});
 
 	return records.map((r) => ({
@@ -197,7 +203,8 @@ export async function getBooksByIds(pb: PocketBase, ids: string[]): Promise<Cart
 		slug: r.slug,
 		price: r.price,
 		stock: r.stock,
-		cover: r.cover ? pb.files.getURL(r, r.cover, { thumb: '100x100' }) : null
+		cover: r.cover ? pb.files.getURL(r, r.cover, { thumb: '100x100' }) : null,
+		weightGrams: r.weight_grams ?? 0
 	}));
 }
 
