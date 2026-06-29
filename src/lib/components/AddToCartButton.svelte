@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
+	import { page } from '$app/state';
 	import { cart } from '$lib/cart/cart.svelte';
 	import { announcer } from '$lib/a11y/announcer.svelte';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t } from '$lib/i18n';
 
 	// Shared add-to-cart control for the PDP and the listing grid. The only
 	// differences between the two surfaces are `qty` (the PDP feeds its stepper
@@ -20,7 +21,7 @@
 		class?: string;
 	} = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	// Disable against the *live cart*, not just catalog stock: once the cart
 	// already holds the book's full stock there's nothing left to add. Reactive,

@@ -8,9 +8,9 @@ function banner(id: string, start: string): Banner {
 	return {
 		id,
 		type: 'live_interview',
-		title: `Interview ${id}`,
-		subtitle: '',
-		cta_label: '',
+		title_es: `Interview ${id}`,
+		subtitle_es: '',
+		cta_label_es: '',
 		cta_link: '',
 		image: null,
 		srcset: null,

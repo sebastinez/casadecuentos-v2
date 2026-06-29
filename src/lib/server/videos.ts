@@ -12,19 +12,24 @@ import { watchUrl, thumbnailUrl } from '$lib/youtube';
 export interface VideoRecord {
 	id: string;
 	video_id: string;
-	title: string;
-	description: string;
+	// Localizable (read via `localizedField`); `_de` falls back to `_es`.
+	title_es: string;
+	title_de?: string;
+	description_es: string;
+	description_de?: string;
 	published: string;
 	watchUrl: string;
 	thumbnailUrl: string;
 }
 
-// Source video record (intrinsic fields; carries through any future `*_de`).
+// Source video record. `title`/`description` are localized into `_es`/`_de`.
 interface VideoSource {
 	id: string;
 	video_id: string;
-	title: string;
-	description: string;
+	title_es: string;
+	title_de?: string;
+	description_es: string;
+	description_de?: string;
 	published: string;
 }
 

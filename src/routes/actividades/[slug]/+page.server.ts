@@ -3,10 +3,11 @@ import { error, fail } from '@sveltejs/kit';
 import { createPocketBase, createAdminPocketBase } from '$lib/server/pocketbase';
 import { getEventBySlug } from '$lib/server/events';
 import { createMailTransport, rsvpConfirmationEmail } from '$lib/server/mail';
-import { localizedField, DEFAULT_LOCALE } from '$lib/i18n';
+import { localizedField, DEFAULT_LOCALE, LOCALES, localeFromPathname } from '$lib/i18n';
 
-// Event detail load: one event by slug (404 on miss). `canonicalUrl` is absolute
-// so OG/canonical tags are correct when shared on WhatsApp/Instagram.
+// Event detail load: one event by slug (404 on miss). `canonicalUrl` carries the
+// active locale prefix (per-locale indexing) and `alternates` advertises the sibling
+// locale(s) via hreflang, so OG/canonical tags are correct when shared.
 export const load: PageServerLoad = async ({ params, url }) => {
 	const pb = createPocketBase();
 	const event = await getEventBySlug(pb, params.slug);
@@ -15,8 +16,15 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		throw error(404, 'Evento no encontrado');
 	}
 
-	const canonicalUrl = `${url.origin}/actividades/${event.slug}`;
-	return { event, canonicalUrl };
+	// Locale from the URL prefix (not `locals.locale`) so reading `url.pathname` makes
+	// this load rerun on a client-side switch, keeping canonical/hreflang in step.
+	const locale = localeFromPathname(url.pathname) ?? DEFAULT_LOCALE;
+	const canonicalUrl = `${url.origin}/${locale}/actividades/${event.slug}`;
+	const alternates = LOCALES.map((locale) => ({
+		locale,
+		url: `${url.origin}/${locale}/actividades/${event.slug}`
+	}));
+	return { event, canonicalUrl, alternates };
 };
 
 // Basic email shape check — enough to reject obvious typos before we store/send.
@@ -32,7 +40,7 @@ export const actions: Actions = {
 	// (the `rsvps` collection is fully closed — no public create), and the Spanish
 	// confirmation email is best-effort: a Resend outage must not lose a reservation
 	// the owner can already see in the admin. No capacity/waitlist in v1.
-	rsvp: async ({ request, params }) => {
+	rsvp: async ({ request, params, locals }) => {
 		const form = await request.formData();
 		const name = String(form.get('name') ?? '').trim();
 		const family_name = String(form.get('family_name') ?? '').trim();
@@ -59,14 +67,17 @@ export const actions: Actions = {
 		// Best-effort confirmation email (mirrors the order-confirmation posture):
 		// the reservation is recorded regardless of send success.
 		try {
-			const message = rsvpConfirmationEmail({
-				email,
-				name,
-				eventTitle: localizedField(event, 'title', DEFAULT_LOCALE),
-				eventDate: event.date,
-				eventTime: event.time,
-				venueAddress: event.venue_address
-			});
+			const message = rsvpConfirmationEmail(
+				{
+					email,
+					name,
+					eventTitle: localizedField(event, 'title', locals.locale),
+					eventDate: event.date,
+					eventTime: event.time,
+					venueAddress: event.venue_address
+				},
+				locals.locale
+			);
 			await createMailTransport().send(message);
 		} catch (err) {
 			console.error('[rsvp] confirmation email failed:', err);

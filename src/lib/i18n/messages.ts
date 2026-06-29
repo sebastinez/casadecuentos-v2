@@ -1,8 +1,8 @@
 import type { Locale } from './locales';
 
-// UI string dictionary, keyed by locale then by message key. v1 fills `es`
-// only; `de` is intentionally empty (filled in v2). `t()` falls back to Spanish
-// for any key missing in the active locale, so an empty `de` table is safe.
+// UI string dictionary, keyed by locale then by message key. `t()` falls back
+// to Spanish for any key missing in the active locale, so a partial `de` table
+// is safe.
 export const messages: Record<Locale, Record<string, string>> = {
 	es: {
 		'nav.home': 'Inicio',
@@ -219,5 +219,220 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'footer.contactHeading': 'Contacto',
 		'footer.rights': 'Todos los derechos reservados.'
 	},
-	de: {}
+	de: {
+		'nav.home': 'Start',
+		'nav.books': 'Bücher',
+		'nav.events': 'Veranstaltungen',
+		'nav.videos': 'Interviews',
+		'nav.about': 'Über uns',
+		'nav.contact': 'Kontakt',
+		'nav.cart': 'Warenkorb',
+		'nav.menu': 'Menü',
+		'nav.openMenu': 'Menü öffnen',
+		'nav.closeMenu': 'Menü schließen',
+
+		'site.name': 'Casa de Cuentos',
+		'home.tagline': 'Online-Buchhandlung für Kinder- und Jugendbücher.',
+
+		// Landing page — hero carousel + featured strip
+		'home.hero.label': 'Empfohlen',
+		'home.hero.prev': 'Vorherige',
+		'home.hero.next': 'Nächste',
+		'home.hero.goTo': 'Zur Folie',
+		'home.featured.heading': 'Empfohlene Bücher',
+
+		// Header fuzzy search
+		'search.open': 'Suchen',
+		'search.close': 'Suche schließen',
+		'search.label': 'Büchersuche',
+		'search.placeholder': 'Nach Titel, Autor oder Illustrator suchen…',
+		'search.noResults': 'Keine Bücher gefunden.',
+		'search.error': 'Die Suche konnte nicht geladen werden.',
+
+		'books.heading': 'Bücher',
+		'books.empty': 'Derzeit sind keine Bücher verfügbar.',
+		'books.noResults': 'Keine Bücher mit diesen Filtern gefunden.',
+		'books.outOfStock': 'Ausverkauft',
+
+		// Listing pagination
+		'pagination.label': 'Seitennavigation',
+		'pagination.previous': 'Zurück',
+		'pagination.next': 'Weiter',
+		'pagination.goToPage': 'Zur Seite',
+
+		// Listing filters / search / sort
+		'filter.age': 'Alter',
+		'filter.genre': 'Genre',
+		'filter.publisher': 'Verlag',
+		'filter.language': 'Sprache',
+		'filter.search': 'Suchen',
+		'filter.searchPlaceholder': 'Titel, Autor oder Illustrator',
+		'filter.sort': 'Sortieren',
+		'filter.all': 'Alle',
+		'filter.apply': 'Filtern',
+		'filter.clear': 'Zurücksetzen',
+		'filter.toggle': 'Filter',
+		'sort.newest': 'Neueste',
+		'sort.priceAsc': 'Preis: aufsteigend',
+		'sort.priceDesc': 'Preis: absteigend',
+
+		// Product detail
+		'book.author': 'Autor',
+		'book.illustrator': 'Illustrator',
+		'book.publisher': 'Verlag',
+		'book.year': 'Erscheinungsjahr',
+		'book.language': 'Sprache',
+		'book.genre': 'Genre',
+		'book.ageBand': 'Empfohlenes Alter',
+		'book.format': 'Format',
+		'book.pages': 'Seiten',
+		'book.size': 'Größe',
+		'book.isbn': 'ISBN',
+		'book.description': 'Beschreibung',
+		'book.details': 'Details',
+		'book.addToCart': 'In den Warenkorb',
+		'book.added': 'Hinzugefügt',
+		'book.maxInCart': 'Maximal im Warenkorb',
+		'book.coverAlt': 'Cover von',
+
+		// Age bands (taxonomy labels — localizable)
+		'age.0-3': '0–3 Jahre',
+		'age.3-6': '3–6 Jahre',
+		'age.6-9': '6–9 Jahre',
+		'age.9-12': '9–12 Jahre',
+		'age.12+': '12+ / Jugendliche',
+
+		// Cart page
+		'cart.heading': 'Warenkorb',
+		'cart.added': 'Zum Warenkorb hinzugefügt',
+		'cart.empty': 'Dein Warenkorb ist leer.',
+		'cart.browse': 'Bücher entdecken',
+		'cart.quantity': 'Menge',
+		'cart.decrease': 'Menge verringern',
+		'cart.increase': 'Menge erhöhen',
+		'cart.remove': 'Entfernen',
+		'cart.clear': 'Warenkorb leeren',
+		'cart.subtotal': 'Zwischensumme',
+		'cart.shipping': 'Versand',
+		'cart.total': 'Gesamt',
+		'cart.deliverySpeed': 'Liefergeschwindigkeit',
+		'cart.delivery.economy': 'Standard (2–3 Tage)',
+		'cart.delivery.priority': 'Express (1 Tag)',
+		'cart.shippingUnavailable': 'Wird beim Bezahlvorgang berechnet',
+		'cart.loading': 'Wird geladen…',
+		'cart.error': 'Der Warenkorb konnte nicht geladen werden.',
+		'cart.checkout': 'Zur Kasse',
+		'cart.checkingOut': 'Weiterleitung zur Zahlung…',
+		'cart.checkoutError': 'Die Zahlung konnte nicht gestartet werden. Bitte versuche es erneut.',
+		'cart.outOfStockError': 'Einige Bücher sind nicht mehr in der gewünschten Menge verfügbar.',
+
+		// Checkout return pages
+		'pago.success.heading': 'Vielen Dank für deinen Einkauf!',
+		'pago.success.body':
+			'Wir verarbeiten deine Zahlung. Du erhältst in Kürze eine Bestätigungs-E-Mail.',
+		'pago.cancel.heading': 'Zahlung abgebrochen',
+		'pago.cancel.body':
+			'Es wurde keine Zahlung vorgenommen. Dein Warenkorb ist weiterhin verfügbar.',
+		'pago.backToCart': 'Zurück zum Warenkorb',
+		'pago.keepBrowsing': 'Weiter stöbern',
+
+		// Order-confirmation email.
+		'email.confirm.subject': 'Bestellbestätigung',
+		'email.confirm.greeting': 'Vielen Dank für deinen Einkauf bei Casa de Cuentos.',
+		'email.confirm.intro': 'Wir haben deine Zahlung erhalten und bereiten deine Bestellung vor.',
+		'email.confirm.orderNumber': 'Bestellnummer',
+		'email.confirm.items': 'Artikel',
+		'email.confirm.quantity': 'Menge',
+		'email.confirm.subtotal': 'Zwischensumme',
+		'email.confirm.shipping': 'Versand',
+		'email.confirm.total': 'Gesamt',
+		'email.confirm.closing':
+			'Sobald deine Bestellung versandt wurde, senden wir dir eine weitere E-Mail mit der Sendungsnummer.',
+		'email.confirm.signature': 'Casa de Cuentos',
+		'email.confirm.help': 'Bei Fragen antworte einfach auf diese E-Mail oder schreibe uns an',
+		'email.confirm.orderSummary': 'Bestellübersicht',
+
+		'events.heading': 'Veranstaltungen',
+		'events.empty': 'Derzeit sind keine Veranstaltungen geplant.',
+		'events.upcoming': 'Kommende Veranstaltungen',
+		'event.when': 'Datum und Uhrzeit',
+		'event.where': 'Ort',
+		'event.timeSuffix': 'Uhr',
+		'event.backTolist': 'Zurück zu den Veranstaltungen',
+		'event.mapLabel': 'Veranstaltungsort',
+
+		// RSVP form. Free events, no capacity/waitlist.
+		'rsvp.heading': 'Sichere dir deinen Platz',
+		'rsvp.intro':
+			'Die Plätze sind kostenlos. Hinterlasse uns deine Daten und wir bestätigen dir per E-Mail.',
+		'rsvp.name': 'Vorname',
+		'rsvp.familyName': 'Nachname',
+		'rsvp.email': 'E-Mail',
+		'rsvp.phone': 'Telefon',
+		'rsvp.submit': 'Platz reservieren',
+		'rsvp.submitting': 'Wird gesendet…',
+		'rsvp.success':
+			'Vielen Dank! Deine Reservierung ist bestätigt. Wir haben dir eine E-Mail gesendet.',
+		'rsvp.error': 'Die Reservierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.',
+		'rsvp.invalid': 'Bitte überprüfe die Felder: Alle sind erforderlich.',
+
+		// RSVP confirmation email.
+		'email.rsvp.subject': 'Reservierungsbestätigung',
+		'email.rsvp.greeting': 'Vielen Dank für deine Reservierung bei Casa de Cuentos.',
+		'email.rsvp.intro': 'Wir haben deine Reservierung für die folgende Veranstaltung registriert:',
+		'email.rsvp.event': 'Veranstaltung',
+		'email.rsvp.when': 'Datum und Uhrzeit',
+		'email.rsvp.where': 'Ort',
+		'email.rsvp.closing':
+			'Wir freuen uns auf dich. Falls du nicht teilnehmen kannst, musst du nichts weiter tun.',
+		'email.rsvp.signature': 'Casa de Cuentos',
+
+		// Videos page + live-interview banner.
+		'videos.heading': 'Interviews und Videos',
+		'videos.metaDescription':
+			'Lesungen, Interviews und Videos von Casa de Cuentos auf unserem YouTube-Kanal.',
+		'videos.empty': 'Noch keine Videos. Schau bald wieder vorbei.',
+		'videos.liveLabel': 'Nächstes Live-Interview',
+		'videos.liveBadge': 'Live',
+		'video.thumbnailAlt': 'Vorschaubild des Videos',
+
+		// Contact page + form
+		'contact.heading': 'Kontakt',
+		'contact.intro': 'Hast du eine Frage oder suchst du ein Buch? Schreib uns.',
+		'contact.name': 'Name',
+		'contact.email': 'E-Mail',
+		'contact.subject': 'Betreff',
+		'contact.message': 'Nachricht',
+		'contact.submit': 'Nachricht senden',
+		'contact.submitting': 'Wird gesendet…',
+		'contact.success': 'Vielen Dank! Wir haben deine Nachricht erhalten und antworten dir bald.',
+		'contact.invalid': 'Bitte überprüfe die Felder: Alle sind erforderlich.',
+		'contact.rateLimited':
+			'Du hast zu viele Nachrichten gesendet. Bitte versuche es später erneut.',
+		'contact.error': 'Die Nachricht konnte nicht gesendet werden. Bitte versuche es erneut.',
+		'contact.reach': 'Du erreichst uns auch hier',
+		'contact.addressLabel': 'Adresse',
+		'contact.emailLabel': 'E-Mail',
+		'contact.instagramLabel': 'Instagram',
+
+		// Contact-message email (sent to the owner).
+		'email.contact.subject': 'Neue Kontaktnachricht',
+		'email.contact.intro': 'Du hast eine neue Nachricht über das Kontaktformular erhalten:',
+
+		// Static content pages.
+		'about.heading': 'Über uns',
+		'privacy.heading': 'Datenschutzerklärung',
+		'terms.heading': 'Allgemeine Geschäftsbedingungen',
+		'shipping.heading': 'Versand und Rückgabe',
+
+		// Footer: policy links + contact info + copyright.
+		'footer.policies': 'Informationen',
+		'footer.about': 'Über uns',
+		'footer.privacy': 'Datenschutz',
+		'footer.terms': 'AGB',
+		'footer.shipping': 'Versand und Rückgabe',
+		'footer.contact': 'Kontakt',
+		'footer.contactHeading': 'Kontakt',
+		'footer.rights': 'Alle Rechte vorbehalten.'
+	}
 };

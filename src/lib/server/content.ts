@@ -8,17 +8,21 @@ import type PocketBase from 'pocketbase';
 // holds an absolute YouTube URL (hero/featured treat it as a relative path).
 export type BannerType = 'hero' | 'featured' | 'live_interview';
 
-// Banner as the landing page consumes it: localizable copy in base columns (read
-// through `localizedField` in the component) plus a ready-to-render image URL (null
+// Banner as the landing page consumes it: localizable copy in per-locale `_es`/`_de`
+// columns (read through `localizedField` in the component) plus a ready-to-render image URL (null
 // → the page shows a gradient fallback). `start` carries through so the
 // next-interview selector can pick the most imminent `live_interview`; the in-window
 // check already happened inside `listBanners`.
 export interface Banner {
 	id: string;
 	type: BannerType;
-	title: string;
-	subtitle: string;
-	cta_label: string;
+	// Localizable copy (read via `localizedField`); `_de` falls back to `_es`.
+	title_es: string;
+	title_de?: string;
+	subtitle_es: string;
+	subtitle_de?: string;
+	cta_label_es: string;
+	cta_label_de?: string;
 	cta_link: string;
 	// `image` is a single mid-size URL (the <img> fallback / preload href);
 	// `srcset` lists the same image at several widths so the browser fetches the
@@ -34,9 +38,12 @@ export interface Banner {
 interface BannerSource {
 	id: string;
 	type: BannerType;
-	title: string;
-	subtitle: string;
-	cta_label: string;
+	title_es: string;
+	title_de?: string;
+	subtitle_es: string;
+	subtitle_de?: string;
+	cta_label_es: string;
+	cta_label_de?: string;
 	cta_link: string;
 	image: string;
 	start: string;
@@ -85,9 +92,7 @@ export async function listBanners(pb: PocketBase, type: BannerType): Promise<Ban
 			...r,
 			image: r.image ? pb.files.getURL(r, r.image, { thumb: `${fallbackWidth}x0` }) : null,
 			srcset: r.image
-				? widths
-						.map((w) => `${pb.files.getURL(r, r.image, { thumb: `${w}x0` })} ${w}w`)
-						.join(', ')
+				? widths.map((w) => `${pb.files.getURL(r, r.image, { thumb: `${w}x0` })} ${w}w`).join(', ')
 				: null
 		}));
 }

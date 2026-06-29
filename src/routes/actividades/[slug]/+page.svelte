@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { PageData, ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import { t, localizedField, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizedField, localizeHref } from '$lib/i18n';
 	import { formatEventDate } from '$lib/datetime';
 	import EventMap from '$lib/components/EventMap.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 
 	const event = $derived(data.event);
 	const title = $derived(localizedField(event, 'title', locale));
@@ -34,6 +34,9 @@
 	<title>{title} — {t('site.name', locale)}</title>
 	<meta name="description" content={metaDescription} />
 	<link rel="canonical" href={data.canonicalUrl} />
+	{#each data.alternates as alt (alt.locale)}
+		<link rel="alternate" hreflang={alt.locale} href={alt.url} />
+	{/each}
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={metaDescription} />
@@ -45,7 +48,7 @@
 
 <article class="flex flex-col gap-8">
 	<header>
-		<a href="/actividades" class="text-sm text-gray-600 hover:underline"
+		<a href={localizeHref('/actividades', locale)} class="text-sm text-gray-600 hover:underline"
 			>← {t('event.backTolist', locale)}</a
 		>
 		<h1 class="mt-2 text-2xl font-semibold">{title}</h1>

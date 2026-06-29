@@ -6,10 +6,15 @@ import type { SearchEntry } from '$lib/search/catalog-index';
 // defaults `perPage` to 30.
 export const BOOKS_PER_PAGE = 20;
 
-// A taxonomy record (genre / publisher / language); `name` is the displayed label.
+// A taxonomy record (genre / publisher / language). `genres` and `book_languages`
+// carry localized `name_es`/`name_de` (read via `localizedField`); `publishers` keeps a
+// single intrinsic `name` (proper nouns, not translated). All three flow through this
+// one shape, so every label field is optional.
 export interface Taxon {
 	id: string;
-	name: string;
+	name?: string;
+	name_es?: string;
+	name_de?: string;
 	slug: string;
 }
 
@@ -22,9 +27,12 @@ export interface Book {
 	author: string;
 	illustrator: string;
 	slug: string;
-	description: string;
+	// Localizable (read via `localizedField`); German falls back to Spanish.
+	description_es: string;
+	description_de?: string;
 	ISBN: string;
-	format: string;
+	format_es: string;
+	format_de?: string;
 	page_count: number;
 	book_size: string;
 	publication_year: number;
@@ -98,7 +106,10 @@ export async function listTaxonomy(
 	pb: PocketBase,
 	collection: 'genres' | 'publishers' | 'book_languages'
 ): Promise<Taxon[]> {
-	return pb.collection(collection).getFullList<Taxon>({ sort: 'name' });
+	// `publishers` sorts by its single `name`; `genres`/`book_languages` localized their
+	// label into `name_es`/`name_de`, so the (Spanish) base sort key is `name_es`.
+	const sort = collection === 'publishers' ? 'name' : 'name_es';
+	return pb.collection(collection).getFullList<Taxon>({ sort });
 }
 
 // `cover` is the raw filename; `collectionId`/`collectionName` let `pb.files.getURL`

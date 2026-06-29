@@ -7,9 +7,8 @@ describe('t (UI message accessor)', () => {
 		expect(t('nav.home', 'es')).toBe('Inicio');
 	});
 
-	it('falls back to Spanish when the key is missing in the requested locale', () => {
-		// `de` table is empty in v1, so this exercises the Spanish fallback path.
-		expect(t('nav.home', 'de')).toBe('Inicio');
+	it('returns the German string when the key is present in the de table', () => {
+		expect(t('nav.home', 'de')).toBe('Start');
 	});
 
 	it('defaults to Spanish when no locale is given', () => {
@@ -22,33 +21,33 @@ describe('t (UI message accessor)', () => {
 	});
 });
 
-describe('localizedField (localized content accessor)', () => {
+describe('localizedField (localized content accessor — symmetric _es/_de columns)', () => {
 	const record = {
-		description: 'Texto en español',
+		description_es: 'Texto en español',
 		description_de: 'Deutscher Text',
-		empty_de: '   ',
-		title: 'La pequeña oruga glotona'
+		// A field with only the Spanish column filled (German not yet entered).
+		title_es: 'La pequeña oruga glotona'
 	};
 
-	it('returns the requested locale value when the suffixed column is present', () => {
+	it('returns the requested locale column when it is present', () => {
 		expect(localizedField(record, 'description', 'de')).toBe('Deutscher Text');
+		expect(localizedField(record, 'description', 'es')).toBe('Texto en español');
 	});
 
-	it('falls back to the Spanish base when the localized column is missing', () => {
+	it('falls back to the Spanish column when the German column is missing', () => {
 		expect(localizedField(record, 'title', 'de')).toBe('La pequeña oruga glotona');
 	});
 
-	it('falls back to the Spanish base when the localized column is empty/whitespace', () => {
-		const r = { empty: 'Base español', empty_de: '   ' };
-		expect(localizedField(r, 'empty', 'de')).toBe('Base español');
+	it('falls back to the Spanish column when the German column is empty/whitespace', () => {
+		const r = { empty_es: 'Solo español', empty_de: '   ' };
+		expect(localizedField(r, 'empty', 'de')).toBe('Solo español');
 	});
 
-	it('returns the base column directly for Spanish (the default locale)', () => {
-		expect(localizedField(record, 'description', 'es')).toBe('Texto en español');
+	it('defaults to Spanish (the default locale) when no locale is given', () => {
 		expect(localizedField(record, 'description')).toBe('Texto en español');
 	});
 
-	it('returns an empty string when neither localized nor base value exists', () => {
+	it('returns an empty string when neither the localized nor the Spanish column exists', () => {
 		expect(localizedField(record, 'missing', 'de')).toBe('');
 		expect(localizedField(record, 'missing')).toBe('');
 	});

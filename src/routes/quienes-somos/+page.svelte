@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 	// `?enhanced` emits a responsive, multi-format picture (AVIF/webp + the listed
 	// widths) with intrinsic dimensions baked in. The source is ~4000×6000, so we
 	// pin widths to the actual render slot (≤480px CSS, ×2 for retina) instead of
 	// letting the plugin ship multi-megabyte halvings of the original.
 	import euge from '$lib/assets/euge.webp?enhanced&w=480;960;1440';
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 </script>
 
 <svelte:head>

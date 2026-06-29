@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { cart } from '$lib/cart/cart.svelte';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizeHref } from '$lib/i18n';
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	// The customer landed here after Stripe Checkout. This page marks NOTHING as
 	// paid — fulfilment is driven solely by the signature-verified webhook (Phase
@@ -22,7 +23,10 @@
 <div class="mx-auto max-w-lg py-12 text-center">
 	<h1 class="text-2xl font-semibold">{t('pago.success.heading', locale)}</h1>
 	<p class="mt-4 text-gray-600">{t('pago.success.body', locale)}</p>
-	<a href="/libros" class="mt-6 inline-block text-sm text-gray-700 hover:underline">
+	<a
+		href={localizeHref('/libros', locale)}
+		class="mt-6 inline-block text-sm text-gray-700 hover:underline"
+	>
 		{t('pago.keepBrowsing', locale)}
 	</a>
 </div>

@@ -9,8 +9,14 @@ declare global {
 			message: string;
 			bookIds?: string[];
 		}
-		// interface Locals {}
-		// interface PageData {}
+		// Active locale, resolved from the URL prefix (`/es/…` | `/de/…`) in
+		// `hooks.server.ts` and surfaced to every load/page via `+layout.server.ts`.
+		interface Locals {
+			locale: import('$lib/i18n').Locale;
+		}
+		interface PageData {
+			locale: import('$lib/i18n').Locale;
+		}
 		// interface PageState {}
 		// interface Platform {}
 	}

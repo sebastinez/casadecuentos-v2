@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { t, localizedField, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizedField } from '$lib/i18n';
 	import { cart } from '$lib/cart/cart.svelte';
 	import AddToCartButton from '$lib/components/AddToCartButton.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 	const priceFmt = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' });
 
 	const book = $derived(data.book);
@@ -41,13 +41,19 @@
 			{ label: t('book.illustrator', locale), value: book.illustrator },
 			{ label: t('book.publisher', locale), value: book.expand?.publisher?.name },
 			{ label: t('book.year', locale), value: book.publication_year || '' },
-			{ label: t('book.language', locale), value: book.expand?.language?.name },
-			{ label: t('book.genre', locale), value: book.expand?.genre?.name },
+			{
+				label: t('book.language', locale),
+				value: book.expand?.language ? localizedField(book.expand.language, 'name', locale) : ''
+			},
+			{
+				label: t('book.genre', locale),
+				value: book.expand?.genre ? localizedField(book.expand.genre, 'name', locale) : ''
+			},
 			{
 				label: t('book.ageBand', locale),
 				value: book.age_band ? t(`age.${book.age_band}`, locale) : ''
 			},
-			{ label: t('book.format', locale), value: book.format },
+			{ label: t('book.format', locale), value: localizedField(book, 'format', locale) },
 			{ label: t('book.pages', locale), value: book.page_count || '' },
 			{ label: t('book.size', locale), value: book.book_size },
 			{ label: t('book.isbn', locale), value: book.ISBN }
@@ -59,6 +65,9 @@
 	<title>{book.title} — {t('site.name', locale)}</title>
 	<meta name="description" content={metaDescription} />
 	<link rel="canonical" href={data.canonicalUrl} />
+	{#each data.alternates as alt (alt.locale)}
+		<link rel="alternate" hreflang={alt.locale} href={alt.url} />
+	{/each}
 	<meta property="og:type" content="product" />
 	<meta property="og:title" content={book.title} />
 	<meta property="og:description" content={metaDescription} />

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { t, localizedField, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+	import { t, localizedField, localizeHref } from '$lib/i18n';
 	import HeroCarousel from '$lib/components/HeroCarousel.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	const locale: Locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 	const priceFmt = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' });
 
 	// Fade promo covers in over the brand gradient, only when they arrive after this
@@ -43,7 +43,7 @@
 		<h1 class="text-3xl font-semibold tracking-tight">{t('site.name', locale)}</h1>
 		<p class="mx-auto mt-3 max-w-prose text-gray-600">{t('home.tagline', locale)}</p>
 		<a
-			href="/libros"
+			href={localizeHref('/libros', locale)}
 			class="mt-6 inline-block rounded-md bg-terracotta-600 px-4 py-2 text-sm font-medium text-white hover:bg-terracotta-700"
 		>
 			{t('nav.books', locale)}
@@ -60,7 +60,7 @@
 			{@const subtitle = localizedField(banner, 'subtitle', locale)}
 			{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 			<a
-				href={banner.cta_link || '/libros'}
+				href={localizeHref(banner.cta_link || '/libros', locale)}
 				class="group relative flex min-h-48 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-green-700 to-green-500 p-6 text-white"
 			>
 				{#if banner.image}
@@ -102,7 +102,7 @@
 			{#each data.featuredBooks as book (book.id)}
 				<li>
 					<a
-						href="/libros/{book.slug}"
+						href={localizeHref(`/libros/${book.slug}`, locale)}
 						class="flex h-full flex-col rounded-lg border border-gray-200 p-3 hover:border-gray-400"
 					>
 						{#if book.cover}

@@ -1,9 +1,10 @@
 <script lang="ts">
 	// Static terms & conditions — hardcoded Spanish prose.
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t, localizeHref } from '$lib/i18n';
 	import { site } from '$lib/site';
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 </script>
 
 <svelte:head>
@@ -44,7 +45,7 @@
 	<h2>Envíos, garantía y devoluciones</h2>
 	<p>
 		Las condiciones de envío y la política de garantía y devoluciones se detallan en la página de
-		<a href="/envios-devoluciones">Envíos y devoluciones</a>.
+		<a href={localizeHref('/envios-devoluciones', locale)}>Envíos y devoluciones</a>.
 	</p>
 
 	<h2>Contacto</h2>

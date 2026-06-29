@@ -2,14 +2,16 @@ import { DEFAULT_LOCALE, type Locale } from './locales';
 
 // Read a localizable *content* field off a record, with Spanish fallback.
 //
-// Convention (painful to retrofit, so it is fixed early):
-//   - Spanish lives in the unsuffixed base column, e.g. `description`.
-//   - Other locales live in `<field>_<locale>`, e.g. `description_de`.
-//   - Those suffixed columns are NOT pre-created (a v2 data-entry task), so they
-//     may be absent or empty — in which case we fall back to the Spanish base.
+// Convention (symmetric suffixed sibling columns):
+//   - Each locale lives in its own `<field>_<locale>` column, e.g. `description_es`,
+//     `description_de`. There is no unsuffixed base column for localizable fields.
+//   - The German column may be absent or empty (a content-entry task), in which case
+//     we fall back to the Spanish (`DEFAULT_LOCALE`) column.
 //
-// For `es` we always return the base column directly. Bibliographic metadata
-// (title/author/ISBN/…) is intrinsic and never goes through this accessor.
+// Callers pass the *base* field name (`description`, `name`, `format`); the suffix is
+// applied here. Bibliographic metadata (title/author/ISBN/…) is intrinsic, stays in
+// an unsuffixed column, and never goes through this accessor.
+//
 // Generic over any object (typed records like `Book` or plain bags), so callers
 // don't need an index signature; lookups are done through a local cast.
 export function localizedField<T extends object>(
@@ -19,13 +21,11 @@ export function localizedField<T extends object>(
 ): string {
 	const rec = record as Record<string, unknown>;
 
-	if (locale !== DEFAULT_LOCALE) {
-		const value = rec[`${field}_${locale}`];
-		if (typeof value === 'string' && value.trim() !== '') {
-			return value;
-		}
+	const value = rec[`${field}_${locale}`];
+	if (typeof value === 'string' && value.trim() !== '') {
+		return value;
 	}
 
-	const base = rec[field];
-	return typeof base === 'string' ? base : '';
+	const fallback = rec[`${field}_${DEFAULT_LOCALE}`];
+	return typeof fallback === 'string' ? fallback : '';
 }

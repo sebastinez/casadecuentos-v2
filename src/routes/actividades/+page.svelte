@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { t, localizedField, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizedField, localizeHref } from '$lib/i18n';
 	import { formatEventDate } from '$lib/datetime';
 
 	let { data }: { data: PageData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 </script>
 
 <svelte:head>
@@ -22,7 +22,7 @@
 		{#each data.events as event (event.id)}
 			<li>
 				<a
-					href="/actividades/{event.slug}"
+					href={localizeHref(`/actividades/${event.slug}`, locale)}
 					class="flex h-full flex-col rounded-lg border border-gray-200 p-4 hover:border-gray-400"
 				>
 					<p class="text-sm font-medium text-gray-500">

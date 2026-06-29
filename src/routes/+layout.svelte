@@ -2,36 +2,38 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.ico';
 	import logo from '$lib/assets/logo.webp';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizeHref } from '$lib/i18n';
 	import { site } from '$lib/site';
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
 	import CartIcon from '$lib/components/CartIcon.svelte';
 	import MobileNav from '$lib/components/MobileNav.svelte';
+	import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
 	import { announcer } from '$lib/a11y/announcer.svelte';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
-	// v1 is Spanish-only; locale is threaded explicitly so German is a data task,
-	// not a rewrite.
-	const locale = DEFAULT_LOCALE;
-	const nav = [
-		{ href: '/', label: t('nav.home', locale) },
-		{ href: '/libros', label: t('nav.books', locale) },
-		{ href: '/actividades', label: t('nav.events', locale) },
-		{ href: '/videos', label: t('nav.videos', locale) },
-		{ href: '/quienes-somos', label: t('nav.about', locale) },
-		{ href: '/contacto', label: t('nav.contact', locale) }
-	];
+	// Active locale comes from the URL prefix (resolved in hooks.server.ts) via the
+	// layout load. Nav/footer hrefs are reactive so they re-prefix when the locale
+	// switches; labels resolve through the i18n message layer.
+	const locale = $derived(data.locale);
+	const nav = $derived([
+		{ href: localizeHref('/', locale), label: t('nav.home', locale) },
+		{ href: localizeHref('/libros', locale), label: t('nav.books', locale) },
+		{ href: localizeHref('/actividades', locale), label: t('nav.events', locale) },
+		{ href: localizeHref('/videos', locale), label: t('nav.videos', locale) },
+		{ href: localizeHref('/quienes-somos', locale), label: t('nav.about', locale) },
+		{ href: localizeHref('/contacto', locale), label: t('nav.contact', locale) }
+	]);
 
 	// Footer policy links, separate from the primary nav: the "information" links —
 	// About + the hardcoded legal pages + contact.
-	const footerLinks = [
-		{ href: '/quienes-somos', label: t('footer.about', locale) },
-		{ href: '/envios-devoluciones', label: t('footer.shipping', locale) },
-		{ href: '/privacidad', label: t('footer.privacy', locale) },
-		{ href: '/terminos', label: t('footer.terms', locale) },
-		{ href: '/contacto', label: t('footer.contact', locale) }
-	];
+	const footerLinks = $derived([
+		{ href: localizeHref('/quienes-somos', locale), label: t('footer.about', locale) },
+		{ href: localizeHref('/envios-devoluciones', locale), label: t('footer.shipping', locale) },
+		{ href: localizeHref('/privacidad', locale), label: t('footer.privacy', locale) },
+		{ href: localizeHref('/terminos', locale), label: t('footer.terms', locale) },
+		{ href: localizeHref('/contacto', locale), label: t('footer.contact', locale) }
+	]);
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -40,7 +42,7 @@
 	<header class="sticky top-0 z-10 border-b border-terracotta-100 bg-cream/90 backdrop-blur">
 		<nav class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
 			<a
-				href="/"
+				href={localizeHref('/', locale)}
 				class="flex items-center gap-2 font-serif text-xl font-semibold tracking-tight text-terracotta-700 hover:text-terracotta-800"
 			>
 				<img src={logo} alt="" width="80" height="80" class="h-30 w-30 shrink-0" />
@@ -58,6 +60,7 @@
 					{/each}
 				</ul>
 				<HeaderSearch />
+				<LocaleSwitcher {locale} />
 				<CartIcon />
 				<MobileNav {nav} />
 			</div>

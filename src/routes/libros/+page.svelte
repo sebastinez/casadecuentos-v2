@@ -1,13 +1,13 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizedField, localizeHref } from '$lib/i18n';
 	import { AGE_BANDS } from '$lib/age-bands';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import AddToCartButton from '$lib/components/AddToCartButton.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 	const priceFmt = new Intl.NumberFormat('de-CH', {
 		style: 'currency',
 		currency: 'CHF'
@@ -54,14 +54,14 @@
 		if (f.sort) params.set('sort', f.sort);
 		if (page > 1) params.set('page', String(page));
 		const qs = params.toString();
-		return qs ? `/libros?${qs}` : '/libros';
+		return localizeHref(qs ? `/libros?${qs}` : '/libros', locale);
 	}
 
-	const sortOptions = [
+	const sortOptions = $derived([
 		{ value: 'newest', label: t('sort.newest', locale) },
 		{ value: 'price-asc', label: t('sort.priceAsc', locale) },
 		{ value: 'price-desc', label: t('sort.priceDesc', locale) }
-	];
+	]);
 </script>
 
 <!-- Native <details>: the filter panel is collapsed by default and toggled with
@@ -95,7 +95,7 @@
 	     server `load` re-runs the PocketBase filter query. No client JS needed. -->
 	<form
 		method="GET"
-		action="/libros"
+		action={localizeHref('/libros', locale)}
 		class="mt-4 grid grid-cols-1 gap-4 rounded-lg border border-gray-200 p-4 sm:grid-cols-2 lg:grid-cols-3"
 	>
 		<label class="flex flex-col gap-1 text-sm">
@@ -124,7 +124,9 @@
 			<select name="genre" class="rounded-md border border-gray-300 px-3 py-2">
 				<option value="" selected={f.genre === ''}>{t('filter.all', locale)}</option>
 				{#each data.facets.genres as g (g.id)}
-					<option value={g.slug} selected={f.genre === g.slug}>{g.name}</option>
+					<option value={g.slug} selected={f.genre === g.slug}
+						>{localizedField(g, 'name', locale)}</option
+					>
 				{/each}
 			</select>
 		</label>
@@ -144,7 +146,9 @@
 			<select name="language" class="rounded-md border border-gray-300 px-3 py-2">
 				<option value="" selected={f.language === ''}>{t('filter.all', locale)}</option>
 				{#each data.facets.languages as l (l.id)}
-					<option value={l.slug} selected={f.language === l.slug}>{l.name}</option>
+					<option value={l.slug} selected={f.language === l.slug}
+						>{localizedField(l, 'name', locale)}</option
+					>
 				{/each}
 			</select>
 		</label>
@@ -171,7 +175,7 @@
 				{t('filter.apply', locale)}
 			</button>
 			{#if hasFilters}
-				<a href="/libros" class="text-sm text-gray-600 hover:underline"
+				<a href={localizeHref('/libros', locale)} class="text-sm text-gray-600 hover:underline"
 					>{t('filter.clear', locale)}</a
 				>
 			{/if}
@@ -190,7 +194,7 @@
 				<!-- Card is no longer one big <a>: only the cover and title link to the
 				     detail page, leaving the add-to-cart button as a valid sibling
 				     (a <button> can't be nested inside an <a>). -->
-				<a href="/libros/{book.slug}" class="group">
+				<a href={localizeHref(`/libros/${book.slug}`, locale)} class="group">
 					<img
 						src={book.cover}
 						alt=""
@@ -200,7 +204,9 @@
 					/>
 				</a>
 				<h2 class="font-medium">
-					<a href="/libros/{book.slug}" class="hover:underline">{book.title}</a>
+					<a href={localizeHref(`/libros/${book.slug}`, locale)} class="hover:underline"
+						>{book.title}</a
+					>
 				</h2>
 				{#if book.author}
 					<p class="text-sm text-gray-600">{book.author}</p>

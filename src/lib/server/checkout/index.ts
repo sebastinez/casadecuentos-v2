@@ -3,6 +3,7 @@ import type PocketBase from 'pocketbase';
 import type { CartItem } from '$lib/cart/cart';
 import { getBooksByIds } from '$lib/server/catalog';
 import { shippingCost, type ShippingRate, type Urgency } from '$lib/shipping';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
 import { buildOrder, type CatalogPort } from './order';
 import { buildSessionParams } from './stripe-params';
 
@@ -25,9 +26,9 @@ async function loadShippingRates(pb: PocketBase): Promise<ShippingRate[]> {
 export async function startCheckout(
 	items: CartItem[],
 	urgency: Urgency,
-	deps: { pb: PocketBase; stripe: Stripe; origin: string }
+	deps: { pb: PocketBase; stripe: Stripe; origin: string; locale?: Locale }
 ): Promise<{ url: string }> {
-	const { pb, stripe, origin } = deps;
+	const { pb, stripe, origin, locale = DEFAULT_LOCALE } = deps;
 
 	const catalog: CatalogPort = { getBooksByIds: (ids) => getBooksByIds(pb, ids) };
 	const rates = await loadShippingRates(pb);
@@ -46,7 +47,9 @@ export async function startCheckout(
 		shipping_urgency: order.urgency,
 		total: order.total,
 		currency: 'CHF',
-		carrier: 'Swiss Post'
+		carrier: 'Swiss Post',
+		// Remembered so the paid webhook emails the confirmation in the buyer's language.
+		locale
 	});
 
 	const session = await stripe.checkout.sessions.create(
@@ -54,7 +57,8 @@ export async function startCheckout(
 			order,
 			orderId: record.id,
 			successUrl: `${origin}/pago/exito?session_id={CHECKOUT_SESSION_ID}`,
-			cancelUrl: `${origin}/pago/cancelado`
+			cancelUrl: `${origin}/pago/cancelado`,
+			locale
 		})
 	);
 

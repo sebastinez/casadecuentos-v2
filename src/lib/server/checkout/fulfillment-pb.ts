@@ -26,7 +26,10 @@ export function createOrdersPort(pb: PocketBase): OrdersPort {
 					items_total: record.items_total ?? 0,
 					shipping_total: record.shipping_total ?? 0,
 					total: record.total ?? 0,
-					currency: record.currency ?? 'CHF'
+					currency: record.currency ?? 'CHF',
+					// `localizedField`-style fallback isn't needed; the email builder
+					// defaults to Spanish when this is undefined.
+					locale: record.locale || undefined
 				};
 			} catch (err) {
 				if (err instanceof ClientResponseError && err.status === 404) {

@@ -1,5 +1,6 @@
 import { canTransition, type OrderStatus } from './order-state';
 import { site } from '$lib/site';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
 import type { OrderLine } from './order';
 import type { MailTransport } from '$lib/server/mail';
 import { orderConfirmationEmail } from '$lib/server/mail';
@@ -31,6 +32,8 @@ export interface FulfillmentOrder {
 	shipping_total: number;
 	total: number;
 	currency: string;
+	// Buyer's locale, captured at checkout; localizes the confirmation email.
+	locale?: Locale;
 }
 
 // Persisted patch applied at the `paid` transition.
@@ -97,6 +100,9 @@ export async function fulfillCheckout(
 	}
 
 	const orderNumber = await deps.orders.nextOrderNumber();
+	// The customer-facing confirmation goes out in the locale they shopped in; the
+	// owner copy below stays in Spanish (DEFAULT_LOCALE).
+	const locale = order.locale ?? DEFAULT_LOCALE;
 
 	// The latch — flip to paid first (see ordering note above).
 	await deps.orders.markPaid(order.id, {
@@ -135,15 +141,18 @@ export async function fulfillCheckout(
 	if (input.email) {
 		try {
 			await deps.mail.send(
-				orderConfirmationEmail({
-					orderNumber,
-					email: input.email,
-					lines: order.items,
-					itemsTotal: order.items_total,
-					shipping: order.shipping_total,
-					total: order.total,
-					currency: order.currency
-				})
+				orderConfirmationEmail(
+					{
+						orderNumber,
+						email: input.email,
+						lines: order.items,
+						itemsTotal: order.items_total,
+						shipping: order.shipping_total,
+						total: order.total,
+						currency: order.currency
+					},
+					locale
+				)
 			);
 		} catch (err) {
 			console.error(`[fulfillment] confirmation email failed for order ${order.id}:`, err);

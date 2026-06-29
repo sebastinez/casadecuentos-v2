@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { t, localizedField, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t, localizedField } from '$lib/i18n';
 	import { formatPublishedDate } from '$lib/datetime';
 	import type { VideoRecord } from '$lib/server/videos';
 
 	let { video }: { video: VideoRecord } = $props();
 
-	const locale: Locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	const title = $derived(localizedField(video, 'title', locale));
 	const description = $derived(localizedField(video, 'description', locale));

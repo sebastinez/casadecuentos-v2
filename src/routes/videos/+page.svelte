@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t } from '$lib/i18n';
 	import VideoCard from '$lib/components/VideoCard.svelte';
 	import LiveInterviewBanner from '$lib/components/LiveInterviewBanner.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 </script>
 
 <svelte:head>

@@ -1,10 +1,11 @@
 <script lang="ts">
 	// Static privacy notice — hardcoded Spanish prose. Must accurately name the
 	// real data processors (PRD): Stripe, Resend, Hetzner, PocketBase.
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 	import { site } from '$lib/site';
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 </script>
 
 <svelte:head>

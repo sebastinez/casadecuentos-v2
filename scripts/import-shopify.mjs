@@ -194,9 +194,13 @@ async function findOrCreate(collection, name, cache) {
 		if (DRY_RUN) {
 			id = `(would-create ${collection}/${slug})`;
 		} else {
+			// `genres`/`book_languages` localized their label into `name_es` (+ optional
+			// `name_de`); `publishers` keeps a single intrinsic `name`. The CSV is
+			// Spanish, so fill the Spanish-side column for the localized collections.
+			const labelField = collection === 'publishers' ? 'name' : 'name_es';
 			const rec = await pb
 				.collection(collection)
-				.create({ name: name.trim(), slug }, { requestKey: null });
+				.create({ [labelField]: name.trim(), slug }, { requestKey: null });
 			id = rec.id;
 			console.log(`  + created ${collection}: "${name.trim()}" (${slug})`);
 		}
@@ -282,14 +286,16 @@ async function main() {
 			slug: handle,
 			author: get(main, 'Author (product.metafields.custom.author)'),
 			illustrator: get(main, 'Ilustrator (product.metafields.custom.ilustrator)'),
-			description: buildDescription(
+			// Localizable columns are symmetric per-locale (`*_es` / `*_de`); the CSV is
+			// Spanish, so the import fills the `_es` side and leaves `_de` for the owner.
+			description_es: buildDescription(
 				get(main, 'Description (product.metafields.custom.description)'),
 				get(main, 'Body (HTML)')
 			),
 			price: parseFloat(get(main, 'Variant Price')) || 0,
 			stock: toInt(get(main, 'Variant Inventory Qty')) || 0,
 			ISBN: get(main, 'ISBN (product.metafields.facts.isbn)'),
-			format: normalizeFormat(get(main, 'Tipo (product.metafields.custom.tipo)')),
+			format_es: normalizeFormat(get(main, 'Tipo (product.metafields.custom.tipo)')),
 			page_count: toInt(get(main, 'Paginas (product.metafields.custom.paginas)')) ?? '',
 			book_size: get(main, 'Tamaño (product.metafields.custom.size)'),
 			language: langId,

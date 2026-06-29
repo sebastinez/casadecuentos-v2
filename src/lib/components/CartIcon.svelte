@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { cart } from '$lib/cart/cart.svelte';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizeHref } from '$lib/i18n';
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	// The cart lives in localStorage, so its count is only known on the client.
 	// The server renders no badge; we mirror that until mount, then reveal the
@@ -17,7 +18,7 @@
 </script>
 
 <a
-	href="/carrito"
+	href={localizeHref('/carrito', locale)}
 	class="relative rounded-md p-2 text-gray-700 hover:bg-gray-100"
 	aria-label={count > 0 ? `${t('nav.cart', locale)} (${count})` : t('nav.cart', locale)}
 >

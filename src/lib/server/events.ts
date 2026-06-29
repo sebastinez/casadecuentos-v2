@@ -13,8 +13,11 @@ import { zurichToday } from '$lib/datetime';
 // carries through for `localizedField`.
 export interface EventRecord {
 	id: string;
-	title: string;
-	description: string;
+	// Localizable (read via `localizedField`); `_de` falls back to `_es`.
+	title_es: string;
+	title_de?: string;
+	description_es: string;
+	description_de?: string;
 	date: string;
 	time: string;
 	venue_address: string;

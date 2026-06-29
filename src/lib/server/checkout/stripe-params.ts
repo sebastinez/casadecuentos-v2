@@ -1,4 +1,5 @@
 import type Stripe from 'stripe';
+import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
 import type { BuiltOrder } from './order';
 
 // Pure mapping from a validated `BuiltOrder` to the params for a hosted Stripe
@@ -21,13 +22,17 @@ export interface SessionParamOptions {
 	orderId: string;
 	successUrl: string;
 	cancelUrl: string;
+	// The buyer's active locale → Stripe's hosted-checkout language. Stripe accepts
+	// both `es` and `de`.
+	locale?: Locale;
 }
 
 export function buildSessionParams({
 	order,
 	orderId,
 	successUrl,
-	cancelUrl
+	cancelUrl,
+	locale = DEFAULT_LOCALE
 }: SessionParamOptions): Stripe.Checkout.SessionCreateParams {
 	const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.lines.map((line) => ({
 		quantity: line.qty,
@@ -40,8 +45,8 @@ export function buildSessionParams({
 
 	return {
 		mode: 'payment',
-		// Spanish hosted checkout.
-		locale: 'es',
+		// Hosted checkout in the buyer's language.
+		locale,
 		// TWINT + cards; Apple/Google Pay ride on `card`. No tax (not VAT-registered,
 		// books-only).
 		payment_method_types: ['card', 'twint'],

@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { createCatalogIndex, searchCatalog, type SearchEntry } from '$lib/search/catalog-index';
+	import { page } from '$app/state';
 	import { portal } from '$lib/actions/portal';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizeHref } from '$lib/i18n';
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	// The catalog index is fetched lazily on first open and cached for the session
 	// — keystrokes match against this in-memory Fuse index, never the server.
@@ -120,7 +121,7 @@
 						{#each results as entry (entry.id)}
 							<li>
 								<a
-									href="/libros/{entry.slug}"
+									href={localizeHref(`/libros/${entry.slug}`, locale)}
 									onclick={closeSearch}
 									class="flex items-center gap-3 rounded-md px-1 py-2 hover:bg-gray-50"
 								>

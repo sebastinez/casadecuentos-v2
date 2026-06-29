@@ -3,12 +3,12 @@
 	import { cart } from '$lib/cart/cart.svelte';
 	import type { CartBook } from '$lib/server/catalog';
 	import { shippingCost, totalWeightGrams, type Urgency } from '$lib/shipping';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t, localizeHref } from '$lib/i18n';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(data.locale);
 	const priceFmt = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' });
 
 	// The cart is client-only (localStorage), so the server renders no contents;
@@ -135,14 +135,17 @@
 	<p class="text-red-600">{t('cart.error', locale)}</p>
 {:else if cart.items.length === 0}
 	<p class="text-gray-600">{t('cart.empty', locale)}</p>
-	<a href="/libros" class="mt-3 inline-block text-sm text-gray-700 hover:underline">
+	<a
+		href={localizeHref('/libros', locale)}
+		class="mt-3 inline-block text-sm text-gray-700 hover:underline"
+	>
 		{t('cart.browse', locale)}
 	</a>
 {:else}
 	<ul class="divide-y divide-gray-100 border-y border-gray-100">
 		{#each lines as { item, book } (item.id)}
 			<li class="flex items-center gap-4 py-4">
-				<a href="/libros/{book.slug}" class="shrink-0">
+				<a href={localizeHref(`/libros/${book.slug}`, locale)} class="shrink-0">
 					{#if book.cover}
 						<img
 							src={book.cover}
@@ -157,7 +160,10 @@
 				</a>
 
 				<div class="min-w-0 flex-1">
-					<a href="/libros/{book.slug}" class="block truncate font-medium hover:underline">
+					<a
+						href={localizeHref(`/libros/${book.slug}`, locale)}
+						class="block truncate font-medium hover:underline"
+					>
 						{book.title}
 					</a>
 					<p class="text-sm text-gray-500">{priceFmt.format(book.price)}</p>

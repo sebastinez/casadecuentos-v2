@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { page } from '$app/state';
 	import { portal } from '$lib/actions/portal';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { t } from '$lib/i18n';
 
 	type NavItem = { href: string; label: string };
 	let { nav }: { nav: NavItem[] } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	// `prefers-reduced-motion: reduce` → zero-duration transitions. The second arg
 	// is the SSR fallback (no media to match on the server): assume motion is fine.

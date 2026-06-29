@@ -1,12 +1,13 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
 	import { enhance } from '$app/forms';
-	import { t, DEFAULT_LOCALE } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t } from '$lib/i18n';
 	import { site } from '$lib/site';
 
 	let { form }: { form: ActionData } = $props();
 
-	const locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	let submitting = $state(false);
 </script>

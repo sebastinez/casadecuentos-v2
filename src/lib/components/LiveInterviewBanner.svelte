@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { t, localizedField, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t, localizedField } from '$lib/i18n';
 	import type { Banner } from '$lib/server/content';
 
 	let { banner }: { banner: Banner } = $props();
 
-	const locale: Locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	const title = $derived(localizedField(banner, 'title', locale));
 	const subtitle = $derived(localizedField(banner, 'subtitle', locale));

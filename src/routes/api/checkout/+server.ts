@@ -15,7 +15,7 @@ import { parseUrgency } from '$lib/shipping';
 // trust boundary the cart uses for localStorage), so any price/title a client
 // tries to send is structurally stripped to `{ id, qty }` before the order is
 // built. Authoritative price + stock are read from PocketBase.
-export const POST: RequestHandler = async ({ request, url }) => {
+export const POST: RequestHandler = async ({ request, url, locals }) => {
 	let body: unknown;
 	try {
 		body = await request.json();
@@ -38,7 +38,8 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		const { url: checkoutUrl } = await startCheckout(items, urgency, {
 			pb,
 			stripe,
-			origin: url.origin
+			origin: url.origin,
+			locale: locals.locale
 		});
 		return json({ url: checkoutUrl });
 	} catch (err) {

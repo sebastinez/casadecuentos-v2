@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { t, localizedField, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+	import { page } from '$app/state';
+	import { t, localizedField, localizeHref } from '$lib/i18n';
 	import type { Banner } from '$lib/server/content';
 
 	let { banners }: { banners: Banner[] } = $props();
 
-	const locale: Locale = DEFAULT_LOCALE;
+	const locale = $derived(page.data.locale);
 
 	let current = $state(0);
 	// Auto-advance pauses while the customer is interacting (hover/focus) so the
@@ -89,7 +90,7 @@
 				{/if}
 				{#if banner.cta_link && ctaLabel}
 					<a
-						href={banner.cta_link}
+						href={localizeHref(banner.cta_link, locale)}
 						class="mt-6 inline-block rounded-md bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100"
 					>
 						{ctaLabel}
