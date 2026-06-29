@@ -202,9 +202,13 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.contact.subject': 'Nuevo mensaje de contacto',
 		'email.contact.intro': 'Has recibido un nuevo mensaje desde el formulario de contacto:',
 
-		// Static content pages. Page bodies are hardcoded Spanish prose in their
-		// components; only titles/chrome flow through i18n.
+		// Static content pages. Most page bodies are hardcoded Spanish prose in their
+		// components; only titles/chrome flow through i18n. The "Quienes somos" body is
+		// the exception — it lives in `about-content.ts` (greeting + paragraphs).
 		'about.heading': 'Quienes somos',
+		'about.metaDescription':
+			'Casa de Cuentos es una librería en línea de libros infantiles y juveniles para la comunidad hispanohablante en Suiza.',
+		'about.imageAlt': 'María Eugenia, fundadora de Casa de Cuentos',
 		'privacy.heading': 'Política de privacidad',
 		'terms.heading': 'Términos y condiciones',
 		'shipping.heading': 'Envíos y devoluciones',
@@ -421,6 +425,9 @@ export const messages: Record<Locale, Record<string, string>> = {
 
 		// Static content pages.
 		'about.heading': 'Über uns',
+		'about.metaDescription':
+			'Casa de Cuentos ist eine Online-Buchhandlung für Kinder- und Jugendbücher für die spanischsprachige Gemeinschaft in der Schweiz.',
+		'about.imageAlt': 'María Eugenia, Gründerin von Casa de Cuentos',
 		'privacy.heading': 'Datenschutzerklärung',
 		'terms.heading': 'Allgemeine Geschäftsbedingungen',
 		'shipping.heading': 'Versand und Rückgabe',
