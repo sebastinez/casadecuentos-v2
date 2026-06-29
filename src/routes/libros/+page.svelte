@@ -184,7 +184,7 @@
 		{hasFilters ? t('books.noResults', locale) : t('books.empty', locale)}
 	</p>
 {:else}
-	<ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+	<ul class="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 		{#each data.books as book (book.id)}
 			<li class="flex h-full flex-col rounded-lg border border-gray-200 p-4">
 				<!-- Card is no longer one big <a>: only the cover and title link to the
