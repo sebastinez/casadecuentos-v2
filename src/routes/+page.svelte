@@ -61,7 +61,7 @@
 			{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 			<a
 				href={localizeHref(banner.cta_link || '/libros', locale)}
-				class="group relative flex min-h-48 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-green-700 to-green-500 p-6 text-white"
+				class="group relative flex min-h-72 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-green-700 to-green-500 p-6 text-white"
 			>
 				{#if banner.image}
 					<img

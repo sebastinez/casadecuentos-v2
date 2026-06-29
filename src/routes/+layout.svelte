@@ -40,7 +40,7 @@
 
 <div class="flex min-h-screen flex-col">
 	<header class="sticky top-0 z-10 border-b border-terracotta-100 bg-cream/90 backdrop-blur">
-		<nav class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
+		<nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4">
 			<a
 				href={localizeHref('/', locale)}
 				class="flex items-center gap-2 font-serif text-xl font-semibold tracking-tight text-terracotta-700 hover:text-terracotta-800"
@@ -67,7 +67,7 @@
 		</nav>
 	</header>
 
-	<main class="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+	<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
 		{@render children()}
 	</main>
 

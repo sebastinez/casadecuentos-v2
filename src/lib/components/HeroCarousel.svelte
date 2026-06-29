@@ -57,7 +57,7 @@
 		{@const subtitle = localizedField(banner, 'subtitle', locale)}
 		{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 		<div
-			class="relative flex min-h-[18rem] flex-col items-start justify-end overflow-hidden bg-gradient-to-br from-green-800 to-green-600 p-8 text-white sm:min-h-[24rem]"
+			class="relative flex min-h-72 flex-col items-start justify-end overflow-hidden bg-gradient-to-br from-green-800 to-green-600 p-8 text-white sm:min-h-[36rem]"
 			class:hidden={i !== current}
 			role="group"
 			aria-roledescription="slide"
