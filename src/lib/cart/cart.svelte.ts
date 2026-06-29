@@ -40,6 +40,12 @@ export const cart = {
 	get count(): number {
 		return cartCount(items);
 	},
+	// Quantity of one book already in the cart (0 if absent). Lets a product/grid
+	// view cap "add" controls against what's already reserved, not just catalog
+	// stock — reactive, so the controls update the moment the cart changes.
+	qtyOf(id: string): number {
+		return items.find((item) => item.id === id)?.qty ?? 0;
+	},
 	add(id: string, qty = 1) {
 		items = addItem(items, id, qty);
 		persist();

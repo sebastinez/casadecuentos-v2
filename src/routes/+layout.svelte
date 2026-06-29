@@ -7,6 +7,7 @@
 	import HeaderSearch from '$lib/components/HeaderSearch.svelte';
 	import CartIcon from '$lib/components/CartIcon.svelte';
 	import MobileNav from '$lib/components/MobileNav.svelte';
+	import { announcer } from '$lib/a11y/announcer.svelte';
 
 	let { children } = $props();
 
@@ -127,3 +128,7 @@
 		</div>
 	</footer>
 </div>
+
+<!-- Single app-wide polite live region: visual-only UI changes (e.g. the
+     add-to-cart morph) push a message here so screen readers are told too. -->
+<div aria-live="polite" aria-atomic="true" class="sr-only">{announcer.message}</div>

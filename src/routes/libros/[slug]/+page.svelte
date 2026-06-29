@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { t, localizedField, DEFAULT_LOCALE } from '$lib/i18n';
 	import { cart } from '$lib/cart/cart.svelte';
+	import AddToCartButton from '$lib/components/AddToCartButton.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -10,7 +11,18 @@
 
 	const book = $derived(data.book);
 	const description = $derived(localizedField(book, 'description', locale));
-	const inStock = $derived(book.stock > 0);
+
+	// How many more can still be added: catalog stock minus what's already in the
+	// cart. Drives the stepper's ceiling so a shopper can't queue more than exists
+	// across repeated adds; the button itself disables when this hits 0.
+	const remaining = $derived(Math.max(0, book.stock - cart.qtyOf(book.id)));
+
+	// Chosen quantity to add (this many *more*). Kept within `remaining` so the
+	// stepper and the add button never disagree about what's addable.
+	let qty = $state(1);
+	$effect(() => {
+		if (qty > remaining) qty = Math.max(1, remaining);
+	});
 
 	// Plain-text excerpt of the HTML blurb for the <meta>/OG description.
 	const metaDescription = $derived(
@@ -89,18 +101,31 @@
 
 		<p class="mt-4 text-xl font-semibold text-terracotta-700">{priceFmt.format(book.price)}</p>
 
-		<div class="mt-4">
-			<button
-				type="button"
-				disabled={!inStock}
-				onclick={() => cart.add(book.id)}
-				class="rounded-md bg-terracotta-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-terracotta-700 disabled:cursor-not-allowed disabled:bg-terracotta-200"
-			>
-				{inStock ? t('book.addToCart', locale) : t('books.outOfStock', locale)}
-			</button>
-			{#if !inStock}
-				<p class="mt-2 text-sm text-red-600">{t('books.outOfStock', locale)}</p>
+		<div class="mt-4 flex items-center gap-3">
+			{#if remaining > 0}
+				<div class="flex items-center gap-1" role="group" aria-label={t('cart.quantity', locale)}>
+					<button
+						type="button"
+						onclick={() => (qty = Math.max(1, qty - 1))}
+						disabled={qty <= 1}
+						aria-label={t('cart.decrease', locale)}
+						class="h-10 w-10 rounded-md border border-gray-300 text-lg leading-none hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+					>
+						−
+					</button>
+					<span class="w-8 text-center text-sm tabular-nums">{qty}</span>
+					<button
+						type="button"
+						onclick={() => (qty = Math.min(remaining, qty + 1))}
+						disabled={qty >= remaining}
+						aria-label={t('cart.increase', locale)}
+						class="h-10 w-10 rounded-md border border-gray-300 text-lg leading-none hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+					>
+						+
+					</button>
+				</div>
 			{/if}
+			<AddToCartButton book={{ id: book.id, stock: book.stock }} {qty} />
 		</div>
 
 		{#if description}

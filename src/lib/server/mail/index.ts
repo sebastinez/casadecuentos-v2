@@ -20,7 +20,6 @@ function resendTransport(apiKey: string, from: string): MailTransport {
 				body: JSON.stringify({
 					from,
 					to: message.to,
-					bcc: message.bcc,
 					subject: message.subject,
 					html: message.html,
 					text: message.text

@@ -76,6 +76,8 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'book.description': 'Descripción',
 		'book.details': 'Detalles',
 		'book.addToCart': 'Añadir al carrito',
+		'book.added': 'Añadido',
+		'book.maxInCart': 'Máximo en el carrito',
 		'book.coverAlt': 'Portada de',
 
 		// Age bands (taxonomy labels — localizable)
@@ -87,6 +89,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 
 		// Cart page
 		'cart.heading': 'Carrito',
+		'cart.added': 'Añadido al carrito',
 		'cart.empty': 'Tu carrito está vacío.',
 		'cart.browse': 'Explorar libros',
 		'cart.quantity': 'Cantidad',

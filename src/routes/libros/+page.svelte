@@ -3,6 +3,7 @@
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
 	import { AGE_BANDS } from '$lib/age-bands';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import AddToCartButton from '$lib/components/AddToCartButton.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -185,29 +186,29 @@
 {:else}
 	<ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 		{#each data.books as book (book.id)}
-			<li>
-				<a
-					href="/libros/{book.slug}"
-					class="flex h-full flex-col rounded-lg border border-gray-200 p-4 hover:border-gray-400"
-				>
+			<li class="flex h-full flex-col rounded-lg border border-gray-200 p-4">
+				<!-- Card is no longer one big <a>: only the cover and title link to the
+				     detail page, leaving the add-to-cart button as a valid sibling
+				     (a <button> can't be nested inside an <a>). -->
+				<a href="/libros/{book.slug}" class="group">
 					<img
 						src={book.cover}
 						alt=""
 						loading="lazy"
 						decoding="async"
-						class="mb-4 aspect-3/4 w-full object-cover"
+						class="mb-4 aspect-3/4 w-full object-cover transition-opacity group-hover:opacity-90"
 					/>
-					<h2 class="font-medium">{book.title}</h2>
-					{#if book.author}
-						<p class="text-sm text-gray-600">{book.author}</p>
-					{/if}
-					<div class="mt-3 flex items-center justify-between">
-						<span class="font-semibold text-terracotta-700">{priceFmt.format(book.price)}</span>
-						{#if book.stock <= 0}
-							<span class="text-sm text-red-600">{t('books.outOfStock', locale)}</span>
-						{/if}
-					</div>
 				</a>
+				<h2 class="font-medium">
+					<a href="/libros/{book.slug}" class="hover:underline">{book.title}</a>
+				</h2>
+				{#if book.author}
+					<p class="text-sm text-gray-600">{book.author}</p>
+				{/if}
+				<div class="mt-auto flex items-center justify-between gap-2 pt-3">
+					<span class="font-semibold text-terracotta-700">{priceFmt.format(book.price)}</span>
+					<AddToCartButton book={{ id: book.id, stock: book.stock }} compact />
+				</div>
 			</li>
 		{/each}
 	</ul>

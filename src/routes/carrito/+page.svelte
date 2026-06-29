@@ -175,9 +175,10 @@
 					<span class="w-8 text-center text-sm tabular-nums">{item.qty}</span>
 					<button
 						type="button"
-						onclick={() => cart.setQty(item.id, item.qty + 1)}
+						onclick={() => cart.setQty(item.id, Math.min(book.stock, item.qty + 1))}
+						disabled={item.qty >= book.stock}
 						aria-label={t('cart.increase', locale)}
-						class="h-8 w-8 rounded-md border border-gray-300 text-lg leading-none hover:bg-gray-50"
+						class="h-8 w-8 rounded-md border border-gray-300 text-lg leading-none hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
 					>
 						+
 					</button>
