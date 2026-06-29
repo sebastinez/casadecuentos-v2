@@ -72,7 +72,7 @@
 	</main>
 
 	<footer class="border-t border-terracotta-100 bg-terracotta-50/50">
-		<div class="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-600">
+		<div class="mx-auto max-w-7xl px-4 py-8 text-sm text-gray-600">
 			<div class="flex flex-col gap-8 sm:flex-row sm:justify-between">
 				<nav aria-label={t('footer.policies', locale)}>
 					<h2 class="font-medium text-gray-900">{t('footer.policies', locale)}</h2>
