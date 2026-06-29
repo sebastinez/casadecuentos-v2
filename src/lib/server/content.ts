@@ -20,7 +20,11 @@ export interface Banner {
 	subtitle: string;
 	cta_label: string;
 	cta_link: string;
+	// `image` is a single mid-size URL (the <img> fallback / preload href);
+	// `srcset` lists the same image at several widths so the browser fetches the
+	// smallest one that fits. Both null → the component shows the gradient.
 	image: string | null;
+	srcset: string | null;
 	start: string;
 }
 
@@ -52,6 +56,14 @@ function inWindow(banner: BannerSource, now: number): boolean {
 	return true;
 }
 
+// Candidate render widths per placement. Hero spans the full content column
+// (max ~992px, so 1800 covers retina); featured cards are at most ~480px wide.
+const SRCSET_WIDTHS: Record<BannerType, number[]> = {
+	hero: [600, 900, 1200, 1800],
+	featured: [400, 600, 800],
+	live_interview: [600] // no image rendered for this placement
+};
+
 // List active, in-window banners of one placement in the owner-defined sort order.
 // `active` + type are filtered in PocketBase; the schedule window is applied here.
 export async function listBanners(pb: PocketBase, type: BannerType): Promise<Banner[]> {
@@ -64,13 +76,19 @@ export async function listBanners(pb: PocketBase, type: BannerType): Promise<Ban
 	});
 
 	const now = Date.now();
-	const thumb = type === 'hero' ? '1200x0' : '800x0';
+	const widths = SRCSET_WIDTHS[type];
+	const fallbackWidth = type === 'hero' ? 1200 : 800;
 
 	return records
 		.filter((r) => inWindow(r, now))
 		.map((r) => ({
 			...r,
-			image: r.image ? pb.files.getURL(r, r.image, { thumb }) : null
+			image: r.image ? pb.files.getURL(r, r.image, { thumb: `${fallbackWidth}x0` }) : null,
+			srcset: r.image
+				? widths
+						.map((w) => `${pb.files.getURL(r, r.image, { thumb: `${w}x0` })} ${w}w`)
+						.join(', ')
+				: null
 		}));
 }
 

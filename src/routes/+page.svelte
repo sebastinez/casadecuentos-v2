@@ -7,11 +7,31 @@
 
 	const locale: Locale = DEFAULT_LOCALE;
 	const priceFmt = new Intl.NumberFormat('de-CH', { style: 'currency', currency: 'CHF' });
+
+	// Fade promo covers in over the brand gradient, only when they arrive after this
+	// action runs. Mirrors HeroCarousel: the img defaults to visible (no `opacity-0`
+	// in SSR markup) so it paints without JS and degrades gracefully.
+	function fadeIn(node: HTMLImageElement) {
+		if (node.complete && node.naturalWidth > 0) return;
+		node.style.opacity = '0';
+		node.addEventListener('load', () => (node.style.opacity = '1'), { once: true });
+	}
 </script>
 
 <svelte:head>
 	<title>{t('site.name', locale)}</title>
 	<meta name="description" content={t('home.tagline', locale)} />
+	<!-- Preload the first hero cover (the LCP element) so it downloads immediately
+	     instead of waiting on CSS/JS discovery. -->
+	{#if data.heroBanners[0]?.image}
+		<link
+			rel="preload"
+			as="image"
+			href={data.heroBanners[0].image}
+			imagesrcset={data.heroBanners[0].srcset}
+			imagesizes="(min-width: 1024px) 992px, 100vw"
+		/>
+	{/if}
 </svelte:head>
 
 <!-- Hero: the curated carousel when banners exist; otherwise a simple branded
@@ -41,9 +61,20 @@
 			{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 			<a
 				href={banner.cta_link || '/libros'}
-				class="group relative flex min-h-48 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-green-700 to-green-500 bg-cover bg-center p-6 text-white"
-				style={banner.image ? `background-image:url('${banner.image}')` : ''}
+				class="group relative flex min-h-48 flex-col justify-end overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-green-700 to-green-500 p-6 text-white"
 			>
+				{#if banner.image}
+					<img
+						src={banner.image}
+						srcset={banner.srcset}
+						sizes="(min-width: 640px) 480px, 100vw"
+						alt=""
+						loading="lazy"
+						decoding="async"
+						use:fadeIn
+						class="absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-500"
+					/>
+				{/if}
 				<div class="absolute inset-0 bg-black/25 transition group-hover:bg-black/35"></div>
 				<div class="relative">
 					{#if title}
@@ -78,6 +109,8 @@
 							<img
 								src={book.cover}
 								alt="{t('book.coverAlt', locale)} {book.title}"
+								loading="lazy"
+								decoding="async"
 								class="mb-3 aspect-3/4 w-full rounded-md object-cover"
 							/>
 						{:else}

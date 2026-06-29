@@ -190,7 +190,13 @@
 					href="/libros/{book.slug}"
 					class="flex h-full flex-col rounded-lg border border-gray-200 p-4 hover:border-gray-400"
 				>
-					<img src={book.cover} alt="" class="mb-4 aspect-3/4 w-full object-cover" />
+					<img
+						src={book.cover}
+						alt=""
+						loading="lazy"
+						decoding="async"
+						class="mb-4 aspect-3/4 w-full object-cover"
+					/>
 					<h2 class="font-medium">{book.title}</h2>
 					{#if book.author}
 						<p class="text-sm text-gray-600">{book.author}</p>

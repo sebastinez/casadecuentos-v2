@@ -19,6 +19,16 @@
 		current = (index + banners.length) % banners.length;
 	}
 
+	// Fade the cover in over the brand gradient, but only when it actually arrives
+	// after this action runs. The image defaults to visible (no `opacity-0` in the
+	// SSR class), so it paints without waiting on hydration and still shows with JS
+	// disabled; we hide-then-fade solely for the not-yet-loaded case.
+	function fadeIn(node: HTMLImageElement) {
+		if (node.complete && node.naturalWidth > 0) return;
+		node.style.opacity = '0';
+		node.addEventListener('load', () => (node.style.opacity = '1'), { once: true });
+	}
+
 	onMount(() => {
 		if (banners.length <= 1) return;
 		// Respect prefers-reduced-motion: no automatic movement. The customer can
@@ -46,14 +56,28 @@
 		{@const subtitle = localizedField(banner, 'subtitle', locale)}
 		{@const ctaLabel = localizedField(banner, 'cta_label', locale)}
 		<div
-			class="flex min-h-[18rem] flex-col items-start justify-end bg-gradient-to-br from-green-800 to-green-600 bg-cover bg-bottom p-8 text-white sm:min-h-[24rem]"
+			class="relative flex min-h-[18rem] flex-col items-start justify-end overflow-hidden bg-gradient-to-br from-green-800 to-green-600 p-8 text-white sm:min-h-[24rem]"
 			class:hidden={i !== current}
-			style={banner.image ? `background-image:url('${banner.image}')` : ''}
 			role="group"
 			aria-roledescription="slide"
 			aria-label={`${i + 1} / ${banners.length}`}
 			aria-hidden={i !== current}
 		>
+			{#if banner.image}
+				<!-- Real <img> (not a CSS background) so the first slide can be preloaded
+				     and prioritised, and so each cover can fade in via use:fadeIn. -->
+				<img
+					src={banner.image}
+					srcset={banner.srcset}
+					sizes="(min-width: 1024px) 992px, 100vw"
+					alt=""
+					fetchpriority={i === 0 ? 'high' : null}
+					loading={i === 0 ? 'eager' : 'lazy'}
+					decoding="async"
+					use:fadeIn
+					class="absolute inset-0 h-full w-full object-cover object-bottom transition-opacity duration-500"
+				/>
+			{/if}
 			<!-- Scrim so light cover art keeps the text legible. -->
 			<div class="absolute inset-0 bg-black/30"></div>
 			<div class="relative max-w-xl">

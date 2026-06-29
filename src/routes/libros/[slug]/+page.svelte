@@ -68,6 +68,8 @@
 			<img
 				src={data.coverUrl}
 				alt="{t('book.coverAlt', locale)} {book.title}"
+				fetchpriority="high"
+				decoding="async"
 				class="w-full rounded-lg border border-gray-200 object-contain"
 			/>
 		{:else}

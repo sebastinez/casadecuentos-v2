@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { t, DEFAULT_LOCALE } from '$lib/i18n';
-	import euge from '$lib/assets/euge.webp';
+	// `?enhanced` emits a responsive, multi-format picture (AVIF/webp + the listed
+	// widths) with intrinsic dimensions baked in. The source is ~4000×6000, so we
+	// pin widths to the actual render slot (≤480px CSS, ×2 for retina) instead of
+	// letting the plugin ship multi-megabyte halvings of the original.
+	import euge from '$lib/assets/euge.webp?enhanced&w=480;960;1440';
 
 	const locale = DEFAULT_LOCALE;
 </script>
@@ -14,11 +18,16 @@
 </svelte:head>
 
 <div class="grid grid-cols-1 gap-8 md:grid-cols-2 md:items-start">
-	<img
-		src={euge}
-		alt="María Eugenia, fundadora de Casa de Cuentos"
-		class="w-full rounded-lg md:sticky md:top-8"
-	/>
+	<!-- <enhanced:img> emits a <picture>; the sticky/sizing must live on a real block
+	     wrapper (the grid child), not on the inner <img>, for md:sticky to work. -->
+	<div class="md:sticky md:top-8">
+		<enhanced:img
+			src={euge}
+			alt="María Eugenia, fundadora de Casa de Cuentos"
+			sizes="(min-width: 768px) 480px, 100vw"
+			class="block w-full rounded-lg"
+		/>
+	</div>
 
 	<article class="prose prose-sm max-w-none">
 		<h1>Hola!</h1>

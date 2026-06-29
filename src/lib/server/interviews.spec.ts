@@ -13,6 +13,7 @@ function banner(id: string, start: string): Banner {
 		cta_label: '',
 		cta_link: '',
 		image: null,
+		srcset: null,
 		start
 	};
 }
