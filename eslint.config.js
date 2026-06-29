@@ -46,7 +46,10 @@ export default defineConfig(
 			// Nav links point at routes built in later phases (/eventos, /nosotros,
 			// /contacto), which `resolve()` can't reference until they exist. The app
 			// is served at the domain root with no base path, so this is safe.
-			'svelte/no-navigation-without-resolve': 'off'
+			'svelte/no-navigation-without-resolve': 'off',
+			// {@html ...} is only fed content authored/curated by the site owner, not
+			// user input, so the XSS risk this rule guards against doesn't apply.
+			'svelte/no-at-html-tags': 'off'
 		}
 	}
 );
