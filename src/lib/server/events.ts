@@ -29,7 +29,9 @@ export interface EventRecord {
 // Upcoming events (today onward, Europe/Zurich), soonest first. The lexical compare
 // against today's Zurich civil date is sound because `date` is stored as
 // `YYYY-MM-DD`; an event stays visible through its whole day (`>=`). Secondary sort
-// by `time` (zero-padded `HH:MM`) orders same-day events.
+// by `time` roughly orders same-day events, but `time` is now free text (it can hold
+// ranges/multiple blocks like "09:30 - 11:00 & 17:30 - 20:00"), so the lexical
+// tiebreak is best-effort, not guaranteed chronological.
 export async function listUpcomingEvents(pb: PocketBase): Promise<EventRecord[]> {
 	return pb.collection('events').getFullList<EventRecord>({
 		filter: pb.filter('date >= {:today}', { today: zurichToday() }),
