@@ -128,7 +128,9 @@ for (const collection of auditable) {
 	for (const f of fields) {
 		const empty = records.filter((r) => isEmpty(r[f.name])).length;
 		const note = empty === 0 ? 'OK' : `${empty} missing${f.required ? '  (REQUIRED!)' : ''}`;
-		console.log(`  ${f.name.padEnd(width)}  ${String(records.length - empty).padStart(4)}/${records.length}  ${note}`);
+		console.log(
+			`  ${f.name.padEnd(width)}  ${String(records.length - empty).padStart(4)}/${records.length}  ${note}`
+		);
 	}
 
 	const gaps = records

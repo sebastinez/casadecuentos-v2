@@ -38,7 +38,9 @@ if (!DEEPL_API_KEY && !DRY_RUN) {
 // Free-tier keys end in ":fx" and live on a different host than paid keys.
 const DEEPL_API_URL =
 	process.env.DEEPL_API_URL ||
-	(DEEPL_API_KEY?.endsWith(':fx') ? 'https://api-free.deepl.com/v2/translate' : 'https://api.deepl.com/v2/translate');
+	(DEEPL_API_KEY?.endsWith(':fx')
+		? 'https://api-free.deepl.com/v2/translate'
+		: 'https://api.deepl.com/v2/translate');
 
 const DEEPL_LANG = { es: 'ES', de: 'DE' };
 
@@ -103,10 +105,14 @@ async function translateBatch(texts, sourceLang, targetLang, tagHandling) {
 }
 
 async function main() {
-	const items = JSON.parse(readFileSync(inFile, 'utf-8')).slice(0, LIMIT === Infinity ? undefined : LIMIT);
+	const items = JSON.parse(readFileSync(inFile, 'utf-8')).slice(
+		0,
+		LIMIT === Infinity ? undefined : LIMIT
+	);
 
 	// Dedupe by (sourceLocale, targetLocale, sourceText, isHtml) -> translation.
-	const uniqueKey = (i) => `${i.sourceLocale}|${i.targetLocale}|${hasHtmlTags(i.sourceText)}|${i.sourceText}`;
+	const uniqueKey = (i) =>
+		`${i.sourceLocale}|${i.targetLocale}|${hasHtmlTags(i.sourceText)}|${i.sourceText}`;
 	const uniqueTexts = new Map(); // key -> { sourceLocale, targetLocale, isHtml, text, translation }
 	for (const item of items) {
 		const key = uniqueKey(item);

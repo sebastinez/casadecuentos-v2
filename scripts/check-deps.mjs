@@ -36,7 +36,9 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // --- version helpers --------------------------------------------------------
 
 const parseVer = (v) => {
-	const m = String(v ?? '').replace(/^[v=\s]+/, '').match(/^(\d+)\.(\d+)\.(\d+)/);
+	const m = String(v ?? '')
+		.replace(/^[v=\s]+/, '')
+		.match(/^(\d+)\.(\d+)\.(\d+)/);
 	return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
 };
 
@@ -129,7 +131,8 @@ const installedNpm = (name) => {
 // ---------------------------------------------------------------------------
 
 const pbBinPath = resolve(repoRoot, '.bin', 'pocketbase');
-const denoUsed = existsSync(resolve(repoRoot, 'deno.json')) || existsSync(resolve(repoRoot, 'deno.jsonc'));
+const denoUsed =
+	existsSync(resolve(repoRoot, 'deno.json')) || existsSync(resolve(repoRoot, 'deno.jsonc'));
 
 const pbInstalled = existsSync(pbBinPath)
 	? binVersion(pbBinPath, ['--version'], /version\s+([\d.]+)/)
@@ -152,7 +155,12 @@ const runtimeRows = [
 		latest: pbLatest,
 		note: existsSync(pbBinPath) ? './.bin/pocketbase update' : '.bin/pocketbase missing'
 	},
-	{ component: 'Node.js', installed: nodeInstalled, latest: nodeLatest, note: 'newest in v' + parseVer(nodeInstalled)[0] + ' line' },
+	{
+		component: 'Node.js',
+		installed: nodeInstalled,
+		latest: nodeLatest,
+		note: 'newest in v' + parseVer(nodeInstalled)[0] + ' line'
+	},
 	{
 		component: 'Deno',
 		installed: denoInstalled ?? '(not installed)',
@@ -204,14 +212,11 @@ if (asJson) {
 }
 
 const renderTable = (headers, rows) => {
-	const widths = headers.map((h, i) =>
-		Math.max(h.length, ...rows.map((r) => [...r[i]].length))
-	);
+	const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => [...r[i]].length)));
 	// [...s].length counts code points so emoji don't over-pad.
 	const pad = (s, w) => s + ' '.repeat(Math.max(0, w - [...s].length));
 	const line = (cells) => '│ ' + cells.map((c, i) => pad(c, widths[i])).join(' │ ') + ' │';
-	const sep = (l, m, r) =>
-		l + widths.map((w) => '─'.repeat(w + 2)).join(m) + r;
+	const sep = (l, m, r) => l + widths.map((w) => '─'.repeat(w + 2)).join(m) + r;
 
 	console.log(sep('┌', '┬', '┐'));
 	console.log(line(headers));

@@ -39,7 +39,9 @@ const opt = (name, dflt) => {
 	const i = args.indexOf(name);
 	return i !== -1 ? args[i + 1] : dflt;
 };
-const inputPath = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--out' && args[i - 1] !== '--delay-ms');
+const inputPath = args.find(
+	(a, i) => !a.startsWith('--') && args[i - 1] !== '--out' && args[i - 1] !== '--delay-ms'
+);
 const OUT_PATH = opt('--out', 'scripts/isbndb-books.json');
 const DELAY_MS = parseInt(opt('--delay-ms', '1100'), 10);
 const RETRY_NOT_FOUND = flag('--retry-not-found');
@@ -48,7 +50,9 @@ const API_KEY = process.env.ISBNDB_API_KEY;
 const BASE_URL = process.env.ISBNDB_BASE_URL || 'https://api2.isbndb.com';
 
 if (!inputPath) {
-	console.error('Usage: ISBNDB_API_KEY=... node scripts/isbndb-fetch.mjs <isbns.txt> [--out file] [--delay-ms N] [--retry-not-found]');
+	console.error(
+		'Usage: ISBNDB_API_KEY=... node scripts/isbndb-fetch.mjs <isbns.txt> [--out file] [--delay-ms N] [--retry-not-found]'
+	);
 	process.exit(1);
 }
 if (!API_KEY) {
@@ -128,8 +132,11 @@ const pending = isbns.filter((i) => {
 });
 
 console.log(`Input: ${isbns.length} distinct ISBN(s) from ${inputPath}`);
-if (invalid.length) console.log(`Skipping ${invalid.length} invalid line(s): ${invalid.join(', ')}`);
-console.log(`Cached: ${Object.keys(cache.books).length} found, ${cache.not_found.length} not-found. Fetching: ${pending.length}.`);
+if (invalid.length)
+	console.log(`Skipping ${invalid.length} invalid line(s): ${invalid.join(', ')}`);
+console.log(
+	`Cached: ${Object.keys(cache.books).length} found, ${cache.not_found.length} not-found. Fetching: ${pending.length}.`
+);
 
 // --- fetch loop ----------------------------------------------------------------
 let n = 0;
@@ -150,7 +157,9 @@ for (const isbn of pending) {
 	}
 
 	if (res.status === 401 || res.status === 403) {
-		console.error(`API key rejected (HTTP ${res.status}). Aborting — progress so far is saved in ${OUT_PATH}.`);
+		console.error(
+			`API key rejected (HTTP ${res.status}). Aborting — progress so far is saved in ${OUT_PATH}.`
+		);
 		save();
 		process.exit(1);
 	}
@@ -162,12 +171,16 @@ for (const isbn of pending) {
 
 	if (res.status === 404) {
 		if (!cache.not_found.includes(isbn)) cache.not_found.push(isbn);
-		console.log(`  [${n}/${pending.length}] ${isbn} NOT FOUND (ISBNdb may add it within ~24h; --retry-not-found later)`);
+		console.log(
+			`  [${n}/${pending.length}] ${isbn} NOT FOUND (ISBNdb may add it within ~24h; --retry-not-found later)`
+		);
 	} else if (res.ok) {
 		const { book } = await res.json();
 		cache.books[isbn] = { fetched_at: new Date().toISOString(), pb: toPB(book), raw: book };
 		cache.not_found = cache.not_found.filter((i) => i !== isbn);
-		console.log(`  [${n}/${pending.length}] ${isbn} ✓ "${book.title}" — ${(book.authors || []).join(', ') || '(no author)'}`);
+		console.log(
+			`  [${n}/${pending.length}] ${isbn} ✓ "${book.title}" — ${(book.authors || []).join(', ') || '(no author)'}`
+		);
 	} else {
 		cache.errors[isbn] = `HTTP ${res.status}`;
 		console.error(`  [${n}/${pending.length}] ${isbn} HTTP ${res.status}`);
@@ -179,8 +192,16 @@ for (const isbn of pending) {
 
 // --- summary -------------------------------------------------------------------
 const errCount = Object.keys(cache.errors).length;
-console.log(`\nDone. ${OUT_PATH}: ${Object.keys(cache.books).length} book(s), ${cache.not_found.length} not-found, ${errCount} error(s).`);
+console.log(
+	`\nDone. ${OUT_PATH}: ${Object.keys(cache.books).length} book(s), ${cache.not_found.length} not-found, ${errCount} error(s).`
+);
 if (cache.not_found.length) console.log(`Not found: ${cache.not_found.join(', ')}`);
-if (errCount) console.log('Errors (re-run to retry): ' + Object.entries(cache.errors).map(([i, e]) => `${i} (${e})`).join(', '));
+if (errCount)
+	console.log(
+		'Errors (re-run to retry): ' +
+			Object.entries(cache.errors)
+				.map(([i, e]) => `${i} (${e})`)
+				.join(', ')
+	);
 console.log('\nReview the `pb` objects in the JSON (title/description/etc. are ISBNdb data,');
 console.log('often English-flavoured) before building the push step.');

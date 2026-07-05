@@ -32,7 +32,9 @@ if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
 async function main() {
 	const items = JSON.parse(readFileSync(inFile, 'utf-8'));
 
-	const ready = items.filter((i) => typeof i.translatedText === 'string' && i.translatedText.trim() !== '');
+	const ready = items.filter(
+		(i) => typeof i.translatedText === 'string' && i.translatedText.trim() !== ''
+	);
 	const notReady = items.length - ready.length;
 	if (notReady > 0) {
 		console.warn(`Skipping ${notReady} entr(y/ies) without a translatedText.`);
@@ -52,11 +54,9 @@ async function main() {
 				JSON.stringify(item.translatedText.slice(0, 80))
 		);
 		if (!DRY_RUN) {
-			await pb.collection(item.collection).update(
-				item.id,
-				{ [columnName]: item.translatedText },
-				{ requestKey: null }
-			);
+			await pb
+				.collection(item.collection)
+				.update(item.id, { [columnName]: item.translatedText }, { requestKey: null });
 		}
 		updated++;
 	}
