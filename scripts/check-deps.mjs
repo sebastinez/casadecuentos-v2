@@ -27,6 +27,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -130,7 +131,7 @@ const installedNpm = (name) => {
 // Runtime / binaries
 // ---------------------------------------------------------------------------
 
-const pbBinPath = '/usr/local/bin/pocketbase';
+const pbBinPath = execSync('which pocketbase', { encoding: 'utf8' }).trim();
 const denoUsed =
 	existsSync(resolve(repoRoot, 'deno.json')) || existsSync(resolve(repoRoot, 'deno.jsonc'));
 
@@ -153,7 +154,7 @@ const runtimeRows = [
 		component: 'PocketBase (server binary)',
 		installed: pbInstalled ?? '(not found)',
 		latest: pbLatest,
-		note: existsSync(pbBinPath) ? './.bin/pocketbase update' : '.bin/pocketbase missing'
+		note: existsSync(pbBinPath) ? 'pocketbase update' : 'pocketbase missing'
 	},
 	{
 		component: 'Node.js',
