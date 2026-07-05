@@ -75,6 +75,74 @@ const slugify = (s) =>
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// --- dimension / weight parsing ---------------------------------------------
+// ISBNdb ships measurements two ways, often both on the same book:
+//   dimensions:  "Height: 11.6 inches, Length: 9.4 inches, Weight: 1.19 Pounds, Width: 0.67 inches"
+//   dimensions_structured: { height: {value, unit}, width, length, weight }
+// Units are usually imperial (inches / pounds) but not guaranteed, so we always
+// normalise. `book_size` is a display Text field (existing style: "20 × 14 cm",
+// bigger dimension first, whole-ish numbers); `weight_grams` is an integer.
+const toCm = (value, unit) => {
+	const u = (unit || '').toLowerCase();
+	if (u.startsWith('inch') || u === 'in' || u === '"') return value * 2.54;
+	if (u.startsWith('millim') || u === 'mm') return value / 10;
+	if (u.startsWith('meter') || u === 'm') return value * 100;
+	// centimeters, or unknown → assume already cm
+	return value;
+};
+
+const toGrams = (value, unit) => {
+	const u = (unit || '').toLowerCase();
+	if (u.startsWith('pound') || u === 'lb' || u === 'lbs') return value * 453.59237;
+	if (u.startsWith('ounce') || u === 'oz') return value * 28.349523125;
+	if (u.startsWith('kilogram') || u === 'kg') return value * 1000;
+	// grams, or unknown → assume already grams
+	return value;
+};
+
+// Collect height/width/length/weight from the structured object first, then
+// fill any gaps from the raw string. Returns { key: {value, unit} }.
+function parseMeasurements(book) {
+	const parts = {};
+	const structured = book.dimensions_structured;
+	if (structured && typeof structured === 'object') {
+		for (const [k, v] of Object.entries(structured)) {
+			if (v && typeof v.value === 'number')
+				parts[k.toLowerCase()] = { value: v.value, unit: v.unit };
+		}
+	}
+	if (typeof book.dimensions === 'string') {
+		const re = /([a-z]+)\s*:\s*([\d.]+)\s*([a-z"]+)/gi;
+		let m;
+		while ((m = re.exec(book.dimensions))) {
+			const key = m[1].toLowerCase();
+			if (!parts[key]) parts[key] = { value: parseFloat(m[2]), unit: m[3] };
+		}
+	}
+	return parts;
+}
+
+// Derive the `book_size` string + `weight_grams` integer for the pb object.
+function measurementsToPB(book) {
+	const parts = parseMeasurements(book);
+	// The two largest linear dimensions are the cover height/width; the smallest
+	// is the spine thickness (ISBNdb often mislabels it "width"), so sort — don't
+	// trust the labels.
+	const linear = ['height', 'width', 'length']
+		.map((k) => parts[k])
+		.filter(Boolean)
+		.map((p) => toCm(p.value, p.unit))
+		.filter((n) => Number.isFinite(n) && n > 0)
+		.sort((a, b) => b - a);
+	const round1 = (n) => String(Math.round(n * 10) / 10);
+	const book_size = linear.length >= 2 ? `${round1(linear[0])} × ${round1(linear[1])} cm` : '';
+	const weight_grams =
+		parts.weight && Number.isFinite(parts.weight.value)
+			? Math.round(toGrams(parts.weight.value, parts.weight.unit))
+			: '';
+	return { book_size, weight_grams };
+}
+
 // Map an ISBNdb `book` object onto the `books` collection's REAL field names.
 // Localized fields go in their `_es` column (the storefront accessor falls
 // back to `_es`; `_de` stays an owner task — ISBNdb data is single-language).
@@ -87,16 +155,18 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // `stock` ships 0: push first, then re-run sync-stock --apply to set tallies.
 function toPB(book) {
 	const yearMatch = (book.date_published || '').match(/\d{4}/);
+	const { book_size, weight_grams } = measurementsToPB(book);
 	return {
 		slug: slugify(book.title),
 		title: book.title || book.title_long || '',
 		author: (book.authors || []).join(', '),
 		ISBN: book.isbn13 || book.isbn || '',
-		price: null,
+		price: 1,
 		stock: 0,
 		format_es: book.binding || '',
 		page_count: book.pages ?? null,
-		book_size: book.dimensions || '',
+		book_size,
+		weight_grams,
 		publication_year: yearMatch ? parseInt(yearMatch[0], 10) : null,
 		description_es: book.synopsis || book.overview || '',
 		publisher: book.publisher || '',

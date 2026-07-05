@@ -68,6 +68,7 @@ const slugify = (s) =>
 // "Español". Expand codes to the slugs they might live under.
 const LANGUAGE_ALIASES = {
 	es: ['espanol', 'spanish', 'castellano'],
+	ca: ['catalan'],
 	de: ['aleman', 'deutsch', 'german'],
 	en: ['ingles', 'english'],
 	fr: ['frances', 'francais', 'french'],
@@ -217,6 +218,7 @@ for (const { isbn, p, publisher, language } of toCreate) {
 		format_es: p.format_es,
 		page_count: p.page_count,
 		book_size: p.book_size,
+		weight_grams: p.weight_grams,
 		publication_year: p.publication_year,
 		description_es: p.description_es,
 		publisher: publisher?.id || '',
