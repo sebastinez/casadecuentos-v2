@@ -130,7 +130,7 @@ const installedNpm = (name) => {
 // Runtime / binaries
 // ---------------------------------------------------------------------------
 
-const pbBinPath = resolve(repoRoot, '.bin', 'pocketbase');
+const pbBinPath = '/usr/local/bin/pocketbase';
 const denoUsed =
 	existsSync(resolve(repoRoot, 'deno.json')) || existsSync(resolve(repoRoot, 'deno.jsonc'));
 
