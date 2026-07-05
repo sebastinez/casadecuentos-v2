@@ -54,7 +54,7 @@
 
 <div
 	bind:this={container}
-	class="h-72 w-full rounded-lg border border-gray-200"
+	class="isolate h-72 w-full rounded-lg border border-gray-200"
 	role="img"
 	aria-label={label}
 ></div>
