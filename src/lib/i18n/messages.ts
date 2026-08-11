@@ -166,7 +166,8 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.event': 'Evento',
 		'email.rsvp.when': 'Fecha y hora',
 		'email.rsvp.where': 'Lugar',
-		'email.rsvp.closing': 'Te esperamos. Si no puedes asistir, no necesitas hacer nada.',
+		'email.rsvp.closing':
+			'Te esperamos. Si no puedes asistir, por favor avisar 48 hs antes del evento. Desde ya muchas gracias.',
 		'email.rsvp.signature': 'Casa de Cuentos',
 
 		// Videos page + live-interview banner. YouTube link-out cards; "Entrevistas"
@@ -388,7 +389,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.when': 'Datum und Uhrzeit',
 		'email.rsvp.where': 'Ort',
 		'email.rsvp.closing':
-			'Wir freuen uns auf dich. Falls du nicht teilnehmen kannst, musst du nichts weiter tun.',
+			'Wir freuen uns auf dich. Falls du nicht teilnehmen kannst, bitten wir dich 48 Stunden vorher bescheid zu geben. Vielen Dank im Vorraus.',
 		'email.rsvp.signature': 'Casa de Cuentos',
 
 		// Videos page + live-interview banner.
