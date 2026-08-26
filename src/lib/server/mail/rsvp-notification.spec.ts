@@ -63,4 +63,22 @@ describe('rsvpNotificationEmail', () => {
 		expect(html).not.toContain('<script>');
 		expect(html).toContain('&lt;script&gt;');
 	});
+
+	it('renders inside the branded card and skips the help footer', () => {
+		const { html } = rsvpNotificationEmail(DATA);
+		expect(html).toContain('assets.casadecuentos.ch/logo.webp');
+		expect(html).toContain('#faf4f1');
+		// Rows are grouped under section headings.
+		expect(html).toContain('Contacto');
+		expect(html).toContain('Niña / niño');
+		// This one lands in info@ — no band pointing the owner at their own inbox.
+		expect(html).not.toContain('mailto:');
+	});
+
+	it('headlines the event title instead of repeating it as a row', () => {
+		const { html, text } = rsvpNotificationEmail(DATA);
+		expect(html).toContain('<h1 style="margin:0 0 12px;');
+		expect(text.split('\n')[0]).toBe('Cuentacuentos de primavera');
+		expect(text).not.toContain('Evento:');
+	});
 });

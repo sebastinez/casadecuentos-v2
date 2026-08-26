@@ -58,4 +58,16 @@ describe('rsvpConfirmationEmail', () => {
 		expect(html).not.toContain('<script>');
 		expect(html).toContain('&lt;script&gt;');
 	});
+
+	it('renders inside the branded card, with sections and the help footer', () => {
+		const { html } = rsvpConfirmationEmail(DATA);
+		expect(html).toContain('assets.casadecuentos.ch/logo.webp');
+		// Cream card background from the shared palette.
+		expect(html).toContain('#faf4f1');
+		// Rows are grouped under section headings.
+		expect(html).toContain('Actividad');
+		expect(html).toContain('Niña / niño');
+		// Attendee-facing mail gets the "questions? write to us" band.
+		expect(html).toContain('mailto:info@casadecuentos.ch');
+	});
 });

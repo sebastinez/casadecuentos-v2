@@ -169,6 +169,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 
 		// RSVP confirmation email. Sent in Spanish; bilingual-ready.
 		'email.rsvp.subject': 'Confirmación de reserva',
+		'email.rsvp.hello': 'Hola',
 		'email.rsvp.greeting': 'Gracias por reservar tu plaza en Casa de Cuentos.',
 		'email.rsvp.intro': 'Hemos registrado tu reserva para el siguiente evento:',
 		'email.rsvp.event': 'Evento',
@@ -177,6 +178,10 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.closing':
 			'Te esperamos. Si no puedes asistir, por favor avisar 48 hs antes del evento. Desde ya muchas gracias.',
 		'email.rsvp.signature': 'Casa de Cuentos',
+		// Card section headings, shared by the attendee and owner RSVP emails.
+		'email.rsvp.sectionEvent': 'Actividad',
+		'email.rsvp.sectionContact': 'Contacto',
+		'email.rsvp.sectionChild': 'Niña / niño',
 
 		// RSVP notification email (sent to the owner, mirrors the attendee copy above).
 		'email.rsvpOwner.subject': 'Nueva reserva',
@@ -402,6 +407,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 
 		// RSVP confirmation email.
 		'email.rsvp.subject': 'Reservierungsbestätigung',
+		'email.rsvp.hello': 'Hallo',
 		'email.rsvp.greeting': 'Vielen Dank für deine Reservierung bei Casa de Cuentos.',
 		'email.rsvp.intro': 'Wir haben deine Reservierung für die folgende Veranstaltung registriert:',
 		'email.rsvp.event': 'Veranstaltung',
@@ -410,6 +416,10 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.closing':
 			'Wir freuen uns auf dich. Falls du nicht teilnehmen kannst, bitten wir dich 48 Stunden vorher bescheid zu geben. Vielen Dank im Vorraus.',
 		'email.rsvp.signature': 'Casa de Cuentos',
+		// Card section headings, shared by the attendee and owner RSVP emails.
+		'email.rsvp.sectionEvent': 'Veranstaltung',
+		'email.rsvp.sectionContact': 'Kontakt',
+		'email.rsvp.sectionChild': 'Kind',
 
 		// RSVP notification email (sent to the owner).
 		'email.rsvpOwner.subject': 'Neue Reservierung',
