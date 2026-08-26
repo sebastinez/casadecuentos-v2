@@ -4,6 +4,7 @@ import type { MailMessage, MailTransport } from './transport';
 export type { MailMessage, MailTransport } from './transport';
 export { orderConfirmationEmail, type OrderConfirmationData } from './order-confirmation';
 export { rsvpConfirmationEmail, type RsvpConfirmationData } from './rsvp-confirmation';
+export { rsvpNotificationEmail, type RsvpNotificationData } from './rsvp-notification';
 export { contactMessageEmail, type ContactMessageData } from './contact-message';
 
 // Resend HTTP transport — a minimal `fetch` POST to the Resend API, no SDK

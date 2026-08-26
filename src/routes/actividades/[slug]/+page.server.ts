@@ -2,8 +2,13 @@ import type { PageServerLoad, Actions } from './$types';
 import { error, fail } from '@sveltejs/kit';
 import { createPocketBase, createAdminPocketBase } from '$lib/server/pocketbase';
 import { getEventBySlug } from '$lib/server/events';
-import { createMailTransport, rsvpConfirmationEmail } from '$lib/server/mail';
+import {
+	createMailTransport,
+	rsvpConfirmationEmail,
+	rsvpNotificationEmail
+} from '$lib/server/mail';
 import { localizedField, DEFAULT_LOCALE, LOCALES, localeFromPathname } from '$lib/i18n';
+import { site } from '$lib/site';
 
 // Event detail load: one event by slug (404 on miss). `canonicalUrl` carries the
 // active locale prefix (per-locale indexing) and `alternates` advertises the sibling
@@ -37,9 +42,10 @@ function looksLikeEmail(value: string): boolean {
 export const actions: Actions = {
 	// RSVP to a free event. The event is resolved from the route slug (not a
 	// spoofable hidden field), the reservation is written by the BFF as a superuser
-	// (the `rsvps` collection is fully closed — no public create), and the Spanish
-	// confirmation email is best-effort: a Resend outage must not lose a reservation
-	// the owner can already see in the admin. No capacity/waitlist in v1.
+	// (the `rsvps` collection is fully closed — no public create), and both emails
+	// (attendee confirmation + owner notification) are best-effort: a Resend outage
+	// must not lose a reservation the owner can already see in the admin. No
+	// capacity/waitlist in v1.
 	rsvp: async ({ request, params, locals }) => {
 		const form = await request.formData();
 		const name = String(form.get('name') ?? '').trim();
@@ -64,8 +70,11 @@ export const actions: Actions = {
 		const pb = await createAdminPocketBase();
 		await pb.collection('rsvps').create({ event: event.id, name, family_name, email, phone });
 
-		// Best-effort confirmation email (mirrors the order-confirmation posture):
-		// the reservation is recorded regardless of send success.
+		// Both emails are best-effort (mirrors the order-confirmation posture): the
+		// reservation is recorded regardless of send success. Separate try/catch blocks
+		// so a failure on one send still lets the other go out.
+		const transport = createMailTransport();
+
 		try {
 			const message = rsvpConfirmationEmail(
 				{
@@ -78,9 +87,29 @@ export const actions: Actions = {
 				},
 				locals.locale
 			);
-			await createMailTransport().send(message);
+			await transport.send(message);
 		} catch (err) {
 			console.error('[rsvp] confirmation email failed:', err);
+		}
+
+		// Owner notification: the same reservation, addressed to the business inbox so
+		// a new RSVP lands in the inbox and not only in the admin. Always the default
+		// locale — the owner reads Spanish whichever locale the visitor booked in.
+		try {
+			const message = rsvpNotificationEmail({
+				to: site.email,
+				name,
+				familyName: family_name,
+				email,
+				phone,
+				eventTitle: localizedField(event, 'title', DEFAULT_LOCALE),
+				eventDate: event.date,
+				eventTime: event.time,
+				venueAddress: event.venue_address
+			});
+			await transport.send(message);
+		} catch (err) {
+			console.error('[rsvp] owner notification email failed:', err);
 		}
 
 		return { success: true };

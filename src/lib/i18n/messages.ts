@@ -170,6 +170,10 @@ export const messages: Record<Locale, Record<string, string>> = {
 			'Te esperamos. Si no puedes asistir, por favor avisar 48 hs antes del evento. Desde ya muchas gracias.',
 		'email.rsvp.signature': 'Casa de Cuentos',
 
+		// RSVP notification email (sent to the owner, mirrors the attendee copy above).
+		'email.rsvpOwner.subject': 'Nueva reserva',
+		'email.rsvpOwner.intro': 'Se ha registrado una nueva reserva para esta actividad:',
+
 		// Videos page + live-interview banner. YouTube link-out cards; "Entrevistas"
 		// is an editorial nav label distinct from the `/videos` slug — the page holds
 		// all channel videos, not only interviews.
@@ -391,6 +395,10 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.rsvp.closing':
 			'Wir freuen uns auf dich. Falls du nicht teilnehmen kannst, bitten wir dich 48 Stunden vorher bescheid zu geben. Vielen Dank im Vorraus.',
 		'email.rsvp.signature': 'Casa de Cuentos',
+
+		// RSVP notification email (sent to the owner).
+		'email.rsvpOwner.subject': 'Neue Reservierung',
+		'email.rsvpOwner.intro': 'Für diese Veranstaltung ist eine neue Reservierung eingegangen:',
 
 		// Videos page + live-interview banner.
 		'videos.heading': 'Interviews und Videos',
