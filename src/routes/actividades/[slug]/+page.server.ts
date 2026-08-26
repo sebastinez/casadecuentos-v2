@@ -52,10 +52,25 @@ export const actions: Actions = {
 		const family_name = String(form.get('family_name') ?? '').trim();
 		const email = String(form.get('email') ?? '').trim();
 		const phone = String(form.get('phone') ?? '').trim();
+		// Child details. Name/age identify who is actually attending; the last two are
+		// open prompts the family may leave blank.
+		const child_name = String(form.get('child_name') ?? '').trim();
+		const child_age = String(form.get('child_age') ?? '').trim();
+		const favorite_books = String(form.get('favorite_books') ?? '').trim();
+		const comments = String(form.get('comments') ?? '').trim();
 
-		const values = { name, family_name, email, phone };
+		const values = {
+			name,
+			family_name,
+			email,
+			phone,
+			child_name,
+			child_age,
+			favorite_books,
+			comments
+		};
 
-		if (!name || !family_name || !phone || !looksLikeEmail(email)) {
+		if (!name || !family_name || !phone || !child_name || !child_age || !looksLikeEmail(email)) {
 			return fail(400, { ...values, invalid: true });
 		}
 
@@ -68,7 +83,17 @@ export const actions: Actions = {
 		}
 
 		const pb = await createAdminPocketBase();
-		await pb.collection('rsvps').create({ event: event.id, name, family_name, email, phone });
+		await pb.collection('rsvps').create({
+			event: event.id,
+			name,
+			family_name,
+			email,
+			phone,
+			child_name,
+			child_age,
+			favorite_books,
+			comments
+		});
 
 		// Both emails are best-effort (mirrors the order-confirmation posture): the
 		// reservation is recorded regardless of send success. Separate try/catch blocks
@@ -83,7 +108,11 @@ export const actions: Actions = {
 					eventTitle: localizedField(event, 'title', locals.locale),
 					eventDate: event.date,
 					eventTime: event.time,
-					venueAddress: event.venue_address
+					venueAddress: event.venue_address,
+					childName: child_name,
+					childAge: child_age,
+					favoriteBooks: favorite_books,
+					comments
 				},
 				locals.locale
 			);
@@ -105,7 +134,11 @@ export const actions: Actions = {
 				eventTitle: localizedField(event, 'title', DEFAULT_LOCALE),
 				eventDate: event.date,
 				eventTime: event.time,
-				venueAddress: event.venue_address
+				venueAddress: event.venue_address,
+				childName: child_name,
+				childAge: child_age,
+				favoriteBooks: favorite_books,
+				comments
 			});
 			await transport.send(message);
 		} catch (err) {

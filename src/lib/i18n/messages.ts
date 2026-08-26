@@ -153,11 +153,19 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'rsvp.familyName': 'Apellido',
 		'rsvp.email': 'Correo electrónico',
 		'rsvp.phone': 'Teléfono',
+		// Child-details block. Name/age are required; the last two are prompts, so
+		// their labels carry the `rsvp.optional` suffix.
+		'rsvp.childName': 'Nombre de la niña / niño',
+		'rsvp.childAge': 'Edad de la niña / niño',
+		'rsvp.favoriteBooks': 'Qué libros le gusta leer',
+		'rsvp.comments': 'Otros comentarios',
+		'rsvp.optional': '(opcional)',
 		'rsvp.submit': 'Reservar plaza',
 		'rsvp.submitting': 'Enviando…',
 		'rsvp.success': '¡Gracias! Tu reserva está confirmada. Te hemos enviado un correo.',
 		'rsvp.error': 'No se pudo completar la reserva. Inténtalo de nuevo.',
-		'rsvp.invalid': 'Por favor revisa los campos: todos son obligatorios.',
+		// No longer "todos son obligatorios" — the last two child fields are optional.
+		'rsvp.invalid': 'Por favor revisa los campos obligatorios.',
 
 		// RSVP confirmation email. Sent in Spanish; bilingual-ready.
 		'email.rsvp.subject': 'Confirmación de reserva',
@@ -378,12 +386,19 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'rsvp.familyName': 'Nachname',
 		'rsvp.email': 'E-Mail',
 		'rsvp.phone': 'Telefon',
+		// Child-details block. German uses the gender-neutral "Kind" rather than
+		// mirroring the Spanish "niña / niño" pairing, which reads clumsy here.
+		'rsvp.childName': 'Name des Kindes',
+		'rsvp.childAge': 'Alter des Kindes',
+		'rsvp.favoriteBooks': 'Welche Bücher liest es gerne',
+		'rsvp.comments': 'Weitere Anmerkungen',
+		'rsvp.optional': '(optional)',
 		'rsvp.submit': 'Platz reservieren',
 		'rsvp.submitting': 'Wird gesendet…',
 		'rsvp.success':
 			'Vielen Dank! Deine Reservierung ist bestätigt. Wir haben dir eine E-Mail gesendet.',
 		'rsvp.error': 'Die Reservierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.',
-		'rsvp.invalid': 'Bitte überprüfe die Felder: Alle sind erforderlich.',
+		'rsvp.invalid': 'Bitte überprüfe die Pflichtfelder.',
 
 		// RSVP confirmation email.
 		'email.rsvp.subject': 'Reservierungsbestätigung',

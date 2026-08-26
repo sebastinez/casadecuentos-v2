@@ -10,7 +10,11 @@ const DATA: RsvpNotificationData = {
 	eventTitle: 'Cuentacuentos de primavera',
 	eventDate: '2026-07-05',
 	eventTime: '10:30',
-	venueAddress: 'Langstrasse 1, 8004 Zürich'
+	venueAddress: 'Langstrasse 1, 8004 Zürich',
+	childName: 'Lucía',
+	childAge: '5',
+	favoriteBooks: 'Elmer, La oruga glotona',
+	comments: 'Es alérgica a los frutos secos'
 };
 
 describe('rsvpNotificationEmail', () => {
@@ -35,9 +39,23 @@ describe('rsvpNotificationEmail', () => {
 		expect(text).toContain('+41 79 123 45 67');
 	});
 
+	it('renders the child details the owner needs to prepare the session', () => {
+		const { text } = rsvpNotificationEmail(DATA);
+		expect(text).toContain('Nombre de la niña / niño: Lucía');
+		expect(text).toContain('Edad de la niña / niño: 5');
+		expect(text).toContain('Elmer, La oruga glotona');
+		expect(text).toContain('Es alérgica a los frutos secos');
+	});
+
 	it('omits the venue line when no address is set', () => {
 		const { text } = rsvpNotificationEmail({ ...DATA, venueAddress: '' });
 		expect(text).not.toContain('Lugar:');
+	});
+
+	it('omits the optional child prompts when left blank', () => {
+		const { text } = rsvpNotificationEmail({ ...DATA, favoriteBooks: '', comments: '' });
+		expect(text).not.toContain('Qué libros le gusta leer:');
+		expect(text).not.toContain('Otros comentarios:');
 	});
 
 	it('escapes HTML in user supplied values', () => {

@@ -22,6 +22,12 @@ export interface RsvpNotificationData {
 	eventDate: string;
 	eventTime: string;
 	venueAddress: string;
+	// Child details. Name/age are always present; the last two are optional prompts
+	// and their lines are dropped when the family left them blank.
+	childName: string;
+	childAge: string;
+	favoriteBooks: string;
+	comments: string;
 }
 
 // Escape HTML metacharacters; every interpolated field here is untrusted text.
@@ -44,38 +50,42 @@ export function rsvpNotificationEmail(
 	// Subject carries the event title so the owner can triage at a glance.
 	const subject = `${t('email.rsvpOwner.subject', locale)} — ${eventTitle}`;
 
+	// Label/value detail rows, rendered identically in both bodies. Empty values are
+	// dropped, so an unset venue or a skipped optional prompt leaves no blank line.
+	// Event details first, then who booked, then who is attending.
+	const rows: Array<[string, string]> = [
+		[t('email.rsvp.event', locale), eventTitle],
+		[t('email.rsvp.when', locale), when],
+		[t('email.rsvp.where', locale), venueAddress],
+		[t('rsvp.name', locale), name],
+		[t('rsvp.familyName', locale), familyName],
+		[t('rsvp.email', locale), email],
+		[t('rsvp.phone', locale), phone],
+		[t('rsvp.childName', locale), data.childName],
+		[t('rsvp.childAge', locale), data.childAge],
+		[t('rsvp.favoriteBooks', locale), data.favoriteBooks],
+		[t('rsvp.comments', locale), data.comments]
+	].filter(([, value]) => !!value) as Array<[string, string]>;
+
 	// Plain-text body: the canonical content. The HTML version mirrors it.
-	const textLines = [
+	const text = [
 		t('email.rsvpOwner.intro', locale),
 		'',
-		`${t('email.rsvp.event', locale)}: ${eventTitle}`,
-		`${t('email.rsvp.when', locale)}: ${when}`
-	];
-	if (venueAddress) textLines.push(`${t('email.rsvp.where', locale)}: ${venueAddress}`);
-	textLines.push(
-		'',
-		`${t('rsvp.name', locale)}: ${name}`,
-		`${t('rsvp.familyName', locale)}: ${familyName}`,
-		`${t('rsvp.email', locale)}: ${email}`,
-		`${t('rsvp.phone', locale)}: ${phone}`
-	);
-	const text = textLines.join('\n');
+		...rows.map(([label, value]) => `${label}: ${value}`)
+	].join('\n');
 
-	const whereHtml = venueAddress
-		? `<p><strong>${t('email.rsvp.where', locale)}:</strong> ${escapeHtml(venueAddress)}</p>`
-		: '';
+	const rowsHtml = rows
+		.map(
+			([label, value]) =>
+				`<p style="white-space: pre-wrap;"><strong>${label}:</strong> ${escapeHtml(value)}</p>`
+		)
+		.join('\n\t');
 
 	const html = `<!doctype html>
 <html lang="${locale}">
 <body style="font-family: system-ui, sans-serif; color: #1a1a1a;">
 	<p>${t('email.rsvpOwner.intro', locale)}</p>
-	<p><strong>${t('email.rsvp.event', locale)}:</strong> ${escapeHtml(eventTitle)}</p>
-	<p><strong>${t('email.rsvp.when', locale)}:</strong> ${escapeHtml(when)}</p>
-	${whereHtml}
-	<p><strong>${t('rsvp.name', locale)}:</strong> ${escapeHtml(name)}</p>
-	<p><strong>${t('rsvp.familyName', locale)}:</strong> ${escapeHtml(familyName)}</p>
-	<p><strong>${t('rsvp.email', locale)}:</strong> ${escapeHtml(email)}</p>
-	<p><strong>${t('rsvp.phone', locale)}:</strong> ${escapeHtml(phone)}</p>
+	${rowsHtml}
 </body>
 </html>`;
 

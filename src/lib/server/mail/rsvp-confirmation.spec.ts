@@ -7,7 +7,11 @@ const DATA: RsvpConfirmationData = {
 	eventTitle: 'Cuentacuentos de primavera',
 	eventDate: '2026-07-05',
 	eventTime: '10:30',
-	venueAddress: 'Langstrasse 1, 8004 Zürich'
+	venueAddress: 'Langstrasse 1, 8004 Zürich',
+	childName: 'Lucía',
+	childAge: '5',
+	favoriteBooks: 'Elmer, La oruga glotona',
+	comments: 'Es alérgica a los frutos secos'
 };
 
 describe('rsvpConfirmationEmail', () => {
@@ -29,9 +33,24 @@ describe('rsvpConfirmationEmail', () => {
 		expect(text).toContain('Langstrasse 1, 8004 Zürich');
 	});
 
+	it('echoes the child details back to the family', () => {
+		const { text } = rsvpConfirmationEmail(DATA);
+		expect(text).toContain('Lucía');
+		expect(text).toContain('Elmer, La oruga glotona');
+		expect(text).toContain('Es alérgica a los frutos secos');
+	});
+
 	it('omits the venue line when no address is set', () => {
 		const { text } = rsvpConfirmationEmail({ ...DATA, venueAddress: '' });
 		expect(text).not.toContain('Lugar:');
+	});
+
+	it('omits the optional child prompts when left blank', () => {
+		const { text } = rsvpConfirmationEmail({ ...DATA, favoriteBooks: '', comments: '' });
+		expect(text).not.toContain('Qué libros le gusta leer:');
+		expect(text).not.toContain('Otros comentarios:');
+		// The required child fields still render.
+		expect(text).toContain('Nombre de la niña / niño: Lucía');
 	});
 
 	it('escapes HTML in user/owner supplied values', () => {

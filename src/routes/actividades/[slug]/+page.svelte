@@ -154,6 +154,51 @@
 					/>
 				</label>
 
+				<!-- Child details: who is actually attending, so the owner can pick
+				     age-appropriate books. Name/age are required like the block above;
+				     the last two are open prompts and marked optional. -->
+				<label class="flex flex-col gap-1 text-sm">
+					<span class="text-gray-500">{t('rsvp.childName', locale)}</span>
+					<input
+						type="text"
+						name="child_name"
+						required
+						value={form?.child_name ?? ''}
+						class="rounded-md border border-gray-300 px-3 py-2"
+					/>
+				</label>
+				<label class="flex flex-col gap-1 text-sm">
+					<span class="text-gray-500">{t('rsvp.childAge', locale)}</span>
+					<input
+						type="text"
+						name="child_age"
+						required
+						value={form?.child_age ?? ''}
+						class="rounded-md border border-gray-300 px-3 py-2"
+					/>
+				</label>
+				<label class="flex flex-col gap-1 text-sm sm:col-span-2">
+					<span class="text-gray-500"
+						>{t('rsvp.favoriteBooks', locale)} {t('rsvp.optional', locale)}</span
+					>
+					<input
+						type="text"
+						name="favorite_books"
+						value={form?.favorite_books ?? ''}
+						class="rounded-md border border-gray-300 px-3 py-2"
+					/>
+				</label>
+				<label class="flex flex-col gap-1 text-sm sm:col-span-2">
+					<span class="text-gray-500"
+						>{t('rsvp.comments', locale)} {t('rsvp.optional', locale)}</span
+					>
+					<textarea
+						name="comments"
+						rows="3"
+						value={form?.comments ?? ''}
+						class="rounded-md border border-gray-300 px-3 py-2"></textarea>
+				</label>
+
 				<div class="sm:col-span-2">
 					<button
 						type="submit"
