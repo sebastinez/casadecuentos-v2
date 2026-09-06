@@ -7,13 +7,20 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	const capitalizeFirst = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
 	const locale = $derived(data.locale);
 
 	const event = $derived(data.event);
 	const title = $derived(localizedField(event, 'title', locale));
 	const description = $derived(localizedField(event, 'description', locale));
+	// Spanish weekday/month names come out lowercase from Intl (`domingo, 5 de …`)
+	// while German ones are already capitalized — force the first letter either way
+	// so the line always reads as a sentence.
 	const when = $derived(
-		`${formatEventDate(event.date, locale)} · ${event.time} ${t('event.timeSuffix', locale)}`
+		capitalizeFirst(
+			`${formatEventDate(event.date, locale)} · ${event.time} ${t('event.timeSuffix', locale)}`
+		)
 	);
 	// Only render the map when the owner filled in real coordinates.
 	const hasMap = $derived(!!event.latitude && !!event.longitude);
