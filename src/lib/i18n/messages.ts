@@ -148,7 +148,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 
 		// RSVP form. Free events, no capacity/waitlist.
 		'rsvp.heading': 'Reserva tu plaza',
-		'rsvp.intro': 'Las plazas son gratuitas. Déjanos tus datos y te confirmaremos por correo.',
+		'rsvp.intro': 'Las plazas son limitadas. Déjanos tus datos y te confirmaremos por correo.',
 		'rsvp.name': 'Nombre',
 		'rsvp.familyName': 'Apellido',
 		'rsvp.email': 'Correo electrónico',
@@ -386,7 +386,7 @@ export const messages: Record<Locale, Record<string, string>> = {
 		// RSVP form. Free events, no capacity/waitlist.
 		'rsvp.heading': 'Sichere dir deinen Platz',
 		'rsvp.intro':
-			'Die Plätze sind kostenlos. Hinterlasse uns deine Daten und wir bestätigen dir per E-Mail.',
+			'Die Plätze sind begrenzt. Hinterlasse uns deine Daten und wir bestätigen dir per E-Mail.',
 		'rsvp.name': 'Vorname',
 		'rsvp.familyName': 'Nachname',
 		'rsvp.email': 'E-Mail',
