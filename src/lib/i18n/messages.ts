@@ -136,6 +136,9 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.confirm.signature': 'Casa de Cuentos',
 		'email.confirm.help': 'Si tienes alguna pregunta, responde a este correo o escríbenos a',
 		'email.confirm.orderSummary': 'Resumen del pedido',
+		'email.confirm.shippingDetails': 'Datos de envío',
+		'email.confirm.shippingMethod': 'Método de envío',
+		'email.confirm.shippingAddress': 'Dirección de envío',
 
 		'events.heading': 'Actividades',
 		'events.empty': 'No hay actividades próximas por el momento.',
@@ -373,6 +376,9 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'email.confirm.signature': 'Casa de Cuentos',
 		'email.confirm.help': 'Bei Fragen antworte einfach auf diese E-Mail oder schreibe uns an',
 		'email.confirm.orderSummary': 'Bestellübersicht',
+		'email.confirm.shippingDetails': 'Versanddetails',
+		'email.confirm.shippingMethod': 'Versandart',
+		'email.confirm.shippingAddress': 'Lieferadresse',
 
 		'events.heading': 'Veranstaltungen',
 		'events.empty': 'Derzeit sind keine Veranstaltungen geplant.',

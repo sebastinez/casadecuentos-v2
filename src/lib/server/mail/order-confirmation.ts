@@ -1,6 +1,7 @@
 import { t, DEFAULT_LOCALE, type Locale } from '$lib/i18n';
 import { site } from '$lib/site';
 import type { OrderLine } from '$lib/server/checkout/order';
+import type { Urgency } from '$lib/shipping';
 import type { MailMessage } from './transport';
 
 // Pure builder for the order-confirmation email: given the paid order's snapshot it
@@ -17,11 +18,70 @@ export interface OrderConfirmationData {
 	shipping: number;
 	total: number;
 	currency: string;
+	// Delivery tier the customer picked in the cart; names the shipping method.
+	urgency: Urgency;
+	// The address Stripe collected, as snapshotted onto the order's `shipping_address`
+	// JSON column. Deliberately `unknown`: it is provider-shaped, untrusted, and may
+	// be absent, so it is narrowed by `toShippingAddress` rather than read field-wise.
+	shippingAddress?: unknown;
+}
+
+// Provider-neutral postal address — the normalized form the template prints.
+export interface ShippingAddress {
+	name?: string;
+	line1?: string;
+	line2?: string;
+	postalCode?: string;
+	city?: string;
+	state?: string;
+	country?: string;
 }
 
 // Format a plain CHF amount (e.g. `24.9` → `CHF 24.90`); two decimals, tax-inclusive.
 function money(amount: number, currency: string): string {
 	return `${currency} ${amount.toFixed(2)}`;
+}
+
+// Narrow the order's opaque address snapshot to the fields we print. Accepts the
+// Stripe-shaped `{ name, address: { line1, postal_code, … } }` blob the webhook
+// stores as well as an already-flat object, and returns `null` when nothing
+// printable survives — so a missing or empty address drops the block entirely
+// instead of rendering "undefined".
+export function toShippingAddress(value: unknown): ShippingAddress | null {
+	if (!value || typeof value !== 'object') return null;
+
+	const raw = value as Record<string, unknown>;
+	const nested = raw.address;
+	const addr = (nested && typeof nested === 'object' ? nested : raw) as Record<string, unknown>;
+
+	const str = (v: unknown): string | undefined =>
+		typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
+
+	const address: ShippingAddress = {
+		name: str(raw.name),
+		line1: str(addr.line1),
+		line2: str(addr.line2),
+		postalCode: str(addr.postal_code) ?? str(addr.postalCode),
+		city: str(addr.city),
+		state: str(addr.state),
+		country: str(addr.country)
+	};
+
+	return Object.values(address).some((part) => part !== undefined) ? address : null;
+}
+
+// The address as printable lines, Swiss convention: recipient, street, postcode +
+// city, then region/country. Missing parts collapse, so there are never blank lines.
+function addressLines(address: ShippingAddress): string[] {
+	const locality = [address.postalCode, address.city].filter(Boolean).join(' ');
+	return [
+		address.name,
+		address.line1,
+		address.line2,
+		locality,
+		address.state,
+		address.country
+	].filter((line): line is string => Boolean(line));
 }
 
 // Escape HTML metacharacters. Titles are owner-entered, but rendering them into an
@@ -38,10 +98,15 @@ export function orderConfirmationEmail(
 	data: OrderConfirmationData,
 	locale: Locale = DEFAULT_LOCALE
 ): MailMessage {
-	const { orderNumber, email, lines, itemsTotal, shipping, total, currency } = data;
+	const { orderNumber, email, lines, itemsTotal, shipping, total, currency, urgency } = data;
 
 	// Subject carries the order number so it threads/searches well in the inbox.
 	const subject = `${t('email.confirm.subject', locale)} #${orderNumber}`;
+
+	// The tier label is the same copy the cart's delivery-speed picker shows — one
+	// source of truth, so the email can't name the tier differently than the UI did.
+	const methodLabel = t(`cart.delivery.${urgency}`, locale);
+	const address = toShippingAddress(data.shippingAddress);
 
 	// Plain-text body: the canonical content. The HTML version mirrors it.
 	const textLines = [
@@ -56,6 +121,17 @@ export function orderConfirmationEmail(
 		`${t('email.confirm.subtotal', locale)}: ${money(itemsTotal, currency)}`,
 		`${t('email.confirm.shipping', locale)}: ${money(shipping, currency)}`,
 		`${t('email.confirm.total', locale)}: ${money(total, currency)}`,
+		'',
+		`${t('email.confirm.shippingDetails', locale)}:`,
+		`${t('email.confirm.shippingMethod', locale)}: ${methodLabel}`,
+		// No address on file (Stripe didn't collect one) → omit the block rather
+		// than print an empty heading.
+		...(address
+			? [
+					`${t('email.confirm.shippingAddress', locale)}:`,
+					...addressLines(address).map((line) => `  ${line}`)
+				]
+			: []),
 		'',
 		t('email.confirm.closing', locale),
 		t('email.confirm.signature', locale)
@@ -100,6 +176,21 @@ export function orderConfirmationEmail(
 		`<td style="padding:4px 0;font-size:${emphasis ? '18px' : '15px'};color:${emphasis ? accent : ink};text-align:right;font-weight:${emphasis ? '700' : '600'};${emphasis ? 'padding-top:12px;' : ''}">${value}</td>` +
 		`</tr>`;
 
+	// A labelled shipping detail: small uppercase label above its value. Stacked (not
+	// two columns) so it stays readable at phone width in every client.
+	const detailRows = (label: string, valueHtml: string): string =>
+		`<tr><td style="padding:0 0 2px;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:${muted};">${label}</td></tr>` +
+		`<tr><td style="padding:0 0 14px;font-size:15px;line-height:1.5;color:${ink};">${valueHtml}</td></tr>`;
+
+	const shippingDetailsHtml =
+		detailRows(t('email.confirm.shippingMethod', locale), escapeHtml(methodLabel)) +
+		(address
+			? detailRows(
+					t('email.confirm.shippingAddress', locale),
+					addressLines(address).map(escapeHtml).join('<br/>')
+				)
+			: '');
+
 	const html = `<!doctype html>
 <html lang="${locale}">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width"/></head>
@@ -131,6 +222,11 @@ export function orderConfirmationEmail(
 						${summaryRow(t('email.confirm.shipping', locale), money(shipping, currency))}
 						${summaryRow(t('email.confirm.total', locale), money(total, currency), true)}
 					</table>
+				</td></tr>
+				<!-- Shipping: the tier the customer picked + where the parcel goes -->
+				<tr><td style="padding:0 32px 20px;">
+					<h2 style="margin:0 0 10px;font-size:16px;font-weight:700;color:${ink};">${t('email.confirm.shippingDetails', locale)}</h2>
+					<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${hairline};padding-top:8px;">${shippingDetailsHtml}</table>
 				</td></tr>
 				<!-- Closing + footer -->
 				<tr><td style="padding:0 32px 28px;">

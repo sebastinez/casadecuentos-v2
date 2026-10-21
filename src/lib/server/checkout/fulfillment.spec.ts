@@ -55,6 +55,7 @@ const ORDER: FulfillmentOrder = {
 	],
 	items_total: 61.8,
 	shipping_total: 8,
+	shipping_urgency: 'priority',
 	total: 69.8,
 	currency: 'CHF'
 };
@@ -104,6 +105,26 @@ describe('fulfillCheckout', () => {
 		expect(sent[1].subject).toContain('#1042');
 		expect(sent[1].subject).toContain('Confirmación de pedido');
 		expect(sent[1].text).toContain('El Principito');
+	});
+
+	it('carries the shipping tier and the collected address into both emails', async () => {
+		const { deps, sent } = fakeDeps(ORDER);
+
+		await fulfillCheckout(EVENT, deps);
+
+		for (const msg of sent) {
+			expect(msg.text).toContain('Prioritario (1 día)');
+			expect(msg.text).toContain('Ada');
+			expect(msg.text).toContain('Zürich');
+		}
+	});
+
+	it('falls back to the economy tier for an order row with no urgency', async () => {
+		const { deps, sent } = fakeDeps({ ...ORDER, shipping_urgency: undefined });
+
+		await fulfillCheckout(EVENT, deps);
+
+		expect(sent[1].text).toContain('Económico (2–3 días)');
 	});
 
 	it('is idempotent: a redelivered event marks paid and decrements stock exactly once', async () => {

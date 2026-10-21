@@ -1,6 +1,7 @@
 import { canTransition, type OrderStatus } from './order-state';
 import { site } from '$lib/site';
 import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import { parseUrgency, type Urgency } from '$lib/shipping';
 import type { OrderLine } from './order';
 import type { MailTransport } from '$lib/server/mail';
 import { orderConfirmationEmail } from '$lib/server/mail';
@@ -32,6 +33,10 @@ export interface FulfillmentOrder {
 	shipping_total: number;
 	total: number;
 	currency: string;
+	// Delivery tier picked in the cart; names the shipping method in the
+	// confirmation email. Optional (older rows predate the column) — `parseUrgency`
+	// falls back to `economy`.
+	shipping_urgency?: Urgency;
 	// Buyer's locale, captured at checkout; localizes the confirmation email.
 	locale?: Locale;
 }
@@ -103,6 +108,9 @@ export async function fulfillCheckout(
 	// The customer-facing confirmation goes out in the locale they shopped in; the
 	// owner copy below stays in Spanish (DEFAULT_LOCALE).
 	const locale = order.locale ?? DEFAULT_LOCALE;
+	// Shipping facts both copies of the email print: the tier from the order
+	// snapshot, the address from the Stripe-collected payload on this event.
+	const urgency = parseUrgency(order.shipping_urgency);
 
 	// The latch — flip to paid first (see ordering note above).
 	await deps.orders.markPaid(order.id, {
@@ -121,7 +129,9 @@ export async function fulfillCheckout(
 				itemsTotal: order.items_total,
 				shipping: order.shipping_total,
 				total: order.total,
-				currency: order.currency
+				currency: order.currency,
+				urgency,
+				shippingAddress: input.shippingAddress
 			})
 		);
 	} catch (err) {
@@ -149,7 +159,9 @@ export async function fulfillCheckout(
 						itemsTotal: order.items_total,
 						shipping: order.shipping_total,
 						total: order.total,
-						currency: order.currency
+						currency: order.currency,
+						urgency,
+						shippingAddress: input.shippingAddress
 					},
 					locale
 				)

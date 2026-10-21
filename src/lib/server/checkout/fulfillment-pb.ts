@@ -27,6 +27,7 @@ export function createOrdersPort(pb: PocketBase): OrdersPort {
 					shipping_total: record.shipping_total ?? 0,
 					total: record.total ?? 0,
 					currency: record.currency ?? 'CHF',
+					shipping_urgency: record.shipping_urgency || undefined,
 					// `localizedField`-style fallback isn't needed; the email builder
 					// defaults to Spanish when this is undefined.
 					locale: record.locale || undefined

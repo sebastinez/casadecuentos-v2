@@ -1,6 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { orderConfirmationEmail, type OrderConfirmationData } from './order-confirmation';
 
+// The address arrives exactly as Stripe hands it over (`collected_information.
+// shipping_details`) and is snapshotted onto the order that way, so the fixture
+// keeps the nested, snake_cased provider shape.
+const ADDRESS = {
+	name: 'Ada Lovelace',
+	address: {
+		line1: 'Bahnhofstrasse 1',
+		line2: '3. Stock',
+		postal_code: '8001',
+		city: 'Zürich',
+		country: 'CH'
+	}
+};
+
 const DATA: OrderConfirmationData = {
 	orderNumber: 1042,
 	email: 'cliente@example.com',
@@ -11,7 +25,9 @@ const DATA: OrderConfirmationData = {
 	itemsTotal: 61.8,
 	shipping: 8,
 	total: 69.8,
-	currency: 'CHF'
+	currency: 'CHF',
+	urgency: 'economy',
+	shippingAddress: ADDRESS
 };
 
 describe('orderConfirmationEmail', () => {
@@ -52,5 +68,75 @@ describe('orderConfirmationEmail', () => {
 		});
 		expect(msg.html).toContain('Tom &amp; &lt;Jerry&gt;');
 		expect(msg.html).not.toContain('<Jerry>');
+	});
+
+	// --- Shipping details: the chosen tier + where the parcel goes ---
+
+	it('names the chosen delivery tier, in the same words the cart used', () => {
+		const economy = orderConfirmationEmail(DATA);
+		expect(economy.text).toContain('Método de envío: Económico (2–3 días)');
+		expect(economy.html).toContain('Económico (2–3 días)');
+
+		const priority = orderConfirmationEmail({ ...DATA, urgency: 'priority' });
+		expect(priority.text).toContain('Método de envío: Prioritario (1 día)');
+		expect(priority.html).toContain('Prioritario (1 día)');
+	});
+
+	it('prints the shipping address, postcode before city, in both bodies', () => {
+		const { text, html } = orderConfirmationEmail(DATA);
+
+		expect(text).toContain('Dirección de envío:');
+		expect(text).toContain('  Ada Lovelace');
+		expect(text).toContain('  Bahnhofstrasse 1');
+		expect(text).toContain('  3. Stock');
+		expect(text).toContain('  8001 Zürich');
+		expect(text).toContain('  CH');
+
+		expect(html).toContain('Dirección de envío');
+		expect(html).toContain('Ada Lovelace<br/>Bahnhofstrasse 1<br/>3. Stock<br/>8001 Zürich<br/>CH');
+	});
+
+	it('localizes the shipping labels and tier for the de locale', () => {
+		const { text } = orderConfirmationEmail({ ...DATA, urgency: 'priority' }, 'de');
+		expect(text).toContain('Versandart: Express (1 Tag)');
+		expect(text).toContain('Lieferadresse:');
+		expect(text).toContain('  8001 Zürich');
+	});
+
+	it('skips absent address parts instead of printing blank lines', () => {
+		const { text } = orderConfirmationEmail({
+			...DATA,
+			shippingAddress: { name: 'Ada', address: { city: 'Zürich', country: 'CH' } }
+		});
+		expect(text).toContain('  Ada\n  Zürich\n  CH');
+		expect(text).not.toContain('undefined');
+	});
+
+	it('also accepts an already-flat address object', () => {
+		const { text } = orderConfirmationEmail({
+			...DATA,
+			shippingAddress: { name: 'Ada', line1: 'Bahnhofstrasse 1', postalCode: '8001', city: 'Bern' }
+		});
+		expect(text).toContain('  Bahnhofstrasse 1');
+		expect(text).toContain('  8001 Bern');
+	});
+
+	it('keeps the shipping method but drops the address block when there is no address', () => {
+		for (const shippingAddress of [null, undefined, {}, 'nonsense']) {
+			const { text, html } = orderConfirmationEmail({ ...DATA, shippingAddress });
+			expect(text).toContain('Método de envío: Económico (2–3 días)');
+			expect(text).not.toContain('Dirección de envío');
+			expect(html).not.toContain('Dirección de envío');
+			expect(text).not.toContain('undefined');
+		}
+	});
+
+	it('escapes HTML-significant characters in the address', () => {
+		const { html } = orderConfirmationEmail({
+			...DATA,
+			shippingAddress: { name: 'Tom & <Jerry>', address: { city: 'Zürich' } }
+		});
+		expect(html).toContain('Tom &amp; &lt;Jerry&gt;');
+		expect(html).not.toContain('<Jerry>');
 	});
 });
