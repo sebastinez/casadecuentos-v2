@@ -3,6 +3,12 @@
 	import { cart } from '$lib/cart/cart.svelte';
 	import type { CartBook } from '$lib/server/catalog';
 	import { shippingCost, totalWeightGrams, type Urgency } from '$lib/shipping';
+	import {
+		emptyShippingAddress,
+		validateShippingAddress,
+		MAX_ADDRESS_FIELD_LENGTH,
+		type ShippingAddressField
+	} from '$lib/shipping-address';
 	import { t, localizeHref } from '$lib/i18n';
 	import type { PageData } from './$types';
 
@@ -89,27 +95,77 @@
 
 	const grandTotal = $derived(subtotal + (shipping ?? 0));
 
-	// Checkout initiation. Posts the cart's ids + quantities to the BFF, which
-	// builds a server-authoritative order + Stripe session and returns the hosted
-	// Checkout URL to redirect to. Prices are never sent — the server reads them.
+	// Delivery address, collected here rather than on Stripe's hosted page: an
+	// order is never created without an address we can ship to, and the customer
+	// fixes problems before paying, not after.
+	let address = $state(emptyShippingAddress());
+
+	// The same pure rules the BFF enforces (`$lib/shipping-address`) — this is only
+	// the live feedback; the server re-validates and has the last word.
+	const addressErrors = $derived(validateShippingAddress(address));
+
+	// Which errors are *shown*: a field's own once the customer has left it, and
+	// all of them once they've tried to pay. Nobody gets scolded for a field they
+	// haven't reached yet.
+	let touched = $state<Partial<Record<ShippingAddressField, boolean>>>({});
+	let attemptedCheckout = $state(false);
+	const shownErrors = $derived(
+		addressErrors.filter((field) => attemptedCheckout || touched[field])
+	);
+
+	// The form's inputs, in render order. Driven from data so all five share one
+	// set of behaviours (autofill token, error wiring, length cap) instead of five
+	// near-identical blocks. `country` isn't here: v1 ships inside Switzerland only.
+	const ADDRESS_INPUTS: {
+		key: ShippingAddressField;
+		// The DOM autofill token type, so a typo can't silently disable autofill.
+		autocomplete: AutoFill;
+		wide: boolean;
+		numeric?: boolean;
+	}[] = [
+		{ key: 'name', autocomplete: 'name', wide: true },
+		{ key: 'line1', autocomplete: 'address-line1', wide: true },
+		{ key: 'line2', autocomplete: 'address-line2', wide: true },
+		{ key: 'postalCode', autocomplete: 'postal-code', wide: false, numeric: true },
+		{ key: 'city', autocomplete: 'address-level2', wide: false }
+	];
+
+	// Checkout initiation. Posts the cart's ids + quantities + delivery address to
+	// the BFF, which builds a server-authoritative order + Stripe session and
+	// returns the hosted Checkout URL to redirect to. Prices are never sent — the
+	// server reads them.
 	let checkingOut = $state(false);
 	let checkoutError = $state('');
 
 	async function checkout() {
+		// Gate on the address before anything else: reveal every outstanding error
+		// and put the cursor in the first one, rather than bouncing off the server.
+		attemptedCheckout = true;
+		if (addressErrors.length > 0) {
+			checkoutError = t('cart.address.incomplete', locale);
+			document.getElementById(`addr-${addressErrors[0]}`)?.focus();
+			return;
+		}
+
 		checkingOut = true;
 		checkoutError = '';
 		try {
 			const res = await fetch('/api/checkout', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({ items: cart.items, urgency })
+				body: JSON.stringify({ items: cart.items, urgency, address })
 			});
 			if (!res.ok) {
 				const data = await res.json().catch(() => ({}));
+				// `invalid_address` means our own validation and the server's disagreed
+				// (a stale page, or a tampered body) — show the address message so the
+				// customer is pointed at the form, not at a generic failure.
 				checkoutError =
 					data?.message === 'out_of_stock'
 						? t('cart.outOfStockError', locale)
-						: t('cart.checkoutError', locale);
+						: data?.message === 'invalid_address'
+							? t('cart.address.incomplete', locale)
+							: t('cart.checkoutError', locale);
 				return;
 			}
 			const { url } = (await res.json()) as { url: string };
@@ -214,6 +270,46 @@
 			{t('cart.clear', locale)}
 		</button>
 	</div>
+
+	<!-- Delivery address: validated here, before payment. -->
+	<fieldset class="mt-6 border-t border-gray-100 pt-4">
+		<legend class="text-sm font-medium text-gray-700">{t('cart.address.heading', locale)}</legend>
+		<p class="mt-1 mb-3 text-xs text-gray-500">{t('cart.address.intro', locale)}</p>
+
+		<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+			{#each ADDRESS_INPUTS as field (field.key)}
+				{@const invalid = shownErrors.includes(field.key)}
+				<label class="flex flex-col gap-1 text-sm {field.wide ? 'sm:col-span-2' : ''}">
+					<span class="text-gray-500">{t(`cart.address.${field.key}`, locale)}</span>
+					<input
+						id={`addr-${field.key}`}
+						type="text"
+						bind:value={address[field.key]}
+						autocomplete={field.autocomplete}
+						inputmode={field.numeric ? 'numeric' : undefined}
+						maxlength={MAX_ADDRESS_FIELD_LENGTH}
+						aria-invalid={invalid ? 'true' : undefined}
+						aria-describedby={invalid ? `addr-${field.key}-error` : undefined}
+						onblur={() => (touched = { ...touched, [field.key]: true })}
+						class="rounded-md border px-3 py-2 {invalid ? 'border-red-400' : 'border-gray-300'}"
+					/>
+					{#if invalid}
+						<p id={`addr-${field.key}-error`} class="text-xs text-red-600">
+							{t(`cart.address.invalid.${field.key}`, locale)}
+						</p>
+					{/if}
+				</label>
+			{/each}
+
+			<!-- Country is fixed (Swiss Post rate table), so it is shown, not asked. -->
+			<div class="flex flex-col gap-1 text-sm sm:col-span-2">
+				<span class="text-gray-500">{t('cart.address.country', locale)}</span>
+				<p class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-gray-600">
+					{t('cart.address.countryValue', locale)}
+				</p>
+			</div>
+		</div>
+	</fieldset>
 
 	<!-- Delivery speed: the customer picks a tier; shipping recomputes live. -->
 	<fieldset class="mt-6 border-t border-gray-100 pt-4">

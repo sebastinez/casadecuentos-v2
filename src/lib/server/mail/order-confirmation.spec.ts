@@ -74,12 +74,12 @@ describe('orderConfirmationEmail', () => {
 
 	it('names the chosen delivery tier, in the same words the cart used', () => {
 		const economy = orderConfirmationEmail(DATA);
-		expect(economy.text).toContain('Método de envío: Económico (2–3 días)');
-		expect(economy.html).toContain('Económico (2–3 días)');
+		expect(economy.text).toContain('Método de envío: Económico (2–3 días hábiles)');
+		expect(economy.html).toContain('Económico (2–3 días hábiles)');
 
 		const priority = orderConfirmationEmail({ ...DATA, urgency: 'priority' });
-		expect(priority.text).toContain('Método de envío: Prioritario (1 día)');
-		expect(priority.html).toContain('Prioritario (1 día)');
+		expect(priority.text).toContain('Método de envío: Prioritario (1 día hábil)');
+		expect(priority.html).toContain('Prioritario (1 día hábil)');
 	});
 
 	it('prints the shipping address, postcode before city, in both bodies', () => {
@@ -98,7 +98,7 @@ describe('orderConfirmationEmail', () => {
 
 	it('localizes the shipping labels and tier for the de locale', () => {
 		const { text } = orderConfirmationEmail({ ...DATA, urgency: 'priority' }, 'de');
-		expect(text).toContain('Versandart: Express (1 Tag)');
+		expect(text).toContain('Versandart: Express (1 Werktag)');
 		expect(text).toContain('Lieferadresse:');
 		expect(text).toContain('  8001 Zürich');
 	});
@@ -124,7 +124,7 @@ describe('orderConfirmationEmail', () => {
 	it('keeps the shipping method but drops the address block when there is no address', () => {
 		for (const shippingAddress of [null, undefined, {}, 'nonsense']) {
 			const { text, html } = orderConfirmationEmail({ ...DATA, shippingAddress });
-			expect(text).toContain('Método de envío: Económico (2–3 días)');
+			expect(text).toContain('Método de envío: Económico (2–3 días hábiles)');
 			expect(text).not.toContain('Dirección de envío');
 			expect(html).not.toContain('Dirección de envío');
 			expect(text).not.toContain('undefined');

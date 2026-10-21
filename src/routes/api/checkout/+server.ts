@@ -5,6 +5,7 @@ import { createStripe } from '$lib/server/checkout/stripe-client';
 import { startCheckout, CheckoutError } from '$lib/server/checkout';
 import { parseCart } from '$lib/cart/cart';
 import { parseUrgency } from '$lib/shipping';
+import { parseShippingAddress, validateShippingAddress } from '$lib/shipping-address';
 
 // Initiates checkout: takes the cart's book ids + quantities, builds a server-
 // authoritative order, creates a `pending` order + Stripe session, and returns
@@ -15,6 +16,10 @@ import { parseUrgency } from '$lib/shipping';
 // trust boundary the cart uses for localStorage), so any price/title a client
 // tries to send is structurally stripped to `{ id, qty }` before the order is
 // built. Authoritative price + stock are read from PocketBase.
+//
+// Address integrity: the delivery address is collected in our own cart, so this
+// endpoint — not Stripe — is where it is validated. The browser runs the same
+// pure rules for live feedback; this check is the one that counts.
 export const POST: RequestHandler = async ({ request, url, locals }) => {
 	let body: unknown;
 	try {
@@ -30,17 +35,29 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
 	// back to the cheapest tier (`economy`). The cost is recomputed here from the
 	// authoritative rate table — the client only chooses the tier, never the price.
 	const urgency = parseUrgency((body as { urgency?: unknown })?.urgency);
+	// The delivery address, trimmed and re-validated server-side. A client that
+	// skips or fakes the form gets the offending field names back, so the cart can
+	// mark exactly the inputs that need fixing.
+	const shippingAddress = parseShippingAddress((body as { address?: unknown })?.address);
+	const invalidFields = validateShippingAddress(shippingAddress);
+	if (invalidFields.length > 0) {
+		throw error(400, { message: 'invalid_address', fields: invalidFields } as App.Error);
+	}
 
 	const pb = await createAdminPocketBase();
 	const stripe = createStripe();
 
 	try {
-		const { url: checkoutUrl } = await startCheckout(items, urgency, {
-			pb,
-			stripe,
-			origin: url.origin,
-			locale: locals.locale
-		});
+		const { url: checkoutUrl } = await startCheckout(
+			items,
+			{ urgency, shippingAddress },
+			{
+				pb,
+				stripe,
+				origin: url.origin,
+				locale: locals.locale
+			}
+		);
 		return json({ url: checkoutUrl });
 	} catch (err) {
 		// Expected, customer-facing failures: surface the code + offending ids so

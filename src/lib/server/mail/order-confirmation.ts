@@ -20,14 +20,17 @@ export interface OrderConfirmationData {
 	currency: string;
 	// Delivery tier the customer picked in the cart; names the shipping method.
 	urgency: Urgency;
-	// The address Stripe collected, as snapshotted onto the order's `shipping_address`
-	// JSON column. Deliberately `unknown`: it is provider-shaped, untrusted, and may
-	// be absent, so it is narrowed by `toShippingAddress` rather than read field-wise.
+	// The delivery address snapshotted onto the order's `shipping_address` JSON
+	// column — normally the one our own cart collected, a Stripe-collected one on
+	// pre-form orders. Deliberately `unknown`: a JSON column that may be absent or
+	// legacy-shaped, so it is narrowed by `toDisplayAddress`, not read field-wise.
 	shippingAddress?: unknown;
 }
 
-// Provider-neutral postal address — the normalized form the template prints.
-export interface ShippingAddress {
+// A postal address reduced to what this template prints. Every field optional on
+// purpose: unlike the validated `ShippingAddress` our checkout form produces, this
+// also has to render whatever an older order happens to carry.
+export interface DisplayAddress {
 	name?: string;
 	line1?: string;
 	line2?: string;
@@ -43,11 +46,11 @@ function money(amount: number, currency: string): string {
 }
 
 // Narrow the order's opaque address snapshot to the fields we print. Accepts the
-// Stripe-shaped `{ name, address: { line1, postal_code, … } }` blob the webhook
-// stores as well as an already-flat object, and returns `null` when nothing
-// printable survives — so a missing or empty address drops the block entirely
-// instead of rendering "undefined".
-export function toShippingAddress(value: unknown): ShippingAddress | null {
+// flat `{ name, line1, postalCode, … }` shape our checkout form writes as well as
+// the Stripe-shaped `{ name, address: { line1, postal_code, … } }` blob older
+// orders carry, and returns `null` when nothing printable survives — so a missing
+// or empty address drops the block entirely instead of rendering "undefined".
+export function toDisplayAddress(value: unknown): DisplayAddress | null {
 	if (!value || typeof value !== 'object') return null;
 
 	const raw = value as Record<string, unknown>;
@@ -57,7 +60,7 @@ export function toShippingAddress(value: unknown): ShippingAddress | null {
 	const str = (v: unknown): string | undefined =>
 		typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
 
-	const address: ShippingAddress = {
+	const address: DisplayAddress = {
 		name: str(raw.name),
 		line1: str(addr.line1),
 		line2: str(addr.line2),
@@ -72,7 +75,7 @@ export function toShippingAddress(value: unknown): ShippingAddress | null {
 
 // The address as printable lines, Swiss convention: recipient, street, postcode +
 // city, then region/country. Missing parts collapse, so there are never blank lines.
-function addressLines(address: ShippingAddress): string[] {
+function addressLines(address: DisplayAddress): string[] {
 	const locality = [address.postalCode, address.city].filter(Boolean).join(' ');
 	return [
 		address.name,
@@ -106,7 +109,7 @@ export function orderConfirmationEmail(
 	// The tier label is the same copy the cart's delivery-speed picker shows — one
 	// source of truth, so the email can't name the tier differently than the UI did.
 	const methodLabel = t(`cart.delivery.${urgency}`, locale);
-	const address = toShippingAddress(data.shippingAddress);
+	const address = toDisplayAddress(data.shippingAddress);
 
 	// Plain-text body: the canonical content. The HTML version mirrors it.
 	const textLines = [

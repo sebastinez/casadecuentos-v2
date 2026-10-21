@@ -28,6 +28,9 @@ export function createOrdersPort(pb: PocketBase): OrdersPort {
 					total: record.total ?? 0,
 					currency: record.currency ?? 'CHF',
 					shipping_urgency: record.shipping_urgency || undefined,
+					// Written at `pending` by our own checkout form; a JSON column, so it
+					// round-trips opaquely to the email template.
+					shipping_address: record.shipping_address ?? null,
 					// `localizedField`-style fallback isn't needed; the email builder
 					// defaults to Spanish when this is undefined.
 					locale: record.locale || undefined
@@ -59,7 +62,9 @@ export function createOrdersPort(pb: PocketBase): OrdersPort {
 				status: 'paid',
 				order_number: patch.orderNumber,
 				email: patch.email ?? '',
-				shipping_address: patch.shippingAddress ?? null,
+				// Absent unless the provider collected an address of its own — the
+				// address our cart wrote at `pending` must never be blanked here.
+				...(patch.shippingAddress !== undefined ? { shipping_address: patch.shippingAddress } : {}),
 				stripe_event_id: patch.eventId
 			});
 		}

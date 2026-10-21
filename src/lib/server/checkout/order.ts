@@ -47,7 +47,7 @@ export interface BuiltOrder {
 	total: number;
 }
 
-export type CheckoutErrorCode = 'empty_cart' | 'invalid_id' | 'out_of_stock';
+export type CheckoutErrorCode = 'empty_cart' | 'invalid_id' | 'out_of_stock' | 'invalid_address';
 
 // A typed, expected checkout failure. Carries the offending book ids so the cart
 // page can name the problem line. The endpoint maps these to a 4xx with the code;

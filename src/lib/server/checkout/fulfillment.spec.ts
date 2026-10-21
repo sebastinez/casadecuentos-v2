@@ -56,15 +56,26 @@ const ORDER: FulfillmentOrder = {
 	items_total: 61.8,
 	shipping_total: 8,
 	shipping_urgency: 'priority',
+	// Written by our own checkout form at `pending` — the authoritative address.
+	shipping_address: {
+		name: 'Ada Lovelace',
+		line1: 'Bahnhofstrasse 1',
+		line2: '',
+		postalCode: '8001',
+		city: 'Zürich',
+		country: 'CH'
+	},
 	total: 69.8,
 	currency: 'CHF'
 };
 
+// Stripe no longer collects an address (our cart does, before payment), so a live
+// event carries none.
 const EVENT: CompletedCheckout = {
 	orderId: 'ord_1',
 	eventId: 'evt_1',
 	email: 'cliente@example.com',
-	shippingAddress: { name: 'Ada', address: { country: 'CH', city: 'Zürich' } }
+	shippingAddress: null
 };
 
 describe('fulfillCheckout', () => {
@@ -77,9 +88,30 @@ describe('fulfillCheckout', () => {
 		expect(orders.markPaid).toHaveBeenCalledWith('ord_1', {
 			orderNumber: 1042,
 			email: 'cliente@example.com',
-			shippingAddress: EVENT.shippingAddress,
 			eventId: 'evt_1'
 		});
+	});
+
+	it('leaves the stored address alone when the provider collected none', async () => {
+		const { deps, orders } = fakeDeps(ORDER);
+
+		await fulfillCheckout(EVENT, deps);
+
+		// No `shippingAddress` key at all: the patch must not blank the address our
+		// checkout form wrote at `pending`.
+		expect(orders.markPaid.mock.calls[0][1]).not.toHaveProperty('shippingAddress');
+	});
+
+	it('still persists a provider-collected address when one does arrive', async () => {
+		const { deps, orders } = fakeDeps(ORDER);
+		const collected = { name: 'Ada', address: { city: 'Bern', country: 'CH' } };
+
+		await fulfillCheckout({ ...EVENT, shippingAddress: collected }, deps);
+
+		expect(orders.markPaid).toHaveBeenCalledWith(
+			'ord_1',
+			expect.objectContaining({ shippingAddress: collected })
+		);
 	});
 
 	it('decrements stock for exactly the order snapshot lines', async () => {
@@ -107,16 +139,30 @@ describe('fulfillCheckout', () => {
 		expect(sent[1].text).toContain('El Principito');
 	});
 
-	it('carries the shipping tier and the collected address into both emails', async () => {
+	it("carries the tier and the order's own delivery address into both emails", async () => {
 		const { deps, sent } = fakeDeps(ORDER);
 
 		await fulfillCheckout(EVENT, deps);
 
+		// The event brings no address; both copies still print the one the customer
+		// entered in our cart.
 		for (const msg of sent) {
-			expect(msg.text).toContain('Prioritario (1 día)');
-			expect(msg.text).toContain('Ada');
-			expect(msg.text).toContain('Zürich');
+			expect(msg.text).toContain('Prioritario (1 día hábil)');
+			expect(msg.text).toContain('Ada Lovelace');
+			expect(msg.text).toContain('Bahnhofstrasse 1');
+			expect(msg.text).toContain('8001 Zürich');
 		}
+	});
+
+	it('falls back to the provider address for an order placed before the form existed', async () => {
+		const { deps, sent } = fakeDeps({ ...ORDER, shipping_address: undefined });
+
+		await fulfillCheckout(
+			{ ...EVENT, shippingAddress: { name: 'Ada', address: { city: 'Bern', country: 'CH' } } },
+			deps
+		);
+
+		expect(sent[1].text).toContain('Bern');
 	});
 
 	it('falls back to the economy tier for an order row with no urgency', async () => {
@@ -124,7 +170,7 @@ describe('fulfillCheckout', () => {
 
 		await fulfillCheckout(EVENT, deps);
 
-		expect(sent[1].text).toContain('Económico (2–3 días)');
+		expect(sent[1].text).toContain('Económico (2–3 días hábiles)');
 	});
 
 	it('is idempotent: a redelivered event marks paid and decrements stock exactly once', async () => {

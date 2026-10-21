@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildSessionParams, toMinorUnits } from './stripe-params';
+import type { ShippingAddress } from '$lib/shipping-address';
 import type { BuiltOrder } from './order';
 
 describe('toMinorUnits', () => {
@@ -31,10 +32,21 @@ const ORDER: BuiltOrder = {
 	total: 69.8
 };
 
+// Already validated by the BFF before it reaches this mapper.
+const ADDRESS: ShippingAddress = {
+	name: 'Ada Lovelace',
+	line1: 'Bahnhofstrasse 1',
+	line2: '3. Stock',
+	postalCode: '8001',
+	city: 'Zürich',
+	country: 'CH'
+};
+
 describe('buildSessionParams', () => {
 	const params = buildSessionParams({
 		order: ORDER,
 		orderId: 'ord123',
+		shippingAddress: ADDRESS,
 		successUrl: 'https://shop.test/pago/exito',
 		cancelUrl: 'https://shop.test/pago/cancelado'
 	});
@@ -67,6 +79,7 @@ describe('buildSessionParams', () => {
 		const priority = buildSessionParams({
 			order: { ...ORDER, urgency: 'priority' },
 			orderId: 'ord123',
+			shippingAddress: ADDRESS,
 			successUrl: 'https://shop.test/pago/exito',
 			cancelUrl: 'https://shop.test/pago/cancelado'
 		});
@@ -75,11 +88,38 @@ describe('buildSessionParams', () => {
 		);
 	});
 
-	it('configures Spanish hosted checkout, TWINT + cards, CH-only address', () => {
+	it('configures Spanish hosted checkout with TWINT + cards', () => {
 		expect(params.mode).toBe('payment');
 		expect(params.locale).toBe('es');
 		expect(params.payment_method_types).toEqual(['card', 'twint']);
-		expect(params.shipping_address_collection?.allowed_countries).toEqual(['CH']);
+	});
+
+	it('never asks Stripe to collect an address — ours is validated before payment', () => {
+		expect(params.shipping_address_collection).toBeUndefined();
+	});
+
+	it('passes our validated address to Stripe as the PaymentIntent shipping', () => {
+		expect(params.payment_intent_data?.shipping).toEqual({
+			name: 'Ada Lovelace',
+			address: {
+				line1: 'Bahnhofstrasse 1',
+				line2: '3. Stock',
+				postal_code: '8001',
+				city: 'Zürich',
+				country: 'CH'
+			}
+		});
+	});
+
+	it('omits an unused second address line rather than sending it empty', () => {
+		const noLine2 = buildSessionParams({
+			order: ORDER,
+			orderId: 'ord123',
+			shippingAddress: { ...ADDRESS, line2: '' },
+			successUrl: 'https://shop.test/pago/exito',
+			cancelUrl: 'https://shop.test/pago/cancelado'
+		});
+		expect(noLine2.payment_intent_data?.shipping?.address).not.toHaveProperty('line2');
 	});
 
 	it('does not enable automatic tax (not VAT-registered, books-only)', () => {

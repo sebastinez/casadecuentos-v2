@@ -20,6 +20,10 @@ export interface CompletedCheckout {
 	eventId: string;
 	// `email` may be absent in rare cases; the address is stored opaquely.
 	email: string | null;
+	// Whatever the provider collected, if anything. Since the delivery address
+	// moved into our own cart (written onto the order at `pending`), Stripe is no
+	// longer asked for one and this is normally `null` — kept because a provider-
+	// collected address, when present, is still worth persisting.
 	shippingAddress: unknown;
 }
 
@@ -37,6 +41,10 @@ export interface FulfillmentOrder {
 	// confirmation email. Optional (older rows predate the column) — `parseUrgency`
 	// falls back to `economy`.
 	shipping_urgency?: Urgency;
+	// The delivery address the customer entered in our cart, snapshotted onto the
+	// order at `pending`. Authoritative for the confirmation email. Opaque here:
+	// only the email template interprets the JSON.
+	shipping_address?: unknown;
 	// Buyer's locale, captured at checkout; localizes the confirmation email.
 	locale?: Locale;
 }
@@ -45,7 +53,10 @@ export interface FulfillmentOrder {
 export interface MarkPaidPatch {
 	orderNumber: number;
 	email: string | null;
-	shippingAddress: unknown;
+	// Present only when the provider collected an address of its own. Absent means
+	// "leave the stored address alone" — the one our cart wrote at `pending` is the
+	// source of truth, and a blank overwrite would lose it.
+	shippingAddress?: unknown;
 	eventId: string;
 }
 
@@ -108,15 +119,19 @@ export async function fulfillCheckout(
 	// The customer-facing confirmation goes out in the locale they shopped in; the
 	// owner copy below stays in Spanish (DEFAULT_LOCALE).
 	const locale = order.locale ?? DEFAULT_LOCALE;
-	// Shipping facts both copies of the email print: the tier from the order
-	// snapshot, the address from the Stripe-collected payload on this event.
+	// Shipping facts both copies of the email print, both off the order snapshot:
+	// the tier, and the address our cart validated before payment. `input` is only
+	// a fallback for orders placed before the form existed, when Stripe collected
+	// the address itself.
 	const urgency = parseUrgency(order.shipping_urgency);
+	const shippingAddress = order.shipping_address ?? input.shippingAddress;
 
 	// The latch — flip to paid first (see ordering note above).
 	await deps.orders.markPaid(order.id, {
 		orderNumber,
 		email: input.email,
-		shippingAddress: input.shippingAddress,
+		// Only when the provider actually collected one (see `MarkPaidPatch`).
+		...(input.shippingAddress ? { shippingAddress: input.shippingAddress } : {}),
 		eventId: input.eventId
 	});
 
@@ -131,7 +146,7 @@ export async function fulfillCheckout(
 				total: order.total,
 				currency: order.currency,
 				urgency,
-				shippingAddress: input.shippingAddress
+				shippingAddress
 			})
 		);
 	} catch (err) {
@@ -161,7 +176,7 @@ export async function fulfillCheckout(
 						total: order.total,
 						currency: order.currency,
 						urgency,
-						shippingAddress: input.shippingAddress
+						shippingAddress
 					},
 					locale
 				)

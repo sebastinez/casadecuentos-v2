@@ -1,5 +1,6 @@
 import type Stripe from 'stripe';
 import { DEFAULT_LOCALE, type Locale } from '$lib/i18n';
+import type { ShippingAddress } from '$lib/shipping-address';
 import type { BuiltOrder } from './order';
 
 // Pure mapping from a validated `BuiltOrder` to the params for a hosted Stripe
@@ -20,6 +21,11 @@ export interface SessionParamOptions {
 	// Opaque id of the `pending` order, echoed back on the webhook (via `metadata`)
 	// to correlate the payment with our order.
 	orderId: string;
+	// The delivery address our own cart collected and validated. Handed to Stripe
+	// as the PaymentIntent's shipping so the payment record carries the same
+	// address the parcel does (visible in the dashboard, on the receipt, and to
+	// Radar) — Stripe never asks the customer for it.
+	shippingAddress: ShippingAddress;
 	successUrl: string;
 	cancelUrl: string;
 	// The buyer's active locale → Stripe's hosted-checkout language. Stripe accepts
@@ -30,6 +36,7 @@ export interface SessionParamOptions {
 export function buildSessionParams({
 	order,
 	orderId,
+	shippingAddress,
 	successUrl,
 	cancelUrl,
 	locale = DEFAULT_LOCALE
@@ -65,8 +72,21 @@ export function buildSessionParams({
 				}
 			}
 		],
-		// Stripe collects the shipping address, restricted to Switzerland.
-		shipping_address_collection: { allowed_countries: ['CH'] },
+		// No `shipping_address_collection`: the address is collected and validated in
+		// our cart *before* payment, so Stripe has nothing to ask. It travels on the
+		// PaymentIntent instead. `line2` is omitted rather than sent empty.
+		payment_intent_data: {
+			shipping: {
+				name: shippingAddress.name,
+				address: {
+					line1: shippingAddress.line1,
+					...(shippingAddress.line2 ? { line2: shippingAddress.line2 } : {}),
+					postal_code: shippingAddress.postalCode,
+					city: shippingAddress.city,
+					country: shippingAddress.country
+				}
+			}
+		},
 		success_url: successUrl,
 		cancel_url: cancelUrl,
 		// Correlate the `checkout.session.completed` event back to our `pending` order.
