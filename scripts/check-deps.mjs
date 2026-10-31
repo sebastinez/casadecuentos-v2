@@ -6,9 +6,9 @@
  * upstream versions:
  *
  *   1. Runtime / binaries — PocketBase server binary (.bin/pocketbase), Node,
- *      Deno and pnpm. "Latest" comes from GitHub releases (PocketBase, Deno),
- *      nodejs.org (Node, newest release in the SAME major line) and the npm
- *      registry (pnpm).
+ *      Deno and pnpm. "Latest" comes from the PocketBase BugStage git tags
+ *      (ganigeorgiev.com), GitHub releases (Deno), nodejs.org (Node, newest
+ *      release in the SAME major line) and the npm registry (pnpm).
  *
  *   2. npm dependencies — every entry in package.json {dependencies,
  *      devDependencies}. "Installed" is read from node_modules/<pkg>/package.json
@@ -17,8 +17,8 @@
  *
  * Status is a semver comparison: ✅ current / patch|minor behind / ⚠️ major
  * behind / ahead of latest. Makes zero writes and needs no credentials; the
- * only requirement is network access to registry.npmjs.org, api.github.com and
- * nodejs.org.
+ * only requirement is network access to registry.npmjs.org, api.github.com,
+ * ganigeorgiev.com and nodejs.org.
  *
  * Usage:
  *   node scripts/check-deps.mjs
@@ -91,6 +91,27 @@ const githubLatestTag = async (repo) => {
 	}
 };
 
+// PocketBase moved off GitHub to a self-hosted BugStage instance; its git API
+// lists tags as [{ name: 'refs/tags/v0.41.1', ... }]. Pre-release tags
+// (-rc.N) are skipped to match GitHub's releases/latest semantics.
+const pocketbaseLatestTag = async () => {
+	try {
+		const refs = await getJSON(
+			'https://ganigeorgiev.com/api/git/pocketbase/pocketbase/refs?type=tag'
+		);
+		const stable = refs
+			.map((r) => r.name.replace(/^refs\/tags\/v?/, ''))
+			.filter((v) => /^\d+\.\d+\.\d+$/.test(v))
+			.sort((a, b) => {
+				const [x, y] = [parseVer(a), parseVer(b)];
+				return y[0] - x[0] || y[1] - x[1] || y[2] - x[2];
+			});
+		return stable[0] ?? '?';
+	} catch {
+		return '?';
+	}
+};
+
 // Newest Node release in the same major line as `currentMajor` (comparing
 // across majors, e.g. 24 -> 25, isn't an apples-to-apples "you're behind").
 const nodeLatestInMajor = async (currentMajor) => {
@@ -143,7 +164,7 @@ const denoInstalled = binVersion('deno', ['--version'], /deno\s+([\d.]+)/);
 const pnpmInstalled = binVersion('pnpm', ['--version'], /([\d.]+)/);
 
 const [pbLatest, denoLatest, nodeLatest, pnpmLatest] = await Promise.all([
-	githubLatestTag('pocketbase/pocketbase'),
+	pocketbaseLatestTag(),
 	githubLatestTag('denoland/deno'),
 	nodeLatestInMajor(parseVer(nodeInstalled)[0]),
 	npmLatest('pnpm')
