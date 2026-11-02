@@ -51,6 +51,6 @@
 		"fuse.js": "^7.5.0",
 		"leaflet": "^1.9.4",
 		"pocketbase": "^0.27.3",
-		"stripe": "^22.6.2"
+		"stripe": "^23.1.0"
 	}
 }

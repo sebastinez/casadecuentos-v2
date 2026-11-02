@@ -91,7 +91,7 @@ describe('buildSessionParams', () => {
 	it('configures Spanish hosted checkout with TWINT + cards', () => {
 		expect(params.mode).toBe('payment');
 		expect(params.locale).toBe('es');
-		expect(params.payment_method_types).toEqual(['card', 'twint']);
+		expect(params.allowed_payment_method_types).toEqual(['card', 'twint']);
 	});
 
 	it('never asks Stripe to collect an address — ours is validated before payment', () => {

@@ -56,7 +56,7 @@ export function buildSessionParams({
 		locale,
 		// TWINT + cards; Apple/Google Pay ride on `card`. No tax (not VAT-registered,
 		// books-only).
-		payment_method_types: ['card', 'twint'],
+		allowed_payment_method_types: ['card', 'twint'],
 		line_items: lineItems,
 		// Weight-based shipping as a single fixed option — the cost + delivery speed
 		// were already chosen in our cart, so Stripe just displays the resolved amount.
