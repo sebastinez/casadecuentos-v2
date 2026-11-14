@@ -20,6 +20,8 @@
  * Validation before any write:
  *   - `price` must be a number ≥ 0 (schema requires it; ISBNdb ships null —
  *     fill it in the JSON during review). Books failing this are refused.
+ *   - `author` must be a non-empty string (whitespace-only counts as empty).
+ *     Books failing this are refused.
  *   - `cover` holds a URL; it's downloaded and uploaded as the file. A failed
  *     download creates the record without a cover (reported).
  *
@@ -165,6 +167,10 @@ for (const [isbn, entry] of entries) {
 	}
 	if (!p.title || !p.slug) {
 		refused.push(`  ${isbn} — missing title/slug in the JSON`);
+		continue;
+	}
+	if (typeof p.author !== 'string' || !p.author.trim()) {
+		refused.push(`  ${isbn} "${p.title}" — author is empty; set it in the JSON`);
 		continue;
 	}
 
