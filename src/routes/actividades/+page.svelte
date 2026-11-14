@@ -6,6 +6,26 @@
 	let { data }: { data: PageData } = $props();
 
 	const locale = $derived(data.locale);
+
+	// Unique (localized) event titles across all upcoming events, sorted for the dropdown.
+	const eventNames = $derived(
+		[...new Set(data.events.map((e) => localizedField(e, 'title', locale)))].sort((a, b) =>
+			a.localeCompare(b, locale)
+		)
+	);
+
+	let selectedName = $state('');
+
+	// Drop a stale selection if the name disappears (e.g. locale switch or reload of data).
+	$effect(() => {
+		if (selectedName && !eventNames.includes(selectedName)) selectedName = '';
+	});
+
+	const filteredEvents = $derived(
+		selectedName
+			? data.events.filter((e) => localizedField(e, 'title', locale) === selectedName)
+			: data.events
+	);
 </script>
 
 <svelte:head>
@@ -13,13 +33,42 @@
 	<meta name="description" content={t('events.upcoming', locale)} />
 </svelte:head>
 
-<h1 class="mb-6 text-2xl font-semibold">{t('events.heading', locale)}</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+	<h1 class="text-2xl font-semibold">{t('events.heading', locale)}</h1>
+
+	{#if eventNames.length > 1}
+		<div class="flex items-center gap-2">
+			<label for="event-filter" class="sr-only">{t('events.filterLabel', locale)}</label>
+			<select
+				id="event-filter"
+				bind:value={selectedName}
+				class="max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm"
+			>
+				<option value="">{t('events.filterAll', locale)}</option>
+				{#each eventNames as name (name)}
+					<option value={name}>{name}</option>
+				{/each}
+			</select>
+			{#if selectedName}
+				<button
+					type="button"
+					onclick={() => (selectedName = '')}
+					class="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:border-gray-400"
+					aria-label={t('events.filterClear', locale)}
+					title={t('events.filterClear', locale)}
+				>
+					✕
+				</button>
+			{/if}
+		</div>
+	{/if}
+</div>
 
 {#if data.events.length === 0}
 	<p class="text-gray-600">{t('events.empty', locale)}</p>
 {:else}
 	<ul class="grid grid-cols-1 gap-6">
-		{#each data.events as event (event.id)}
+		{#each filteredEvents as event (event.id)}
 			<li>
 				<a
 					href={localizeHref(`/actividades/${event.slug}`, locale)}
