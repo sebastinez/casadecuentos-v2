@@ -18,7 +18,8 @@
 		"test": "npm run test:unit -- --run",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"import:shopify": "node scripts/import-shopify.mjs"
+		"import:shopify": "node scripts/import-shopify.mjs",
+		"rsvp:pdf": "node scripts/rsvp-pdf.mjs"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -36,6 +37,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.23.0",
 		"globals": "^17.12.0",
+		"pdfkit": "^0.20.2",
 		"prettier": "^3.9.6",
 		"prettier-plugin-svelte": "^4.1.1",
 		"prettier-plugin-tailwindcss": "^0.8.1",

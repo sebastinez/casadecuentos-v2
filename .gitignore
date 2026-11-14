@@ -29,3 +29,6 @@ vite.config.ts.timestamp-*
 
 # Production secrets live in /etc/casadecuentos/*.env on the server (chmod 600),
 # never in the repo. Only the deploy/*.env.example templates are committed.
+
+# RSVP attendee lists (personal data) from scripts/rsvp-pdf.mjs
+rsvps-*.pdf
