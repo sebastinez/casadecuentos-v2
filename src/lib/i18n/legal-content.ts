@@ -44,6 +44,7 @@ const content: Record<LegalPageKey, Partial<Record<Locale, LegalPage>>> = {
 						<li><strong>Pedidos:</strong> tu dirección de envío y de facturación, y los datos de tu compra. El pago se procesa de forma segura y nosotros nunca vemos ni almacenamos los datos completos de tu tarjeta.</li>
 						<li><strong>Reservas de actividades:</strong> nombre, apellido, correo electrónico y teléfono.</li>
 						<li><strong>Formulario de contacto:</strong> nombre, correo electrónico, asunto y mensaje.</li>
+						<li><strong>Newsletter:</strong> si te suscribes, tu correo electrónico, que guardamos en Resend para enviarte nuestras novedades.</li>
 						<li><strong>Carrito:</strong> recordamos los artículos que añades únicamente en tu navegador. No lo recibimos en nuestros servidores hasta que inicias el pago.</li>
 					</ul>`
 				},
@@ -57,7 +58,7 @@ const content: Record<LegalPageKey, Partial<Record<Locale, LegalPage>>> = {
 					body: `<p>Para operar la tienda recurrimos a proveedores externos que actúan como encargados del tratamiento. Cada uno recibe únicamente los datos que necesita para su función:</p>
 						<ul>
 							<li><strong>Stripe</strong> — procesamiento de pagos y recogida de la dirección de envío durante el pago (TWINT, tarjetas).</li>
-							<li><strong>Resend</strong> — envío de correos transaccionales (confirmación de pedido, aviso de envío, confirmación de reserva, mensajes de contacto). Servidores en la Unión Europea.</li>
+							<li><strong>Resend</strong> — envío de correos transaccionales (confirmación de pedido, aviso de envío, confirmación de reserva, mensajes de contacto) y almacenamiento de los correos electrónicos de quienes se suscriben al newsletter. Servidores en la Unión Europea.</li>
 							<li><strong>Hetzner</strong> — alojamiento de nuestro servidor (centro de datos en la Unión Europea).</li>
 							<li><strong>PocketBase</strong> — la base de datos donde guardamos el catálogo, los pedidos, las reservas y los mensajes de contacto, en el servidor anterior.</li>
 							<li><strong>YouTube (Google) y OpenStreetMap</strong> — algunas miniaturas de vídeo y los mapas se cargan desde sus servidores, que pueden registrar tu dirección IP. No usamos reproductores ni rastreadores incrustados.</li>
@@ -65,7 +66,7 @@ const content: Record<LegalPageKey, Partial<Record<Locale, LegalPage>>> = {
 				},
 				{
 					heading: 'Conservación de los datos',
-					body: `<p>Conservamos los datos de los pedidos durante el tiempo necesario para cumplir nuestras obligaciones legales y de garantía. Los mensajes de contacto y las reservas se conservan mientras sean útiles para atenderte.</p>`
+					body: `<p>Conservamos los datos de los pedidos durante el tiempo necesario para cumplir nuestras obligaciones legales y de garantía. Los mensajes de contacto y las reservas se conservan mientras sean útiles para atenderte. Tu correo del newsletter se conserva hasta que te des de baja o nos pidas eliminarlo.</p>`
 				},
 				{
 					heading: 'Tus derechos',
@@ -85,6 +86,7 @@ const content: Record<LegalPageKey, Partial<Record<Locale, LegalPage>>> = {
 						<li><strong>Bestellungen:</strong> deine Liefer- und Rechnungsadresse sowie die Angaben zu deinem Einkauf. Die Zahlung wird sicher verarbeitet, und wir sehen oder speichern niemals die vollständigen Daten deiner Karte.</li>
 						<li><strong>Reservierungen für Aktivitäten:</strong> Vorname, Nachname, E-Mail-Adresse und Telefonnummer.</li>
 						<li><strong>Kontaktformular:</strong> Name, E-Mail-Adresse, Betreff und Nachricht.</li>
+						<li><strong>Newsletter:</strong> Wenn du dich anmeldest, deine E-Mail-Adresse, die wir bei Resend speichern, um dir unsere Neuigkeiten zu senden.</li>
 						<li><strong>Warenkorb:</strong> Wir merken uns die von dir hinzugefügten Artikel ausschließlich in deinem Browser. Sie erreichen unsere Server erst, wenn du die Zahlung startest.</li>
 					</ul>`
 				},
@@ -98,7 +100,7 @@ const content: Record<LegalPageKey, Partial<Record<Locale, LegalPage>>> = {
 					body: `<p>Für den Betrieb des Shops greifen wir auf externe Anbieter zurück, die als Auftragsverarbeiter tätig sind. Jeder erhält ausschließlich die Daten, die er für seine Funktion benötigt:</p>
 						<ul>
 							<li><strong>Stripe</strong> — Zahlungsabwicklung und Erfassung der Lieferadresse während der Zahlung (TWINT, Karten).</li>
-							<li><strong>Resend</strong> — Versand von Transaktions-E-Mails (Bestellbestätigung, Versandbenachrichtigung, Reservierungsbestätigung, Kontaktnachrichten). Server in der Europäischen Union.</li>
+							<li><strong>Resend</strong> — Versand von Transaktions-E-Mails (Bestellbestätigung, Versandbenachrichtigung, Reservierungsbestätigung, Kontaktnachrichten) sowie Speicherung der E-Mail-Adressen von Newsletter-Abonnenten. Server in der Europäischen Union.</li>
 							<li><strong>Hetzner</strong> — Hosting unseres Servers (Rechenzentrum in der Europäischen Union).</li>
 							<li><strong>PocketBase</strong> — die Datenbank, in der wir den Katalog, die Bestellungen, die Reservierungen und die Kontaktnachrichten speichern, auf dem zuvor genannten Server.</li>
 							<li><strong>YouTube (Google) und OpenStreetMap</strong> — einige Video-Vorschaubilder und die Karten werden von deren Servern geladen, die deine IP-Adresse aufzeichnen können. Wir verwenden keine eingebetteten Player oder Tracker.</li>
@@ -106,7 +108,7 @@ const content: Record<LegalPageKey, Partial<Record<Locale, LegalPage>>> = {
 				},
 				{
 					heading: 'Aufbewahrung der Daten',
-					body: `<p>Wir bewahren die Bestelldaten so lange auf, wie es zur Erfüllung unserer gesetzlichen und gewährleistungsrechtlichen Pflichten erforderlich ist. Kontaktnachrichten und Reservierungen bewahren wir so lange auf, wie sie für deine Betreuung nützlich sind.</p>`
+					body: `<p>Wir bewahren die Bestelldaten so lange auf, wie es zur Erfüllung unserer gesetzlichen und gewährleistungsrechtlichen Pflichten erforderlich ist. Kontaktnachrichten und Reservierungen bewahren wir so lange auf, wie sie für deine Betreuung nützlich sind. Deine Newsletter-E-Mail-Adresse speichern wir, bis du dich abmeldest oder uns um Löschung bittest.</p>`
 				},
 				{
 					heading: 'Deine Rechte',

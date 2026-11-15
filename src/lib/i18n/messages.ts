@@ -263,7 +263,18 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'footer.shipping': 'Envíos y devoluciones',
 		'footer.contact': 'Contacto',
 		'footer.contactHeading': 'Contacto',
-		'footer.rights': 'Todos los derechos reservados.'
+		'footer.rights': 'Todos los derechos reservados.',
+
+		'newsletter.heading': 'Newsletter',
+		'newsletter.intro': 'Recibe novedades, nuevos libros y actividades en tu correo.',
+		'newsletter.email': 'Correo electrónico',
+		'newsletter.placeholder': 'tu@correo.com',
+		'newsletter.submit': 'Suscribirme',
+		'newsletter.submitting': 'Enviando…',
+		'newsletter.success': '¡Gracias! Te has suscrito al newsletter.',
+		'newsletter.invalid': 'Por favor introduce un correo electrónico válido.',
+		'newsletter.rateLimited': 'Demasiados intentos. Inténtalo de nuevo más tarde.',
+		'newsletter.error': 'No se pudo completar la suscripción. Inténtalo de nuevo.'
 	},
 	de: {
 		'nav.home': 'Start',
@@ -522,6 +533,17 @@ export const messages: Record<Locale, Record<string, string>> = {
 		'footer.shipping': 'Versand und Rückgabe',
 		'footer.contact': 'Kontakt',
 		'footer.contactHeading': 'Kontakt',
-		'footer.rights': 'Alle Rechte vorbehalten.'
+		'footer.rights': 'Alle Rechte vorbehalten.',
+
+		'newsletter.heading': 'Newsletter',
+		'newsletter.intro': 'Erhalte Neuigkeiten, neue Bücher und Veranstaltungen per E-Mail.',
+		'newsletter.email': 'E-Mail',
+		'newsletter.placeholder': 'du@beispiel.ch',
+		'newsletter.submit': 'Abonnieren',
+		'newsletter.submitting': 'Wird gesendet…',
+		'newsletter.success': 'Vielen Dank! Du hast den Newsletter abonniert.',
+		'newsletter.invalid': 'Bitte gib eine gültige E-Mail-Adresse ein.',
+		'newsletter.rateLimited': 'Zu viele Versuche. Bitte versuche es später erneut.',
+		'newsletter.error': 'Die Anmeldung ist fehlgeschlagen. Bitte versuche es erneut.'
 	}
 };

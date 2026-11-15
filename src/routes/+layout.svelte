@@ -8,6 +8,7 @@
 	import CartIcon from '$lib/components/CartIcon.svelte';
 	import MobileNav from '$lib/components/MobileNav.svelte';
 	import LocaleSwitcher from '$lib/components/LocaleSwitcher.svelte';
+	import NewsletterSignup from '$lib/components/NewsletterSignup.svelte';
 	import { announcer } from '$lib/a11y/announcer.svelte';
 
 	let { children, data } = $props();
@@ -123,6 +124,7 @@
 						</a>
 					</address>
 				</div>
+				<NewsletterSignup {locale} />
 			</div>
 			<p class="mt-8 border-t border-gray-200 pt-6">
 				&copy; {new Date().getFullYear()}
