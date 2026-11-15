@@ -161,7 +161,7 @@ function toPB(book) {
 		title: book.title || book.title_long || '',
 		author: (book.authors || []).join(', '),
 		ISBN: book.isbn13 || book.isbn || '',
-		price: 1,
+		price: null,
 		stock: 0,
 		format_es: book.binding || '',
 		page_count: book.pages ?? null,

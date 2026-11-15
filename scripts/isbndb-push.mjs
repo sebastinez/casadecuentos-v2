@@ -17,13 +17,27 @@
  * language-code aliases); a miss leaves the relation empty and is reported —
  * create the taxon in admin or fix the string in the JSON, then re-run.
  *
- * Validation before any write:
- *   - `price` must be a number ≥ 0 (schema requires it; ISBNdb ships null —
- *     fill it in the JSON during review). Books failing this are refused.
- *   - `author` must be a non-empty string (whitespace-only counts as empty).
- *     Books failing this are refused.
+ * Validation before any write (mirrors the `books` schema; failures are
+ * REFUSED — fix the JSON and re-run):
+ *   - `title`, `author`, `slug`: non-empty strings, ≤ 255 chars.
+ *   - `ISBN` (or the JSON key): normalizes to a valid ISBN-10/13 shape.
+ *   - `slug` and `ISBN` unique within the JSON (prod collisions are skipped).
+ *   - `price`: number ≥ 0 (schema requires it; ISBNdb ships null — fill it in
+ *     the JSON during review).
+ *   - `stock`, `page_count`, `publication_year`, `weight_grams`: empty or an
+ *     integer ≥ 0.
+ *   - `description_es`: must have visible text (HTML tags alone don't count).
+ *     ISBNdb often has no synopsis — write one during review.
+ *   - `format_es`, `book_size`: ≤ 100 chars.
+ *   - `weight_grams` missing/0: REFUSED in dry run (checkout counts it as 0 g,
+ *     undercharging shipping), but only WARNED under --apply so known-weightless
+ *     books can still go through once you've seen the list.
  *   - `cover` holds a URL; it's downloaded and uploaded as the file. A failed
- *     download creates the record without a cover (reported).
+ *     download, or one that isn't jpeg/png/webp/avif ≤ 5 MB, creates the record
+ *     without a cover (reported).
+ *
+ * A create that PocketBase still rejects is reported and the run continues;
+ * the script exits non-zero if any create failed.
  *
  * `stock` is whatever the JSON says (default 0). After pushing, re-run
  * sync-stock.mjs --apply with the scan file to set real tallies.
@@ -77,13 +91,62 @@ const LANGUAGE_ALIASES = {
 	it: ['italiano', 'italian']
 };
 
+// Mirrors the `books.cover` field constraints.
+const COVER_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+const COVER_MAX_BYTES = 5242880;
+
 async function fetchCover(url) {
 	const res = await fetch(url);
 	if (!res.ok) throw new Error(`HTTP ${res.status} fetching cover`);
 	const buf = Buffer.from(await res.arrayBuffer());
-	const type = res.headers.get('content-type') || 'image/jpeg';
+	const type = (res.headers.get('content-type') || 'image/jpeg').split(';')[0].trim().toLowerCase();
+	if (!COVER_MIME_TYPES.includes(type)) throw new Error(`unsupported cover type "${type}"`);
+	if (buf.length > COVER_MAX_BYTES)
+		throw new Error(`cover is ${(buf.length / 1048576).toFixed(1)} MB (max 5 MB)`);
 	const name = basename(new URL(url).pathname) || 'cover.jpg';
 	return new File([buf], name, { type });
+}
+
+const isBlank = (v) => v === '' || v === null || v === undefined;
+// Optional PB number field with min 0 + onlyInt.
+const isOptionalNonNegInt = (v) => isBlank(v) || (Number.isInteger(v) && v >= 0);
+// ISBN-10 (last char may be X) or ISBN-13, after stripping hyphens/spaces.
+const isISBNShape = (n) => /^(\d{9}[\dX]|\d{13})$/.test(n);
+
+// Hard schema problems for one entry. Empty array = valid.
+function validate(isbn, p) {
+	const problems = [];
+	for (const [field, max] of [
+		['title', 255],
+		['author', 255],
+		['slug', 255]
+	]) {
+		const v = p[field];
+		if (typeof v !== 'string' || !v.trim()) problems.push(`${field} is empty`);
+		else if (v.length > max) problems.push(`${field} is ${v.length} chars (max ${max})`);
+	}
+	const normISBN = normalizeISBN(p.ISBN || isbn);
+	if (!isISBNShape(normISBN))
+		problems.push(`ISBN ${JSON.stringify(p.ISBN || isbn)} isn't a 10/13-digit ISBN`);
+	if (typeof p.price !== 'number' || !Number.isFinite(p.price) || p.price < 0)
+		problems.push(`price is ${JSON.stringify(p.price)}; set a CHF price`);
+	for (const field of ['stock', 'page_count', 'publication_year', 'weight_grams']) {
+		if (!isOptionalNonNegInt(p[field]))
+			problems.push(`${field} is ${JSON.stringify(p[field])}; must be empty or an integer ≥ 0`);
+	}
+	// Editor (HTML) field: count only visible text, so "<p></p>" is still empty.
+	const descText =
+		typeof p.description_es === 'string'
+			? p.description_es.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim()
+			: '';
+	if (!descText) problems.push('description_es is empty; write a description');
+	for (const field of ['format_es', 'book_size']) {
+		const v = p[field];
+		if (isBlank(v)) continue;
+		if (typeof v !== 'string') problems.push(`${field} must be a string`);
+		else if (v.length > 100) problems.push(`${field} is ${v.length} chars (max 100)`);
+	}
+	return problems;
 }
 
 function toFormData(data, file) {
@@ -152,6 +215,11 @@ const toCreate = [];
 const skipped = [];
 const refused = [];
 
+// Within-file uniqueness: first occurrence wins, later ones are refused (a
+// duplicate would otherwise pass the dry run and then fail mid --apply).
+const seenSlugs = new Map();
+const seenISBNs = new Map();
+
 for (const [isbn, entry] of entries) {
 	const p = entry.pb || {};
 	const existing = prodByISBN.get(normalizeISBN(p.ISBN || isbn)) || prodBySlug.get(p.slug);
@@ -159,28 +227,33 @@ for (const [isbn, entry] of entries) {
 		skipped.push(`  ${isbn} "${p.title}" — already in prod as "${existing.slug}"`);
 		continue;
 	}
-	if (typeof p.price !== 'number' || p.price < 0) {
-		refused.push(
-			`  ${isbn} "${p.title}" — price is ${JSON.stringify(p.price)}; set a CHF price in the JSON`
-		);
-		continue;
-	}
-	if (!p.title || !p.slug) {
-		refused.push(`  ${isbn} — missing title/slug in the JSON`);
-		continue;
-	}
-	if (typeof p.author !== 'string' || !p.author.trim()) {
-		refused.push(`  ${isbn} "${p.title}" — author is empty; set it in the JSON`);
+
+	const problems = validate(isbn, p);
+	const normISBN = normalizeISBN(p.ISBN || isbn);
+	if (p.slug && seenSlugs.has(p.slug))
+		problems.push(`slug "${p.slug}" duplicates ${seenSlugs.get(p.slug)} in this JSON`);
+	if (normISBN && seenISBNs.has(normISBN))
+		problems.push(`ISBN ${normISBN} duplicates ${seenISBNs.get(normISBN)} in this JSON`);
+	if (p.slug && !seenSlugs.has(p.slug)) seenSlugs.set(p.slug, isbn);
+	if (normISBN && !seenISBNs.has(normISBN)) seenISBNs.set(normISBN, isbn);
+
+	// Missing weight: blocking in dry run, a warning under --apply.
+	const noWeight = isBlank(p.weight_grams) || p.weight_grams === 0;
+	if (noWeight && !APPLY) problems.push('weight_grams is missing (shipping would count 0 g)');
+
+	if (problems.length) {
+		refused.push(`  ${isbn} "${p.title ?? ''}"\n${problems.map((m) => `      - ${m}`).join('\n')}`);
 		continue;
 	}
 
 	const publisher = matchPublisher(p.publisher);
 	const language = matchLanguage(p.language);
-	toCreate.push({ isbn, p, publisher, language });
+	toCreate.push({ isbn, p, publisher, language, noWeight });
 }
 
-for (const { p, publisher, language } of toCreate) {
+for (const { p, publisher, language, noWeight } of toCreate) {
 	console.log(`+ ${p.slug} — "${p.title}" | CHF ${p.price} | stock ${p.stock ?? 0}`);
+	if (noWeight) console.log('    ! no weight_grams — shipping will count this book as 0 g');
 	if (p.publisher && !publisher)
 		console.log(
 			`    ! publisher "${p.publisher}" not in prod — left empty (create in admin or fix JSON)`
@@ -203,6 +276,7 @@ if (!APPLY) {
 
 // --- apply -------------------------------------------------------------------------
 let created = 0;
+const failed = [];
 for (const { isbn, p, publisher, language } of toCreate) {
 	let cover = null;
 	if (p.cover) {
@@ -230,10 +304,20 @@ for (const { isbn, p, publisher, language } of toCreate) {
 		publisher: publisher?.id || '',
 		language: language?.id || ''
 	};
-	await pb.collection('books').create(toFormData(data, cover), { requestKey: null });
-	created++;
-	console.log(`~ created ${p.slug}`);
+	try {
+		await pb.collection('books').create(toFormData(data, cover), { requestKey: null });
+		created++;
+		console.log(`~ created ${p.slug}`);
+	} catch (e) {
+		const fieldErrors = e?.response?.data && Object.keys(e.response.data).length
+			? ` ${JSON.stringify(e.response.data)}`
+			: '';
+		failed.push(`  ${isbn} "${p.title}" — ${e.message}${fieldErrors}`);
+		console.log(`    ! create FAILED for ${p.slug} (${e.message})${fieldErrors}`);
+	}
 }
+if (failed.length) console.log(`\n-- Failed creates --\n${failed.join('\n')}`);
 console.log(
-	`\nDone. ${created} book(s) created. Re-run sync-stock.mjs --apply to set stock tallies.`
+	`\nDone. ${created} book(s) created, ${failed.length} failed. Re-run sync-stock.mjs --apply to set stock tallies.`
 );
+if (failed.length) process.exit(1);
